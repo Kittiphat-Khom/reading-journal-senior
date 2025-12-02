@@ -1,3 +1,5 @@
+const API_BASE_URL = 'https://reading-journal.xyz';
+
 document.addEventListener('DOMContentLoaded', () => {
     // ⚠️ ตรวจสอบ Port และ URL ของ API ให้ถูกต้อง
     const API_URL = '/api/admin/reports';

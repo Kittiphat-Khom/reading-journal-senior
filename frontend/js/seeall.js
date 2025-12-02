@@ -1,3 +1,5 @@
+const API_BASE_URL = 'https://reading-journal.xyz';
+
 document.addEventListener("DOMContentLoaded", async () => {
     const params = new URLSearchParams(window.location.search);
     const journalId = params.get("id");

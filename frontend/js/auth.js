@@ -1,3 +1,5 @@
+// ✅ บรรทัดที่ 1: ประกาศตัวแปรไว้ตรงนี้เลย
+const API_BASE_URL = 'https://reading-journal.xyz';
 // โหลดข้อมูลผู้ใช้จาก token
 document.addEventListener("DOMContentLoaded", loadUser);
 

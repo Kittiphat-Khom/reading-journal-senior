@@ -1,3 +1,5 @@
+const API_BASE_URL = 'https://reading-journal.xyz';
+
 // ===============================
 // GLOBAL ELEMENTS
 // ===============================

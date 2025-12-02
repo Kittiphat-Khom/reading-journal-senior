@@ -1,11 +1,12 @@
-const API_BASE_URL = "/api";
-let currentFavBook = null; // ตัวแปรเก็บข้อมูลหนังสือที่กด
+// ✅ 1. แก้เป็นโดเมนจริง (ไม่ต้องมี /api ต่อท้ายตรงนี้)
+const API_BASE_URL = 'https://reading-journal.xyz';
+let currentFavBook = null; 
 
 // เริ่มทำงานเมื่อโหลดหน้าเสร็จ
 document.addEventListener("DOMContentLoaded", () => {
   loadUser();       
   loadFavorites();  
-  setupGlobalEvents(); // ตั้งค่า Event ต่างๆ
+  setupGlobalEvents(); 
 });
 
 // ===================================================
@@ -16,7 +17,7 @@ function setupGlobalEvents() {
     const overlay = document.getElementById("overlay");
     if(overlay) overlay.addEventListener("click", toggleSidebar);
 
-    // Close Modals on Outside Click (คลิกพื้นหลังปิด Modal)
+    // Close Modals on Outside Click
     window.onclick = function(event) {
         const bookModal = document.getElementById('bookModal');
         const logoutModal = document.getElementById("logoutModal");
@@ -56,7 +57,7 @@ window.confirmLogoutAction = function() {
 }
 
 // ===================================================
-//  3. BOOK DETAIL MODAL (ที่หายไป) 🔥🔥🔥
+//  3. BOOK DETAIL MODAL
 // ===================================================
 window.openBookDetail = function(book) {
     currentFavBook = book;
@@ -66,7 +67,6 @@ window.openBookDetail = function(book) {
     const author = document.getElementById('modal-author');
     const desc = document.getElementById('modal-desc');
     
-    // Reset Image & Text
     img.src = (book.book_image && book.book_image.startsWith('http')) 
         ? book.book_image 
         : "https://via.placeholder.com/150x220?text=No+Image";
@@ -90,7 +90,8 @@ async function loadUser() {
     const token = localStorage.getItem("token");
     if (!token) { window.location.href = "log-in-page.html"; return; }
 
-    const res = await fetch(`${API_BASE_URL}/users/me`, {
+    // ✅ 2. เติม /api ในการเรียก fetch
+    const res = await fetch(`${API_BASE_URL}/api/users/me`, {
       headers: { Authorization: `Bearer ${token}` }
     });
 
@@ -116,7 +117,8 @@ async function loadFavorites() {
   if(!grid) return;
 
   try {
-    const res = await fetch(`${API_BASE_URL}/favorites`, {
+    // ✅ เติม /api
+    const res = await fetch(`${API_BASE_URL}/api/favorites`, {
       method: "GET",
       headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` }
     });
@@ -170,13 +172,11 @@ function createFavoriteCard(book) {
     </div>
   `;
 
-  // ✅ 1. คลิกรูปภาพ -> เปิด Modal (เรียกฟังก์ชัน openBookDetail)
   const img = card.querySelector("img");
   img.addEventListener("click", () => {
       window.openBookDetail(book);
   });
 
-  // ✅ 2. คลิกปุ่มลบ -> ลบการ์ด
   const removeBtn = card.querySelector(".remove-btn");
   removeBtn.addEventListener("click", async (e) => {
     e.stopPropagation(); 
@@ -195,12 +195,12 @@ function createFavoriteCard(book) {
 }
 
 // ===================================================
-//  6. ADD TO LIBRARY LOGIC (ที่หายไป) 🔥🔥🔥
+//  6. ADD TO LIBRARY LOGIC
 // ===================================================
 window.addToLibraryFromFav = async function() {
     if (!currentFavBook) return;
 
-    const btn = document.getElementById('addToLibBtn'); // ใช้ ID
+    const btn = document.getElementById('addToLibBtn');
     const oldText = btn ? btn.innerHTML : 'Add';
     if(btn) {
         btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Adding...';
@@ -215,18 +215,19 @@ window.addToLibraryFromFav = async function() {
         book_image: currentFavBook.book_image
     };
 
-    // ถ้า user_id หาย ให้ลองดึงใหม่
     if (!payload.user_id) {
          try {
             const token = localStorage.getItem("token");
-            const userRes = await fetch(`${API_BASE_URL}/users/me`, { headers: { Authorization: `Bearer ${token}` }});
+            // ✅ เติม /api
+            const userRes = await fetch(`${API_BASE_URL}/api/users/me`, { headers: { Authorization: `Bearer ${token}` }});
             const userData = await userRes.json();
             payload.user_id = userData.user_id;
          } catch(e) { console.error("User ID missing"); }
     }
 
     try {
-        const res = await fetch(`${API_BASE_URL}/journals/add-by-id`, {
+        // ✅ เติม /api
+        const res = await fetch(`${API_BASE_URL}/api/journals/add-by-id`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
@@ -257,7 +258,8 @@ window.addToLibraryFromFav = async function() {
 async function deleteFavorite(favId, cardElement) {
     const token = localStorage.getItem("token");
     try {
-        const res = await fetch(`${API_BASE_URL}/favorites/${favId}`, {
+        // ✅ เติม /api
+        const res = await fetch(`${API_BASE_URL}/api/favorites/${favId}`, {
             method: "DELETE",
             headers: { "Authorization": `Bearer ${token}` }
         });

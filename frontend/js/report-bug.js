@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', async () => {
     
-    const API_BASE_URL = ''; 
+    const API_BASE_URL = 'https://reading-journal.xyz'; 
     const token = localStorage.getItem('token'); 
 
     if (!token) {

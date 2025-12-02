@@ -1,3 +1,5 @@
+const API_BASE_URL = 'https://reading-journal.xyz';
+
 // js/login.js
 
 // ฟังก์ชันสำหรับลิงก์ทั่วไป (เช่น ปุ่ม Back หรือ Forgot Password)

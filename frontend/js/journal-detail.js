@@ -1,3 +1,4 @@
+const API_BASE_URL = 'https://reading-journal.xyz';
 document.addEventListener("DOMContentLoaded", async () => {
     /* ============================================================
        PART 1: JOURNAL MAIN LOGIC (Load, Save, Timer)

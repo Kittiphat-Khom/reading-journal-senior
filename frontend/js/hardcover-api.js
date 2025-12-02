@@ -1,3 +1,4 @@
+const API_BASE_URL = 'https://reading-journal.xyz';
 /* ============================
    Config & State
 ============================ */

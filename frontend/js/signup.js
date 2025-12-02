@@ -1,3 +1,5 @@
+const API_BASE_URL = 'https://reading-journal.xyz';
+
 document.addEventListener("DOMContentLoaded", () => {
     const form = document.getElementById("signupForm");
     const signupContainer = document.getElementById("signup-container");
