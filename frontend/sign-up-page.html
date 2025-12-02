@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,7 +15,8 @@
 
   <div class="form-container" id="signup-container">
     <div class="form-title">Sign Up</div>
-    <form id="signupForm">
+    
+    <form id="signupForm" novalidate>
       <div class="input-group">
         <label for="username_s">Username</label>
         <input type="text" id="username_s" name="username_s" required>
@@ -36,6 +37,8 @@
         <input type="password" id="confirm_password_s" name="confirm_password_s" required>
       </div>
 
+      <div id="signup-error" class="error-message"></div>
+
       <div class="button-group">
         <button type="button" class="button secondary" onclick="window.location.href='index.html'">Back</button>
         <button type="submit" id="btn-signup" class="button primary">Sign Up</button>
@@ -44,7 +47,7 @@
   </div>
 
   <div class="form-container" id="success-message" style="display: none; text-align: center; padding: 40px 20px;">
-    <div style="color: #4CAF50; font-size: 60px; margin-bottom: 20px;">
+    <div style="color: #4CAF50; font-size: 60px; margin-bottom: 20px; animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
         <i class="fa-regular fa-envelope"></i>
     </div>
     <h2 style="color: #333; margin-bottom: 15px;">Verify your email</h2>
@@ -55,7 +58,6 @@
     <p style="color: #888; font-size: 0.9em; margin-top: 15px;">
         Please click the link in the email to activate your account.
     </p>
-    
     <div style="margin-top: 30px;">
         <button class="button primary" onclick="window.location.href='index.html'">Go to Login</button>
     </div>
