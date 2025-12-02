@@ -6,7 +6,7 @@ import crypto from "crypto";
 import nodemailer from "nodemailer";
 
 const router = express.Router();
-const JWT_SECRET = "your_secret_key"; 
+const JWT_SECRET = process.env.JWT_SECRET || "your_secret_key";
 
 // ✅ 1. กำหนด BASE_URL (เพื่อให้ใช้ได้ทั้ง Localhost และ Server จริง)
 // ถ้าใน Server มีการตั้งค่า process.env.BASE_URL ก็จะใช้ค่า IP นั้น

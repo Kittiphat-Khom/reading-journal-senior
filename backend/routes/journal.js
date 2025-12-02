@@ -3,7 +3,7 @@ import db from "../db.js";
 import jwt from "jsonwebtoken";
 
 const router = express.Router();
-const JWT_SECRET = "your_secret_key"; 
+const JWT_SECRET = process.env.JWT_SECRET || "your_secret_key";
 
 /* ===============================
    🛡️ Middleware: ตรวจสอบ Token

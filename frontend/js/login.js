@@ -72,7 +72,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 // คืนค่าปุ่มกลับสู่สภาพเดิม
                 submitBtn.innerText = originalBtnText;
                 submitBtn.disabled = false;
+        
             }
         });
     }
+console.error("❌ Token Verify Error:", err.message);
 });
