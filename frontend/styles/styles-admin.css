@@ -1,0 +1,459 @@
+/* =========================================
+   1. IMPORTS & VARIABLES
+   ========================================= */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&family=Prompt:wght@300;400;500;600&display=swap');
+
+:root {
+    /* Color Palette */
+    --primary-color: #49768B;
+    --primary-hover: #49768B;
+    --secondary-bg: #f8f9fa;
+    --bg-body: #F5F2EE;
+    
+    --text-dark: #2b2d42;
+    --text-gray: #8d99ae;
+    --text-white: #ffffff;
+
+    --danger-color: #ef233c;
+    --success-color: #49768B;
+    --warning-color: #fcc419;
+
+    /* Effects */
+    --shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    --modal-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    --border-radius: 12px;
+    --transition: all 0.2s ease;
+}
+
+/* =========================================
+   2. GLOBAL RESET & BODY (สำคัญมากสำหรับการล็อคหน้าจอ)
+   ========================================= */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Poppins', 'Prompt', sans-serif;
+}
+
+body {
+    background-color: var(--bg-body);
+    color: var(--text-dark);
+    /* ล็อคความสูงหน้าจอไม่ให้ Scroll */
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden; 
+    display: flex;
+    flex-direction: column;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #bbb;
+}
+
+/* =========================================
+   3. DASHBOARD HOME (Admin Home Styles)
+   ========================================= */
+.dashboard-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-grow: 1;
+    padding: 20px;
+    height: 100%; /* เต็มพื้นที่ */
+    overflow-y: auto; /* ให้ scroll ได้ถ้าเนื้อหาเยอะ */
+}
+
+.dashboard-card {
+    background: var(--text-white);
+    padding: 40px;
+    border-radius: 20px;
+    box-shadow: var(--shadow);
+    width: 100%;
+    max-width: 450px;
+    text-align: center;
+    transition: var(--transition);
+}
+
+.dashboard-header { margin-bottom: 30px; }
+
+.profile-img-container {
+    width: 90px; height: 90px;
+    background: #e0e7ff;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 15px;
+}
+.profile-img-container img { width: 45px; height: 45px; object-fit: contain; }
+
+.dashboard-header h2 { font-size: 22px; font-weight: 600; color: var(--text-dark); margin-bottom: 5px; }
+.dashboard-header p { color: var(--text-gray); font-size: 14px; }
+
+.menu-grid {
+    display: flex; flex-direction: column; gap: 15px; margin-bottom: 30px;
+}
+
+.btn-menu {
+    background: var(--primary-color);
+    color: var(--text-white);
+    border: none; padding: 15px;
+    border-radius: var(--border-radius);
+    font-size: 16px; font-weight: 500;
+    cursor: pointer; width: 100%;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    transition: var(--transition);
+}
+.btn-menu:hover {
+    background: var(--primary-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(67, 97, 238, 0.3);
+}
+
+.btn-logout {
+    background: transparent; border: 1px solid #ddd;
+    color: var(--text-gray); padding: 10px 25px;
+    border-radius: 50px; cursor: pointer;
+    display: flex; align-items: center; gap: 8px; margin: 0 auto;
+    transition: var(--transition);
+}
+.btn-logout:hover {
+    background: #ffebee; color: var(--danger-color); border-color: var(--danger-color);
+}
+
+/* =========================================
+   4. MANAGE PAGES LAYOUT (User & Report)
+   ========================================= */
+/* Container หลักของหน้า */
+.page-container {
+    width: 95%;
+    max-width: 1200px;
+    background: var(--text-white);
+    border-radius: 20px;
+    box-shadow: var(--shadow);
+    padding: 25px;
+    
+    /* จัดกึ่งกลางและกำหนดความสูงให้พอดีจอ */
+    margin: 20px auto;
+    height: calc(100vh - 40px); /* สูงเต็มจอ ลบขอบบนล่าง 40px */
+    
+    /* ใช้ Flexbox เพื่อจัดเรียง Header, Table, Footer */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* ห้าม Container หลัก Scroll */
+}
+
+/* ส่วนหัว (Top Bar) - ไม่ให้ยืดหด */
+.top-bar-user-record {
+    flex: 0 0 auto; 
+    display: flex; 
+    flex-wrap: wrap; 
+    align-items: center;
+    gap: 15px; 
+    margin-bottom: 15px; 
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.back-arrow {
+    font-size: 18px; color: var(--text-gray);
+    cursor: pointer; transition: 0.2s; margin-right: 10px;
+}
+.back-arrow:hover { color: var(--primary-color); }
+
+.title {
+    font-size: 20px; font-weight: 600; margin-right: auto;
+}
+
+/* Search Bar */
+.search-bar-container { position: relative; display: flex; align-items: center; }
+.search-bar-container input {
+    padding: 8px 35px 8px 15px;
+    border: 1px solid #e0e0e0; border-radius: 50px;
+    outline: none; width: 220px; transition: 0.3s;
+    font-size: 13px;
+}
+.search-bar-container input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+}
+.search-icon {
+    position: absolute; right: 12px; color: var(--text-gray); cursor: pointer; font-size: 14px;
+}
+
+/* Dropdowns */
+select {
+    padding: 8px 15px;
+    border-radius: 50px;
+    border: 1px solid #e0e0e0;
+    outline: none; cursor: pointer;
+    color: var(--text-dark);
+    background: var(--text-white);
+    font-size: 13px;
+}
+select:hover { border-color: #ccc; }
+
+/* =========================================
+   5. TABLE STYLES (หัวใจสำคัญของการ Fit จอ)
+   ========================================= */
+.table-container { 
+    /* ให้ยืดจนเต็มพื้นที่ที่เหลือในแนวตั้ง */
+    flex: 1 1 auto; 
+    
+    /* Scroll เฉพาะส่วนนี้ */
+    overflow-y: auto; 
+    overflow-x: auto;
+    
+    /* Layout */
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    border: 1px solid #f0f0f0;
+    border-radius: 8px;
+}
+
+.user-table {
+    width: 100%; 
+    border-collapse: collapse; 
+}
+
+/* Sticky Header: ให้หัวตารางค้างอยู่ข้างบนเวลาเลื่อน */
+.user-table th {
+    position: sticky; 
+    top: 0; 
+    z-index: 10;
+    background-color: var(--secondary-bg);
+    color: var(--text-gray);
+    font-weight: 600; 
+    padding: 12px 15px;
+    text-align: left; font-size: 13px;
+    text-transform: uppercase; letter-spacing: 0.5px;
+    border-bottom: 2px solid #ddd;
+    white-space: nowrap;
+    box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.1); /* เงาเล็กน้อย */
+}
+
+.user-table td {
+    padding: 12px 15px; 
+    border-bottom: 1px solid #f0f0f0;
+    color: var(--text-dark); vertical-align: middle;
+    font-size: 14px;
+}
+.user-table tr:hover { background-color: #fafafa; }
+
+/* Checkbox Style */
+.checkbox-cell { text-align: center; width: 40px; }
+input[type="checkbox"] {
+    accent-color: var(--primary-color);
+    transform: scale(1.1); cursor: pointer;
+}
+
+/* Status Icons */
+.fa-check-circle { color: var(--success-color); font-size: 18px; }
+.fa-clock { color: var(--warning-color); font-size: 18px; }
+
+/* =========================================
+   6. PAGINATION & BOTTOM BAR
+   ========================================= */
+.bottom-bar-container {
+    flex: 0 0 auto; /* ไม่ยืดหด */
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #eee;
+}
+
+.action-buttons {
+    display: flex; gap: 15px; align-items: center;
+    margin-bottom: 10px;
+}
+
+.btn {
+    padding: 6px 14px; border-radius: 8px; border: none;
+    cursor: pointer; font-weight: 500; font-size: 13px;
+    transition: 0.2s;
+}
+#selectAllBtn {
+    background: #e0e7ff; color: var(--primary-color);
+}
+#selectAllBtn:hover { background: #c7d2fe; }
+
+/* Icons in Action Bar */
+.fa-trash-alt { color: #ff6b6b; font-size: 18px; transition: 0.2s; cursor: pointer; }
+.fa-trash-alt:hover { color: var(--danger-color); transform: scale(1.1); }
+
+#editDataIcon, #editIcon { color: #555; font-size: 18px; transition: 0.2s; cursor: pointer; }
+#editDataIcon:hover { color: var(--primary-color); transform: scale(1.1); }
+
+.fa-plus-circle { color: var(--success-color); font-size: 24px; cursor: pointer; transition: 0.2s; }
+.fa-plus-circle:hover { transform: scale(1.1); }
+
+/* Pagination */
+.pagination {
+    display: flex; justify-content: center; align-items: center;
+    gap: 8px; 
+}
+
+.pagination-number, .pagination-arrow {
+    width: 32px; height: 32px;
+    display: flex; justify-content: center; align-items: center;
+    border-radius: 50%;
+    background-color: #ffffff; border: 1px solid #e2e8f0;
+    color: #64748b; font-size: 12px; font-weight: 500;
+    cursor: pointer; transition: 0.2s; user-select: none;
+}
+.pagination-number:hover, .pagination-arrow:hover {
+    background-color: #f1f5f9; color: #49768B; border-color: #cbd5e1;
+}
+.pagination-number.active {
+    background-color: var(--primary-color);
+    color: #ffffff; border-color: var(--primary-color);
+    box-shadow: 0 4px 10px rgba(67, 97, 238, 0.3);
+}
+
+/* =========================================
+   7. MODALS (Universal & Specific)
+   ========================================= */
+
+/* Overlay */
+.modal-overlay, 
+.edit-modal-overlay, 
+.add-user-modal-overlay, 
+.report-detail-modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: none; /* JS toggles flex */
+    justify-content: center; align-items: center;
+    z-index: 1000; backdrop-filter: blur(2px);
+}
+
+/* Box Common Style */
+.modal-box, 
+.edit-modal-box, 
+.add-user-modal-box, 
+.report-detail-modal-box {
+    background: var(--text-white);
+    padding: 30px;
+    border-radius: 20px;
+    width: 90%;
+    max-width: 600px;
+    
+    /* จัดการ Modal สูงเกินจอ */
+    max-height: 90vh; 
+    overflow-y: auto;
+    
+    box-shadow: var(--modal-shadow);
+    text-align: left;
+    animation: fadeIn 0.3s ease;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Modal Headers */
+.modal-title, .edit-modal-title, .add-user-modal-title {
+    font-size: 20px; font-weight: 600; margin-bottom: 20px; color: var(--text-dark);
+}
+.modal-message { color: #666; margin-bottom: 25px; font-size: 14px; line-height: 1.5; }
+
+/* Forms inside Modal */
+.edit-modal-row, .add-user-modal-row, .report-detail-info-row {
+    margin-bottom: 15px; text-align: left;
+}
+.edit-modal-row label, .add-user-modal-row label, .report-detail-info-row label {
+    display: block; margin-bottom: 6px; font-size: 13px; font-weight: 500; color: var(--text-gray);
+}
+.edit-modal-row input, .add-user-modal-row input, .report-detail-info-row input, textarea {
+    width: 100%; padding: 12px;
+    border: 1px solid #ddd; border-radius: 8px;
+    outline: none; font-size: 14px; background: #fcfcfc;
+    transition: 0.2s;
+}
+.edit-modal-row input:focus, .add-user-modal-row input:focus {
+    border-color: var(--primary-color); background: #fff;
+}
+textarea { resize: none; height: 80px; }
+
+/* Buttons inside Modal */
+.modal-buttons, .edit-modal-buttons, .add-user-modal-buttons, .report-detail-buttons {
+    display: flex; justify-content: flex-end; gap: 10px; margin-top: 25px;
+}
+
+/* Confirm / Done Buttons */
+.modal-confirm-btn, .edit-modal-done-btn, .add-user-modal-done-btn, .report-detail-mark-done-btn {
+    background: var(--primary-color); color: white;
+    padding: 10px 20px; border: none; border-radius: 8px;
+    cursor: pointer; font-weight: 500; transition: 0.2s;
+}
+.modal-confirm-btn:hover, .edit-modal-done-btn:hover, .add-user-modal-done-btn:hover {
+    background: var(--primary-hover); transform: translateY(-1px);
+}
+
+/* Cancel Buttons */
+.modal-cancel-btn, .edit-modal-cancel-btn, .add-user-modal-cancel-btn, .report-detail-cancel-done-btn {
+    background: #dedede; color: #555;
+    padding: 10px 20px; border: none; border-radius: 8px;
+    cursor: pointer; font-weight: 500; transition: 0.2s;
+}
+.modal-cancel-btn:hover { background: #e0e0e0; }
+
+/* Specific: Delete Modal */
+.modal-trash-icon {
+    font-size: 40px; color: var(--danger-color); margin-bottom: 15px;
+}
+.modal-confirm-btn { background-color: var(--danger-color); }
+.modal-confirm-btn:hover { background-color: #d90429; }
+
+/* Specific: Report Detail Modal */
+.report-detail-modal-box { max-width: 600px; text-align: left; }
+.report-detail-image-frame {
+    background: #f8f9fa; height: 220px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 20px; border: 2px dashed #ddd; overflow: hidden;
+}
+.report-detail-image { max-width: 100%; max-height: 100%; object-fit: contain; }
+.report-detail-image-placeholder { color: #aaa; font-size: 14px; }
+
+/* Status Button specific colors */
+.report-detail-mark-done-btn { background: var(--success-color); }
+.report-detail-mark-done-btn:hover { background: #20a094; }
+
+/* Responsive */
+@media (max-width: 768px) {
+    /* ปลดล็อคความสูงสำหรับมือถือ เพื่อให้ Scroll แบบธรรมชาติ */
+    body {
+        height: auto; 
+        overflow: auto; 
+        display: block;
+    }
+    .page-container { 
+        padding: 15px; 
+        margin: 0; 
+        width: 100%; 
+        border-radius: 0;
+        height: auto; /* มือถือให้สูงตามเนื้อหา */
+        box-shadow: none;
+    }
+    .top-bar-user-record { flex-direction: column; align-items: flex-start; gap: 10px; }
+    .search-bar-container input { width: 100%; }
+    .user-table th, .user-table td { padding: 10px; }
+    
+    .table-container {
+        flex: none; /* ยกเลิก Flex grow ในมือถือ */
+        overflow-x: auto;
+    }
+}

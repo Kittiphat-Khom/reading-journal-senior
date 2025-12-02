@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log In</title>
+    <link rel="stylesheet" href="styles/styles.css">
+</head>
+<body>
+    <div class="form-container">
+        <div class="form-title">Log in</div>
+        <form id="login-form">
+            <div class="input-group">
+                <label for="username_l">Username</label>
+                <input type="text" id="username_l" name="username_l" required>
+            </div>
+            <div class="input-group">
+                <label for="password_l">Password</label>
+                <input type="password" id="password_l" name="password_l" required>
+                <div style="text-align: right; margin-top: 5px;">
+                    <a href="forgot-password.html" style="color: #4a6fa5; font-size: 0.9em; text-decoration: none;">Forgot password?</a>
+                </div>
+            </div>
+            
+            <div class="button-group">
+                <button type="button" class="button secondary" onclick="window.location.href='index.html'">Back</button>
+                <button type="submit" id="login-btn" class="button primary">Log In</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('username_l').value;
+            const password = document.getElementById('password_l').value;
+            const loginBtn = document.getElementById('login-btn');
+            const originalBtnText = loginBtn.innerText;
+
+            // เปลี่ยนสถานะปุ่มเป็น Loading
+            loginBtn.innerText = "Logging in...";
+            loginBtn.disabled = true;
+
+            try {
+                // ยิง API ไปที่ Backend
+                const res = await fetch('/api/users/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await res.json();
+
+                // คืนค่าปุ่มกลับสู่ปกติ
+                loginBtn.innerText = originalBtnText;
+                loginBtn.disabled = false;
+
+                if (res.ok) {
+                    // ✅ 1. ดึงค่า Role และจัดการตัวพิมพ์เล็ก/ใหญ่ให้ชัวร์
+                    const userRole = (data.role || (data.user && data.user.role) || "").toLowerCase();
+
+                    console.log("Login Success:", data);
+                    
+                    // ✅ 2. บันทึก Token และข้อมูลลง LocalStorage
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('role', userRole);
+                    
+                    if(data.user && data.user.username) {
+                        localStorage.setItem('username', data.user.username);
+                    }
+
+                    // ✅ 3. ตรวจสอบเงื่อนไขเพื่อเปลี่ยนหน้า (Redirect Logic)
+                    if (userRole === 'admin') {
+                        // 👑 กรณีเป็น Admin
+                        alert("Welcome Admin!");
+                        window.location.href = 'adminhome.html';
+                    } else {
+                        // 👤 กรณีเป็น User ทั่วไป
+                        // เช็คว่า backend ส่ง has_preferences มาเป็น true หรือ false
+                        if (data.has_preferences === true) {
+                            // เคยเลือกแล้ว -> ไป Dashboard
+                            // alert("Welcome back!");
+                            window.location.href = 'dashboard-page.html';
+                        } else {
+                            // ยังไม่เคยเลือก -> ไปหน้าเลือก Genre
+                            // alert("Please select your interests.");
+                            window.location.href = 'manage-pre-genre.html';
+                        }
+                    }
+
+                } else {
+                    // แสดง Error จาก Backend (เช่น รหัสผิด, ยังไม่ยืนยันอีเมล)
+                    alert(data.message || "เข้าสู่ระบบไม่สำเร็จ");
+                }
+            } catch (err) {
+                console.error("Login Error:", err);
+                loginBtn.innerText = originalBtnText;
+                loginBtn.disabled = false;
+                alert("ไม่สามารถเชื่อมต่อกับ Server ได้");
+            }
+        });
+    </script>
+</body>
+</html>

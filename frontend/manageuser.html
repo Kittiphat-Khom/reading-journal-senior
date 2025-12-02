@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage User Record</title>
+    <link rel="stylesheet" href="styles/styles-admin.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="page-container">
+        <div class="top-bar-user-record">
+            <a href="adminhome.html" style="text-decoration: none;">
+                <i class="fas fa-chevron-left back-arrow"></i>
+            </a>
+            <span class="title">Manage User Records</span>
+            
+            <div class="search-bar-container">
+                <input type="text" id="searchInput" placeholder="Search ID or Username">
+                <i class="fas fa-search search-icon" id="searchBtn"></i>
+            </div>
+            
+            <select id="sortDate" class="sort-dropdown">
+                <option value="newest">Newest to Oldest</option>
+                <option value="oldest">Oldest to Newest</option> 
+            </select>
+        </div>
+
+        <div class="table-container">
+            <table class="user-table">
+                <thead>
+                    <tr>
+                        <th class="checkbox-cell" style="width: 50px;"></th>
+                        <th>User ID</th>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Register Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    </tbody>
+            </table>
+        </div>
+
+        <div class="bottom-bar-container">
+            <div class="action-buttons">
+                <button class="btn" id="selectAllBtn">Select All</button>
+                
+                <div style="display: flex; gap: 20px; align-items: center; margin-left: 20px;">
+                    <i class="fas fa-trash-alt" id="deleteIcon" title="Delete Selected" style="cursor: pointer;"></i>
+                    <i class="fas fa-pen" id="editDataIcon" title="Edit Selected" style="cursor: pointer; font-size: 18px; color: #555;"></i>
+                    <i class="fas fa-plus-circle" id="addUserIcon" title="Add User"></i>
+                </div>
+            </div>
+
+            <div class="pagination" id="paginationContainer"></div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="deleteModalOverlay">
+      <div class="modal-box">
+        <div class="modal-trash-icon">
+          <i class="fas fa-trash-alt"></i>
+        </div>
+        <h3 class="modal-title">Delete User</h3>
+        <p class="modal-message">
+          Are you sure you want to delete the selected user(s)?<br>This process cannot be undone.
+        </p>
+        <div class="modal-buttons">
+          <button class="modal-cancel-btn" id="modalCancelBtn">Cancel</button>
+          <button class="modal-confirm-btn" id="modalConfirmBtn">Delete</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="edit-modal-overlay" id="editModalOverlay">
+      <div class="edit-modal-box">
+        <div style="font-size: 40px; color: #4361ee; margin-bottom: 15px;">
+            <i class="fas fa-user-edit"></i>
+        </div>
+        <h3 class="edit-modal-title">Edit User Information</h3>
+        <form class="edit-modal-form" id="editModalForm">
+          <div class="edit-modal-row">
+            <label for="editUsername">Username</label>
+            <input type="text" id="editUsername" name="editUsername" autocomplete="off">
+          </div>
+          <div class="edit-modal-row">
+            <label for="editEmail">Email</label>
+            <input type="email" id="editEmail" name="editEmail" autocomplete="off">
+          </div>
+        </form>
+        <div class="edit-modal-buttons">
+          <button type="button" class="edit-modal-cancel-btn" id="editModalCancelBtn">Cancel</button>
+          <button type="button" class="edit-modal-done-btn" id="editModalDoneBtn">Save Changes</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="add-user-modal-overlay" id="addUserModalOverlay">
+      <div class="add-user-modal-box">
+        <div style="font-size: 40px; color: #2ec4b6; margin-bottom: 15px;">
+            <i class="fas fa-user-plus"></i>
+        </div>
+        <h3 class="add-user-modal-title">Add New User</h3>
+        <form class="add-user-modal-form" id="addUserModalForm">
+          <div class="add-user-modal-row">
+            <label for="addUsername">Username</label>
+            <input type="text" id="addUsername" name="addUsername" autocomplete="off" placeholder="Enter username">
+          </div>
+          <div class="add-user-modal-row">
+            <label for="addEmail">Email</label>
+            <input type="email" id="addEmail" name="addEmail" autocomplete="off" placeholder="Enter email">
+          </div>
+          <div class="add-user-modal-row">
+            <label for="addPassword">Password</label>
+            <input type="password" id="addPassword" name="addPassword" autocomplete="new-password" placeholder="Enter password">
+          </div>
+        </form>
+        <div class="add-user-modal-buttons">
+          <button type="button" class="add-user-modal-cancel-btn" id="addUserModalCancelBtn">Cancel</button>
+          <button type="button" class="add-user-modal-done-btn" id="addUserModalDoneBtn">Add User</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="js/manageuser.js"></script>
+</body>
+</html>

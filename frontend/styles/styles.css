@@ -1,0 +1,161 @@
+/* =========== BODY AND GENERAL APP STYLES =========== */
+body {
+    background-color: #f8f6f2;
+    font-family: Arial, sans-serif;
+    color: #333;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+}
+
+/* =========== CONTAINER =========== */
+.app-container {
+    width: 100%;
+    max-width: 800px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 20px;
+}
+
+/* =========== HEADER =========== */
+.header, .header-fixed {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    display: flex;
+    align-items: center;
+    z-index: 10;
+}
+.book-icon {
+    width: 40px;
+    height: 40px;
+    background-color: #79a8bc;
+    border-radius: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-right: 10px;
+}
+.book-icon::before {
+    content: "★";
+    color: white;
+    font-size: 24px;
+    line-height: 1;
+}
+.title-text {
+    font-size: 24px;
+    font-weight: normal;
+    color: #4a4a4a;
+}
+
+/* =========== FORM CONTAINER =========== */
+.form-container {
+    background-color: white;
+    padding: 30px 40px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    text-align: center;
+    width: 300px;
+    margin-top: 100px;
+}
+.form-title {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 25px;
+    color: #4a4a4a;
+}
+.input-group {
+    margin-bottom: 15px;
+    text-align: left;
+}
+.input-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 14px;
+    color: #666;
+}
+.input-group input {
+    width: 100%;
+    padding: 10px;
+    box-sizing: border-box;
+    border: none;
+    background-color: #ebebeb;
+    border-radius: 5px;
+    font-size: 16px;
+    height: 40px;
+}
+.button-group {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 20px;
+}
+.button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s;
+    min-width: 80px;
+}
+.button.primary {
+    background-color: #5b87a0;
+    color: white;
+}
+.button.secondary {
+    background-color: #cccccc;
+    color: #4a4a4a;
+}
+.button:hover {
+    opacity: 0.9;
+}
+.forgot-password {
+    text-align: right;
+    margin-top: 5px;
+}
+.forgot-password a {
+    color: #5b87a0;
+    text-decoration: none;
+    font-size: 12px;
+}
+
+/* =========== WELCOME PAGE =========== */
+.welcome-container {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    position: relative;
+    margin: 0;
+    padding: 0;
+}
+.main-icon {
+    width: 80px;
+    height: 80px;
+    background-color: #79a8bc;
+    border-radius: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0 auto 30px auto;
+}
+.main-icon::before {
+    content: "★";
+    color: white;
+    font-size: 40px;
+    line-height: 1;
+}
+.welcome-text {
+    font-size: 24px;
+    margin-bottom: 30px;
+    color: #4a4a4a;
+}
+

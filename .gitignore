@@ -1,0 +1,20 @@
+# ไฟล์ที่ห้ามเอาขึ้น GitHub เด็ดขาด
+
+# 1. โฟลเดอร์ Library (หนักและลงใหม่ได้เอง)
+node_modules/
+venv/
+env/
+.venv/
+
+# 2. ไฟล์แคชของ Python (ขยะ)
+__pycache__/
+*.py[cod]
+
+# 3. ไฟล์ความลับ (รหัสผ่าน API Key ต่างๆ)
+.env
+.DS_Store
+
+# 4. ไฟล์ Log
+*.log
+
+*.pkl

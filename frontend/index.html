@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to Reading Journal</title>
+    <link rel="stylesheet" href="styles/styles.css">
+</head>
+<body>
+    <div class="welcome-container">
+        <div class="main-icon"></div>
+        <div class="welcome-text">Welcome to Reading Journal</div>
+
+        <div class="button-group">
+            <button class="button secondary" onclick="navigateTo('log-in-page.html')">Log In</button>
+            <button class="button primary" onclick="navigateTo('sign-up-page.html')">Sign Up</button>
+        </div>
+    </div>
+    
+    <script>
+        function navigateTo(pageUrl) {
+            window.location.href = pageUrl;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Report Bug</title>
+  <!-- Link Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <!-- Link Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+  <!-- Link CSS -->
+  <link rel="stylesheet" href="styles/report-bug.css" />
+</head>
+<body>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-top">
+      <div class="user">
+        <div class="avatar"><i class="fa-solid fa-user"></i></div>
+        <div class="user-info">
+          <div class="user-name" id="user-name">Loading...</div>
+          <div class="user-sub" id="user-email">Fetching user info...</div>
+        </div>
+        <button class="close-btn" onclick="toggleSidebar()">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="sidebar-middle">
+      <ul class="menu">
+        <li><a href="dashboard-page.html"><i class="fa-solid fa-book-open"></i>Manage Reading Journals</a></li>
+        <li><a href="favorite-page.html"><i class="fa-solid fa-heart"></i>Manage Favorite List</a></li>
+        <li><a href="search-page.html"><i class="fa-solid fa-magnifying-glass"></i>Search Book</a></li>
+        <li><a href="recommend-page.html"><i class="fa-solid fa-lightbulb"></i>Search Recommended Book</a></li>
+        <li><a href="report-bug.html" class="active"><i class="fa-solid fa-bug"></i>Bug Report</a></li>
+      </ul>
+    </div>
+
+    <div class="sidebar-bottom">
+      <button class="logout-btn" id="logout-btn">
+        <i class="fa-solid fa-right-from-bracket"></i> Log out
+      </button>
+    </div>
+  </aside>
+
+  <div id="overlay" class="overlay" onclick="toggleSidebar()"></div>
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="left">
+      <button class="menu-btn" onclick="toggleSidebar()">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+      <h1>Report Bug</h1>
+    </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content">
+    
+    <div class="container fade-in" id="report-form-view">
+      
+      <!-- TOP NAV & BUTTON -->
+      <header class="top-nav">
+        <a href="dashboard-page.html" class="back-link">
+          <i class="fa-solid fa-arrow-left-long"></i> Back to Journal
+        </a>
+        
+        <!-- ✅ ปุ่ม My Reports (เช็ค ID นี้) -->
+        <button id="openHistoryBtn" class="btn-history" type="button">
+            <i class="fa-solid fa-clock-rotate-left"></i> My Reports
+        </button>
+      </header>
+
+      <!-- FORM CARD -->
+      <div class="card glass-effect">
+        <div class="card-header">
+            <h2>Found a bug?</h2>
+            <p>Please describe the issue to help us fix it.</p>
+        </div>
+
+        <div class="form-content">
+          <!-- Left: Upload -->
+          <div class="upload-section">
+            <label class="section-label">Attachment</label>
+            <label class="upload-box" id="uploadBox" for="imageUpload">
+              <img id="imagePreview" src="" alt="Image Preview">
+              <div class="upload-placeholder" id="uploadPlaceholder">
+                <div class="icon-circle">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                </div>
+                <span class="main-text">Click to upload image</span>
+                <span class="sub-text">SVG, PNG, JPG or GIF (max. 15MB)</span>
+              </div>
+              <div id="fileNameDisplay" class="file-name-display"></div>
+              <input type="file" id="imageUpload" accept="image/png, image/jpeg, image/jpg" hidden>
+            </label>
+          </div>
+
+          <!-- Right: Inputs -->
+          <div class="input-section">
+            <div class="form-group">
+              <label>Report Title</label>
+              <input type="text" id="reportTitle" class="input-field" placeholder="e.g., Cannot login via Google">
+            </div>
+            <div class="form-group">
+              <label>Description</label>
+              <textarea id="reportDesc" class="input-field textarea-field" placeholder="Tell us more about what happened..."></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn-primary" id="submitBtn">
+            <span>Submit Report</span>
+            <i class="fa-solid fa-paper-plane"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SUCCESS MESSAGE VIEW (Hidden by default) -->
+    <div class="container fade-in" id="report-success-view" style="display: none;">
+      <div class="success-card">
+        <div class="icon-bug-anim">
+          <div class="circle-bg"></div>
+          <i class="fa-solid fa-check"></i>
+        </div>
+        <h2>Thank You!</h2>
+        <p>Your report has been submitted successfully.<br>We will look into it shortly.</p>
+        <a href="report-bug.html">
+          <button class="btn-primary btn-ok">Submit Another Report</button>
+        </a>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- HISTORY MODAL POPUP (Hidden by default) -->
+  <div id="historyModal" class="modal-overlay">
+    <div class="modal-box modal-box-lg">
+        <div class="history-modal-header">
+            <h3><i class="fa-solid fa-clock-rotate-left"></i> My Reports</h3>
+            <button id="closeHistoryBtn" class="close-modal-btn">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        
+        <div class="history-modal-content">
+             <div id="historyList" class="history-list">
+                <!-- Data loaded by JS -->
+                <div class="empty-state">
+                    <i class="fa-solid fa-spinner fa-spin"></i>
+                    <p>Loading...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+  </div>
+
+  <!-- LOGOUT MODAL -->
+  <div id="logoutModal" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-icon-wrapper">
+        <div class="modal-icon">
+          <i class="fa-solid fa-power-off"></i>
+        </div>
+      </div>
+      <div class="modal-content">
+        <h3>Sign Out?</h3>
+        <p>Are you sure you want to end your session?</p>
+      </div>
+      <div class="modal-actions">
+        <button id="cancelLogoutBtn" class="btn-cancel">Cancel</button>
+        <button id="confirmLogoutBtn" class="btn-confirm">Yes, Sign Out</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script>
+    function toggleSidebar() {
+      const sidebar = document.getElementById("sidebar");
+      const overlay = document.getElementById("overlay");
+      sidebar.classList.toggle("active");
+      overlay.classList.toggle("show");
+    }
+  </script>
+  <script src="./js/report-bug.js"></script>
+</body>
+</html>

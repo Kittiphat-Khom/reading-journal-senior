@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Favorite Books</title>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+  
+  <link rel="stylesheet" href="styles/favorite-page.css" />
+</head>
+<body>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-top">
+      <div class="user">
+        <div class="avatar"><i class="fa-solid fa-user"></i></div>
+        <div class="user-info">
+          <div class="user-name" id="user-name">User</div>
+          <div class="user-sub" id="user-email">Loading...</div>
+        </div>
+        <button class="close-btn" onclick="toggleSidebar()">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+    </div>
+    <div class="sidebar-middle">
+      <ul class="menu">
+        <li><a href="dashboard-page.html"><i class="fa-solid fa-book-open"></i>Manage Reading Journals</a></li>
+        <li><a href="favorite-page.html" class="active"><i class="fa-solid fa-heart"></i>Manage Favorite List</a></li>
+        <li><a href="search-page.html"><i class="fa-solid fa-magnifying-glass"></i>Search Book</a></li>
+        <li><a href="recommend-page.html"><i class="fa-solid fa-lightbulb"></i>Search Recommended Book</a></li>
+        <li><a href="report-bug.html"><i class="fa-solid fa-bug"></i>Bug Report</a></li>
+      </ul>
+    </div>
+    <div class="sidebar-bottom">
+      <button class="logout-btn" onclick="openLogoutModal(event)">
+        <i class="fa-solid fa-right-from-bracket"></i> Log out
+      </button>
+    </div>
+  </aside>
+
+  <div id="overlay" class="overlay" onclick="toggleSidebar()"></div>
+
+  <header class="topbar">
+    <div class="left">
+      <button class="menu-btn" onclick="toggleSidebar()">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+      <h1>My Favorite Books</h1>
+    </div>
+    <div class="actions">
+      <div class="">
+        <i class=""></i>
+      </div>
+    </div>
+  </header>
+
+  <main class="favorite-container">
+    <div class="favorite-grid" id="favorite-grid">
+      </div>
+
+    <div class="empty-message" id="empty-message" style="display: none;">
+      <i class="fa-regular fa-folder-open"></i>
+      <p>Your favorite list is empty.</p>
+    </div>
+  </main>
+
+  <div id="bookModal" class="modal-overlay" style="z-index: 60000;">
+    <div class="modal-box book-detail-box">
+        <span class="close-btn-modal" onclick="closeBookModal()">&times;</span>
+        
+        <div class="modal-img-container">
+            <img id="modal-img" src="" alt="Book Cover">
+        </div>
+        
+        <h2 id="modal-title">Title</h2>
+        <p id="modal-author">Author</p>
+        
+        <h4>Description</h4>
+        <div id="modal-desc">
+            No description available.
+        </div>
+
+        <div class="modal-actions-centered">
+            <button id="addToLibBtn" class="btn-add-lib" onclick="addToLibraryFromFav()">
+                <i class="fa-solid fa-plus"></i> Add to Journal
+            </button>
+        </div>
+    </div>
+  </div>
+
+  <div id="custom-confirm-modal" class="confirm-overlay">
+    <div class="confirm-box">
+      <div class="confirm-icon"><i class="fa-solid fa-circle-exclamation"></i></div>
+      <h3>Are you sure?</h3>
+      <p id="confirm-text">Remove this book from favorites?</p>
+      <div class="confirm-actions">
+        <button id="btn-confirm-cancel" class="btn-secondary">Cancel</button>
+        <button id="btn-confirm-yes" class="btn-danger">Yes, Remove</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="logoutModal" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-icon-wrapper">
+        <div class="modal-icon">
+          <i class="fa-solid fa-power-off"></i>
+        </div>
+      </div>
+      <div class="modal-text-wrapper">
+        <h3>Sign Out?</h3>
+        <p>Are you sure you want to end your session?</p>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeLogoutModal()">Cancel</button>
+        <button id="confirmLogoutBtn" class="btn-danger" onclick="confirmLogoutAction()">Yes, Sign Out</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+
+  <script src="js/favorite-page.js"></script>
+
+  <script>
+    // ตัวแปร Global สำหรับเก็บข้อมูลหนังสือที่กดดูรายละเอียด
+    let currentFavBook = null;
+
+    // ฟังก์ชันเปิด/ปิด Sidebar
+    function toggleSidebar() {
+        document.getElementById("sidebar").classList.toggle("active");
+        document.getElementById("overlay").classList.toggle("show");
+    }
+
+    // ฟังก์ชันเปิด Modal รายละเอียดหนังสือ
+    window.openBookDetail = function(book) {
+        currentFavBook = book;
+        const modal = document.getElementById('bookModal');
+        const img = document.getElementById('modal-img');
+        
+        // จัดการรูปภาพ
+        img.src = (book.book_image && book.book_image.startsWith('http')) 
+            ? book.book_image 
+            : "https://via.placeholder.com/150x220?text=No+Image";
+            
+        document.getElementById('modal-title').textContent = book.title;
+        document.getElementById('modal-author').textContent = "by " + (book.author || "Unknown");
+        document.getElementById('modal-desc').textContent = book.description || "This book currently has no description available.";
+        
+        modal.classList.add('active');
+    }
+
+    window.closeBookModal = function() {
+        document.getElementById('bookModal').classList.remove('active');
+    }
+
+    // ฟังก์ชันคลิกพื้นหลังเพื่อปิด Modal
+    window.onclick = function(event) {
+        const bookModal = document.getElementById('bookModal');
+        if (event.target === bookModal) closeBookModal();
+        
+        const overlay = document.getElementById("overlay");
+        if (event.target === overlay) toggleSidebar();
+    }
+
+    // ฟังก์ชัน Add to Library จากหน้า Favorite
+    window.addToLibraryFromFav = async function() {
+        if (!currentFavBook) return;
+
+        const btn = document.querySelector('#bookModal .btn-add-lib');
+        const oldText = btn.innerHTML;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Adding...';
+        btn.disabled = true;
+
+        const payload = {
+            user_id: currentFavBook.user_id, 
+            title: currentFavBook.title,
+            author: currentFavBook.author,
+            genre: currentFavBook.genre,
+            book_image: currentFavBook.book_image
+        };
+
+        // ถ้าไม่มี user_id ใน object ให้พยายามดึงใหม่
+        if (!payload.user_id) {
+             try {
+                const token = localStorage.getItem("token");
+                const userRes = await fetch('/api/users/me', { headers: { Authorization: `Bearer ${token}` }});
+                const userData = await userRes.json();
+                payload.user_id = userData.user_id;
+             } catch(e) { console.error("User ID missing"); }
+        }
+
+        try {
+            const res = await fetch('/api/journals/add-by-id', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const result = await res.json();
+
+            if (res.ok) {
+                // เรียกใช้ Toast ที่อยู่ในไฟล์ favorite-page.js
+                if (typeof showToast === 'function') {
+                    showToast("Success", `Added "${payload.title}" to library!`, "success");
+                } else {
+                    alert(`Added "${payload.title}" to library!`);
+                }
+                closeBookModal();
+            } else {
+                if (typeof showToast === 'function') {
+                    showToast("Error", "Failed: " + (result.error || "Unknown error"), "error");
+                } else {
+                    alert("Failed: " + (result.error || "Unknown error"));
+                }
+            }
+        } catch (err) {
+            console.error(err);
+            if (typeof showToast === 'function') {
+                showToast("Error", "Network connection failed", "error");
+            } else {
+                alert("Network connection failed");
+            }
+        } finally {
+            btn.innerHTML = oldText;
+            btn.disabled = false;
+        }
+    }
+  </script>
+</body>
+</html>

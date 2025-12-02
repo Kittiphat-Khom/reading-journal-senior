@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reading Statistics</title>
+
+  <link rel="stylesheet" href="styles/seeall.css" />
+
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer"
+  />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+  <div class="stat-content">
+      <header class="stat-header">
+          <button class="btn-back" id="btn-back">
+              <i class="fa-solid fa-chevron-left"></i> Reading Stat
+          </button>
+          <div class="user-info">
+          </div>
+      </header>
+  
+      <div class="stat-body">
+          <div class="stat-chart-section">
+              <h3>Time spent</h3>
+              <div class="chart-container" style="height: 350px; width: 100%;">
+                  <canvas id="readingChart"></canvas>
+              </div>
+              <div class="chart-filter">
+                  <span>Time you have spent in a</span>
+                  <select id="time-filter">
+                      <option value="week">Week</option>
+                      <option value="month">Month</option>
+                      <option value="year">Year</option>
+                  </select>
+              </div>
+          </div>
+  
+          <div class="stat-list-section">
+              <div class="total-time-box">
+                  <h3>Total reading time</h3>
+                  <div class="digital-clock-popup" id="popup-total-time">
+                      <span class="digit-box">00</span> : <span class="digit-box">00</span> : <span class="digit-box">00</span>
+                  </div>
+              </div>
+  
+              <div class="session-list-container">
+                  <h3>Reading time</h3>
+                  <ul id="session-log-list" class="session-log-list"></ul>
+              </div>
+              
+              <div class="stat-footer">
+                  <button class="btn-done" id="btn-done">Done</button>
+              </div>
+          </div>
+      </div>
+  </div>
+
+  <script src="js/seeall.js"></script>
+</body>
+</html>

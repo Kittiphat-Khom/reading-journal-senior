@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Verification</title>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Prompt', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #f4f4f9; margin: 0; }
+        .container { text-align: center; background: white; padding: 40px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        h1 { color: #4CAF50; }
+        p { color: #666; margin-bottom: 20px; }
+        .btn { background-color: #4a6fa5; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; }
+        .error { color: #e74c3c; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1 id="status-title">Verifying...</h1>
+        <p id="status-message">Please wait while we verify your email.</p>
+        <a href="index.html" class="btn" id="login-btn" style="display: none;">Go to Login</a>
+    </div>
+
+    <script>
+        async function verifyEmail() {
+            // 1. ดึง Token จาก URL
+            const params = new URLSearchParams(window.location.search);
+            const token = params.get("token");
+
+            if (!token) {
+                document.getElementById("status-title").innerText = "Error";
+                document.getElementById("status-title").className = "error";
+                document.getElementById("status-message").innerText = "Invalid verification link.";
+                return;
+            }
+
+            try {
+                // 2. ส่งไปหา Backend
+                const res = await fetch("/api/users/verify-email", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ token })
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    document.getElementById("status-title").innerText = "Verified!";
+                    document.getElementById("status-message").innerText = "Your email has been verified successfully.";
+                    document.getElementById("login-btn").style.display = "inline-block";
+                } else {
+                    throw new Error(data.message);
+                }
+            } catch (err) {
+                document.getElementById("status-title").innerText = "Verification Failed";
+                document.getElementById("status-title").className = "error";
+                document.getElementById("status-message").innerText = err.message || "Something went wrong.";
+            }
+        }
+
+        // รันทันทีที่เปิดหน้าเว็บ
+        verifyEmail();
+    </script>
+</body>
+</html>

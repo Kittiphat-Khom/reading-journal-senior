@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Reports</title>
+    <link rel="stylesheet" href="./styles/styles-admin.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <div class="page-container">
+        <div class="top-bar-user-record">
+            <a href="adminhome.html" style="text-decoration: none;">
+                <i class="fas fa-chevron-left back-arrow"></i>
+            </a>
+            <span class="title">Manage Reports</span>
+            
+            <div class="search-bar-container">
+                <input type="text" id="searchInput" placeholder="Search...">
+                <i class="fas fa-search search-icon"></i>
+            </div>
+
+            <select id="sortReports">
+                <option value="newest">Newest</option>
+                <option value="oldest">Oldest</option>
+            </select>
+
+            <select id="filterStatus">
+                <option value="all">All Status</option>
+                <option value="not_done">Not Done</option>
+                <option value="done">Done</option>
+            </select>
+        </div>
+
+        <div class="table-container">
+            <table class="user-table">
+                <thead>
+                    <tr>
+                        <th style="width: 50px; text-align: center;">ID</th>
+                        <th>Title</th>
+                        <th>Description</th>
+                        <th style="width: 150px;">Date</th>
+                        <th style="width: 100px; text-align: center;">Status</th>
+                        <th style="width: 80px; text-align: center;">View</th>
+                    </tr>
+                </thead>
+                <tbody id="reportTableBody">
+                    <tr>
+                        <td style="text-align: center;">14</td>
+                        <td>Login Issue</td>
+                        <td>Cannot login to system</td>
+                        <td>25 Nov 2025</td>
+                        <td style="text-align: center;"><i class="fas fa-check-circle"></i></td>
+                        <td style="text-align: center;">
+                            <button class="btn" style="background:var(--primary-color); color:#fff; padding:4px 10px; font-size:12px;">View</button>
+                        </td>
+                    </tr>
+                    </tbody>
+            </table>
+        </div>
+
+        <div class="bottom-bar-container">
+            <div class="pagination" id="paginationContainer">
+                </div>
+        </div>
+    </div>
+
+    <div class="report-detail-modal-overlay" id="reportDetailModal">
+        <div class="report-detail-modal-box">
+            <div style="text-align: right; margin-bottom: 5px;">
+                <i class="fas fa-times" id="closeDetailModal" style="cursor: pointer; font-size: 18px; color: #999;"></i>
+            </div>
+            
+            <div class="report-detail-image-frame">
+                <span class="report-detail-image-placeholder" id="placeholderImg">No Image</span>
+                <img src="" alt="Report" class="report-detail-image" id="detailImage" style="display: none;">
+            </div>
+            
+            <div class="report-detail-info-row">
+                <label>Title</label>
+                <input type="text" id="reportDetailTitle" readonly>
+            </div>
+            <div class="report-detail-info-row">
+                <label>Description</label>
+                <textarea id="reportDetailDescription" readonly></textarea>
+            </div>
+            
+            <div class="report-detail-buttons">
+                <button class="report-detail-cancel-done-btn" id="btnMarkNotDone">Not Done</button>
+                <button class="report-detail-mark-done-btn" id="btnMarkDone">Mark Done</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="./js/managereport.js"></script>
+</body>
+</html>

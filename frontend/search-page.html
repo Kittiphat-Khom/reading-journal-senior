@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Search Book</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+  <link rel="stylesheet" href="styles/search-page.css" />
+</head>
+<body>
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-top">
+      <div class="user">
+        <div class="avatar"><i class="fa-solid fa-user"></i></div>
+        <div class="user-info">
+          <div class="user-name" id="user-name">Loading...</div>
+          <div class="user-sub" id="user-email">Fetching user info...</div>
+        </div>
+        <button class="close-btn" onclick="toggleSidebar()">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="sidebar-middle">
+      <ul class="menu">
+        <li><a href="dashboard-page.html"><i class="fa-solid fa-book-open"></i>Manage Reading Journals</a></li>
+        <li><a href="favorite-page.html"><i class="fa-solid fa-heart"></i>Manage Favorite List</a></li>
+        <li><a href="search-page.html" class="active"><i class="fa-solid fa-magnifying-glass"></i>Search Book</a></li>
+        <li><a href="recommend-page.html"><i class="fa-solid fa-lightbulb"></i>Search Recommended Book</a></li>
+        <li><a href="report-bug.html"><i class="fa-solid fa-bug"></i>Bug Report</a></li>
+      </ul>
+    </div>
+
+    <div class="sidebar-bottom">
+      <button class="logout-btn" onclick="openLogoutModal(event)">
+        <i class="fa-solid fa-right-from-bracket"></i> Log out
+      </button>
+    </div>
+  </aside>
+
+  <div id="overlay" class="overlay" onclick="toggleSidebar()"></div>
+
+  <header class="topbar">
+    <div class="left">
+      <button class="menu-btn" onclick="toggleSidebar()">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+      <h1>Search Book</h1>
+    </div>
+
+    <div class="search-bar">
+      <input type="text" id="search-input" placeholder="search by title or author" />
+      <button id="search-btn"><i class="fa-solid fa-magnifying-glass"></i></button>
+    </div>
+
+    <div class="actions">
+      <div class="">
+        <i class=""></i>
+      </div>
+    </div>
+  </header>
+
+  <main class="content">
+
+    <section class="book-section" id="search-result-section" style="display:none;">
+      <div class="section-header">
+          <h2>Search Results</h2>
+      </div>
+      <div class="scroll-container">
+          <button class="scroll-btn left" onclick="scrollGrid('search-results', 'left')">&#10094;</button>
+          <div class="book-grid" id="search-results"></div>
+          <button class="scroll-btn right" onclick="scrollGrid('search-results', 'right')">&#10095;</button>
+      </div>
+    </section>
+
+    <section class="book-section">
+      <div class="section-header">
+        <h2>Trending Now</h2>
+        <a class="see-all" href="#" onclick="openSeeAllModal('Trending Now')">See all ></a>
+      </div>
+      <div class="scroll-container">
+        <button class="scroll-btn left" onclick="scrollGrid('cat-trending', 'left')">&#10094;</button>
+        <div class="book-grid" id="cat-trending"></div>
+        <button class="scroll-btn right" onclick="scrollGrid('cat-trending', 'right')">&#10095;</button>
+      </div>
+    </section>
+
+    <section class="book-section">
+      <div class="section-header">
+        <h2>Top Rated</h2>
+        <a class="see-all" href="#" onclick="openSeeAllModal('Top Rated')">See all ></a>
+      </div>
+      <div class="scroll-container">
+        <button class="scroll-btn left" onclick="scrollGrid('cat-top-rated', 'left')">&#10094;</button>
+        <div class="book-grid" id="cat-top-rated"></div>
+        <button class="scroll-btn right" onclick="scrollGrid('cat-top-rated', 'right')">&#10095;</button>
+      </div>
+    </section>
+
+    <section class="book-section">
+      <div class="section-header">
+        <h2>New & Popular</h2>
+        <a class="see-all" href="#" onclick="openSeeAllModal('New & Popular')">See all ></a>
+      </div>
+      <div class="scroll-container">
+        <button class="scroll-btn left" onclick="scrollGrid('cat-new-popular', 'left')">&#10094;</button>
+        <div class="book-grid" id="cat-new-popular"></div>
+        <button class="scroll-btn right" onclick="scrollGrid('cat-new-popular', 'right')">&#10095;</button>
+      </div>
+    </section>
+
+    <section class="book-section">
+      <div class="section-header">
+        <h2>Fantasy</h2>
+        <a class="see-all" href="#" onclick="openSeeAllModal('Fantasy')">See all ></a>
+      </div>
+      <div class="scroll-container">
+        <button class="scroll-btn left" onclick="scrollGrid('cat-fantasy', 'left')">&#10094;</button>
+        <div class="book-grid" id="cat-fantasy"></div>
+        <button class="scroll-btn right" onclick="scrollGrid('cat-fantasy', 'right')">&#10095;</button>
+      </div>
+    </section>
+
+    <section class="book-section">
+      <div class="section-header">
+        <h2>Mystery & Thriller</h2>
+        <a class="see-all" href="#" onclick="openSeeAllModal('Mystery & Thriller')">See all ></a>
+      </div>
+      <div class="scroll-container">
+        <button class="scroll-btn left" onclick="scrollGrid('cat-mystery', 'left')">&#10094;</button>
+        <div class="book-grid" id="cat-mystery"></div>
+        <button class="scroll-btn right" onclick="scrollGrid('cat-mystery', 'right')">&#10095;</button>
+      </div>
+    </section>
+
+    <section class="book-section">
+      <div class="section-header">
+        <h2>Romance</h2>
+        <a class="see-all" href="#" onclick="openSeeAllModal('Romance')">See all ></a>
+      </div>
+      <div class="scroll-container">
+        <button class="scroll-btn left" onclick="scrollGrid('cat-romance', 'left')">&#10094;</button>
+        <div class="book-grid" id="cat-romance"></div>
+        <button class="scroll-btn right" onclick="scrollGrid('cat-romance', 'right')">&#10095;</button>
+      </div>
+    </section>
+
+    <section class="book-section">
+      <div class="section-header">
+        <h2>Sci-Fi Spotlight</h2>
+        <a class="see-all" href="#" onclick="openSeeAllModal('Sci-Fi Spotlight')">See all ></a>
+      </div>
+      <div class="scroll-container">
+        <button class="scroll-btn left" onclick="scrollGrid('cat-scifi', 'left')">&#10094;</button>
+        <div class="book-grid" id="cat-scifi"></div>
+        <button class="scroll-btn right" onclick="scrollGrid('cat-scifi', 'right')">&#10095;</button>
+      </div>
+    </section>
+
+    <section class="book-section">
+      <div class="section-header">
+        <h2>Young Adult</h2>
+        <a class="see-all" href="#" onclick="openSeeAllModal('Young Adult')">See all ></a>
+      </div>
+      <div class="scroll-container">
+        <button class="scroll-btn left" onclick="scrollGrid('cat-young-adult', 'left')">&#10094;</button>
+        <div class="book-grid" id="cat-young-adult"></div>
+        <button class="scroll-btn right" onclick="scrollGrid('cat-young-adult', 'right')">&#10095;</button>
+      </div>
+    </section>
+
+    <section class="book-section">
+      <div class="section-header">
+        <h2>Adventure</h2>
+        <a class="see-all" href="#" onclick="openSeeAllModal('Adventure')">See all ></a>
+      </div>
+      <div class="scroll-container">
+        <button class="scroll-btn left" onclick="scrollGrid('cat-adventure', 'left')">&#10094;</button>
+        <div class="book-grid" id="cat-adventure"></div>
+        <button class="scroll-btn right" onclick="scrollGrid('cat-adventure', 'right')">&#10095;</button>
+      </div>
+    </section>
+
+    <section class="book-section">
+      <div class="section-header">
+        <h2>Comic & Manga</h2>
+        <a class="see-all" href="#" onclick="openSeeAllModal('Comic & Manga')">See all ></a>
+      </div>
+      <div class="scroll-container">
+        <button class="scroll-btn left" onclick="scrollGrid('cat-comic', 'left')">&#10094;</button>
+        <div class="book-grid" id="cat-comic"></div>
+        <button class="scroll-btn right" onclick="scrollGrid('cat-comic', 'right')">&#10095;</button>
+      </div>
+    </section>
+
+  </main>
+
+  <div id="bookModal" class="modal">
+    <div class="modal-content">
+      <span class="close-btn">&times;</span>
+      <div class="modal-image-box">
+        <img id="modalImage" src="">
+      </div>
+      <h2 id="modalTitle">Title</h2>
+      <p id="modalAuthor" class="author">Author</p>
+      <h3>Description</h3>
+      <p id="modalDescription" class="description"></p>
+      <div class="button-row">
+        <button id="addLibraryBtn" class="add-library-btn">
+          <i class="fa-solid fa-plus"></i> Add to Library
+        </button>
+        <button id="addFavouriteBtn" class="fav-icon-btn">
+          <i class="fa-solid fa-heart"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="seeAllModal" class="modal">
+    <div class="modal-content see-all-content">
+      <span class="close-btn" onclick="closeSeeAllModal()">&times;</span>
+      <h2 id="seeAllTitle">Category Name</h2>
+      <div class="see-all-grid" id="seeAllGrid"></div>
+    </div>
+  </div>
+
+  <div id="custom-alert-modal" class="modal">
+    <div class="modal-content alert-content">
+      <div id="alert-icon" style="font-size: 3.5rem; margin-bottom: 15px;"></div>
+      <h3 id="alert-title" style="color: #333; margin-bottom: 10px;">Title</h3>
+      <p id="alert-message" style="color: #666; margin-bottom: 25px; line-height: 1.5;">Message goes here...</p>
+      <button id="btn-alert-ok" class="alert-btn">OK</button>
+    </div>
+  </div>
+
+  <div id="logoutModal" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-icon-wrapper">
+        <div class="modal-icon">
+          <i class="fa-solid fa-power-off"></i>
+        </div>
+      </div>
+      
+      <div class="modal-text-wrapper">
+        <h3>Sign Out?</h3>
+        <p>Are you sure you want to end your session?</p>
+      </div>
+
+      <div class="modal-actions">
+        <button id="cancelLogoutBtn" class="btn-cancel" onclick="closeLogoutModal()">Cancel</button>
+        <button id="confirmLogoutBtn" class="btn-confirm" onclick="confirmLogoutAction()">Yes, Sign Out</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/auth.js"></script>
+  <script src="js/search-page.js"></script>
+
+  <script>
+    function toggleSidebar() {
+      const sidebar = document.getElementById("sidebar");
+      const overlay = document.getElementById("overlay");
+      sidebar.classList.toggle("active");
+      overlay.classList.toggle("show");
+    }
+  </script>
+</body>
+</html>

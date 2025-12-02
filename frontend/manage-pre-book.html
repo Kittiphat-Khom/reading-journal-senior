@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Preferences: Books</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="styles/manage-pre-book.css">
+</head>
+
+<body>
+    <div class="main-wrapper">
+        <div class="container" id="book-selection-page">
+
+            <div class="header-section">
+                <div class="header-top">
+                    <div class="main-title">Manage Preferences</div>
+                    <div class="step-badge">Step 3 of 3: Select Books</div>
+                </div>
+
+                <div class="search-row">
+                    <div class="book-subtitle-wrap">
+                        <h2 class="book-subtitle">
+                            Are you familiar with these books?
+                            <span class="total-count-badge" id="totalCountDisplay">Loading...</span>
+                        </h2>
+                        <p class="book-desc">Please select at least 3 books to finish.</p>
+                    </div>
+
+                    <div class="search-right">
+                        <!-- ✅ [NEW] Label อยู่นอกกล่อง -->
+                        <label for="searchInput" class="search-label-text">Search Book:</label>
+
+                        <div class="search-box">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <!-- เปลี่ยน Placeholder -->
+                            <input type="text" id="searchInput" placeholder="e.g. Harry Potter">
+                        </div>
+                        <span class="page-indicator" id="pageIndicator">Page 1 of 1</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="book-carousel">
+                <button class="side-arrow" id="prevArrow" onclick="navigateCarousel(-1)" disabled>
+                    <i class="fa-solid fa-angle-left"></i>
+                </button>
+
+                <div id="bookGridContainer">
+                    <!-- Grid Content -->
+                </div>
+
+                <button class="side-arrow" id="nextArrow" onclick="navigateCarousel(1)">
+                    <i class="fa-solid fa-angle-right"></i>
+                </button>
+            </div>
+
+            <div class="action-footer">
+                <button class="unselect-all-btn" id="unselectAllBtn">Deselect All</button>
+
+                <div class="footer-right">
+                    <span class="selection-status" id="selectionStatus">
+                        Selected: 0
+                    </span>
+
+                    <button class="back-footer-btn" id="backBtn">Back</button>
+                    <button class="finish-btn" id="finishBtn" disabled>Finish</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <section id="thank-you-page">
+        <div class="thank-you-content">
+            <div class="icon-wrapper">
+                <i class="fa-solid fa-wand-sparkles congratulations-icon"></i>
+            </div>
+            <div class="thank-you-text">
+                Thank you — this helps us know you better
+            </div>
+            <button class="start-btn" type="button" disabled>
+                Start Journal
+            </button>
+        </div>
+    </section>
+
+    <script src="js/manage-pre-book.js"></script>
+</body>
+</html>

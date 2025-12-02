@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="./styles/styles-admin.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* --- CSS สำหรับ Sidebar Layout --- */
+        body {
+            margin: 0; padding: 0;
+            background-color: #F5F2EE;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow-x: hidden;
+        }
+        .main-wrapper { display: flex; min-height: 100vh; }
+
+        /* Sidebar */
+        .sidebar {
+            width: 260px; background-color: #ffffff;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+            position: fixed; height: 100vh; left: 0; top: 0;
+            display: flex; flex-direction: column; z-index: 1000;
+        }
+        .sidebar-header { padding: 30px 20px; text-align: center; border-bottom: 1px solid #eee; }
+        .profile-img-container { width: 80px; height: 80px; margin: 0 auto 10px; border-radius: 50%; overflow: hidden; background: #e0e0e0; }
+        .profile-img-container img { width: 100%; height: 100%; object-fit: cover; }
+        .sidebar-menu { padding: 20px 0; flex-grow: 1; }
+        .menu-item {
+            display: flex; align-items: center; padding: 15px 25px;
+            color: #555; text-decoration: none; cursor: pointer;
+            transition: all 0.3s; font-size: 15px; border-left: 4px solid transparent;
+        }
+        .menu-item:hover { background-color: #f8f9fa; color: #49768B; }
+        .menu-item.active { background-color: #eef2ff; color: #49768B; border-left: 4px solid #4361ee; font-weight: 600; }
+        .sidebar-footer { padding: 20px; border-top: 1px solid #eee; }
+        .btn-logout {
+            width: 100%; padding: 10px; background: #fff; border: 1px solid #ddd;
+            border-radius: 6px; color: #d63031; cursor: pointer; transition: 0.2s;
+            display: flex; justify-content: center; align-items: center; gap: 8px;
+        }
+        .btn-logout:hover { background: #ffe6e6; border-color: #d63031; }
+
+        /* Content Area */
+        .content-area { margin-left: 260px; flex-grow: 1; padding: 30px; width: calc(100% - 260px); }
+        .content-section { display: none; animation: fadeIn 0.3s ease-in-out; }
+        .content-section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Table & Layout Styles */
+        .user-table { width: 100%; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.05); border-collapse: collapse; }
+        .top-bar-user-record {
+            background: white; padding: 15px 25px; border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02); margin-bottom: 20px;
+            display: flex; align-items: center; gap: 15px; flex-wrap: wrap;
+        }
+        
+        /* Icons Actions for User Page (ตอนนี้ย้ายไปข้างล่างแล้ว แต่คง class ไว้) */
+        .action-icon { cursor: pointer; transition: 0.2s; font-size: 18px; }
+        .action-icon:hover { transform: scale(1.1); }
+        .action-icon.add { color: #2ec4b6; }
+        .action-icon.edit { color: #fcc419; }
+        .action-icon.delete { color: #e71d36; }
+
+        /* Pagination Style Overrides (ถ้าจำเป็น) */
+        .pagination { display: flex; gap: 5px; }
+    </style>
+</head>
+<body>
+
+    <div class="main-wrapper">
+        
+        <aside class="sidebar">
+            <header class="sidebar-header">
+                <div class="profile-img-container">
+                    <img src="icon/profile.png" alt="Admin Profile" onerror="this.src='https://via.placeholder.com/150'">
+                </div>
+                <h3 id="admin-name">Admin</h3>
+                <p>System Administrator</p>
+            </header>
+
+            <nav class="sidebar-menu">
+                <div class="menu-item active" onclick="switchTab('reports', this)">
+                    <i class="fas fa-clipboard-list"></i> Manage Reports
+                </div>
+                <div class="menu-item" onclick="switchTab('users', this)">
+                    <i class="fas fa-users"></i> Manage User Records
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <button type="button" class="btn-logout" id="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i> Log out
+                </button>
+            </div>
+        </aside>
+
+        <main class="content-area">
+
+            <div id="section-reports" class="content-section active">
+                <div class="top-bar-user-record">
+                    <span class="title" style="font-size: 1.2rem; font-weight: bold; margin-right: auto;">Manage Reports</span>
+                    
+                    <div class="search-bar-container">
+                        <input type="text" id="searchInput" placeholder="Search Report...">
+                        <i class="fas fa-search search-icon"></i>
+                    </div>
+
+                    <select id="sortReports">
+                        <option value="newest">Newest</option>
+                        <option value="oldest">Oldest</option>
+                    </select>
+
+                    <select id="filterStatus">
+                        <option value="all">All Status</option>
+                        <option value="not_done">Not Done</option>
+                        <option value="done">Done</option>
+                    </select>
+                </div>
+
+                <div class="table-container">
+                    <table class="user-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 50px; text-align: center;">ID</th>
+                                <th>Title</th>
+                                <th>Description</th>
+                                <th style="width: 150px;">Report Date</th>
+                                <th style="width: 120px;">Managed By</th>
+                                <th style="width: 150px;">Managed Date</th>
+                                <th style="width: 100px; text-align: center;">Status</th>
+                                <th style="width: 80px; text-align: center;">View</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reportTableBody"></tbody>
+                    </table>
+                </div>
+                <div class="pagination" id="paginationContainer" style="margin-top: 20px; display: flex; justify-content: center; gap: 5px;"></div>
+            </div>
+
+            <div id="section-users" class="content-section">
+                
+                <div class="top-bar-user-record">
+                    <span class="title" style="font-size: 1.2rem; font-weight: bold;">Manage User Records</span>
+                    
+                    <div class="search-bar-container" style="margin-left: 20px;">
+                        <input type="text" id="searchUser" placeholder="Search ID or Username">
+                        <i class="fas fa-search search-icon" id="searchBtnUser"></i>
+                    </div>
+                    
+                    <select id="sortUser" class="sort-dropdown" style="margin-left: 10px;">
+                        <option value="newest">Newest to Oldest</option>
+                        <option value="oldest">Oldest to Newest</option> 
+                    </select>
+
+                    </div>
+
+                <div class="table-container">
+                    <table class="user-table">
+                        <thead>
+                            <tr>
+                                <th class="checkbox-col" style="width: 40px; text-align: center;">
+                                    <button class="select-all-btn" id="selectAllBtn">Select All</button>
+                                </th>
+                                <th>ID</th>
+                                <th>Username</th>
+                                <th>Email</th>
+                                <th>Register Date</th>
+                            </tr>
+                        </thead>
+                        <tbody id="userTableBody"></tbody>
+                    </table>
+                </div>
+        <div class="bottom-controls" style="position: relative; margin-top: 20px; display: flex; justify-content: center; align-items: center; min-height: 40px;">
+
+    <div class="dashboard-actions" style="position: absolute; left: 15px; display: flex; gap: 15px;">
+        <i class="fas fa-user-plus action-icon add" id="addUserIcon" title="Add User" style="cursor: pointer; font-size: 20px; color: #49768B   ; transition: 0.2s;"></i>
+        <i class="fas fa-edit action-icon edit" id="editDataIcon" title="Edit User" style="cursor: pointer; font-size: 20px; color: #49768B; transition: 0.2s;"></i>
+        <i class="fas fa-trash-alt action-icon delete" id="deleteIcon" title="Delete User" style="cursor: pointer; font-size: 20px; color: #49768B; transition: 0.2s;"></i>
+    </div>
+
+    <div class="pagination" id="paginationUsers" style="display: flex; gap: 5px;"></div>
+
+</div>
+
+            </div>
+
+        </main>
+    </div>
+
+    <div class="report-detail-modal-overlay" id="reportDetailModal">
+        <div class="report-detail-modal-box">
+            <div style="text-align: right; margin-bottom: 5px;">
+                <i class="fas fa-times" id="closeDetailModal" style="cursor: pointer; font-size: 18px; color: #999;"></i>
+            </div>
+            <div class="report-detail-image-frame">
+                <span class="report-detail-image-placeholder" id="placeholderImg">No Image</span>
+                <img src="" alt="Report" class="report-detail-image" id="detailImage" style="display: none;">
+            </div>
+            <div class="report-detail-info-row"><label>Title</label><input type="text" id="reportDetailTitle" readonly></div>
+            <div class="report-detail-info-row"><label>Description</label><textarea id="reportDetailDescription" readonly></textarea></div>
+            <div class="report-detail-info-row"><label>Report Date</label><input type="text" id="reportCreatedAt" readonly style="color: #666;"></div>
+            <div class="report-detail-info-row"><label>Management Note</label><textarea id="reportManagementNote" placeholder="..."></textarea></div>
+            <div class="report-detail-buttons">
+                <button class="report-detail-cancel-done-btn" id="btnMarkNotDone">Cancel mark as done</button>
+                <button class="report-detail-mark-done-btn" id="btnMarkDone">Mark as done</button>
+            </div>
+        </div>
+    </div>
+
+   <div class="add-user-modal-overlay" id="addUserModalOverlay">
+        <div class="add-user-modal-box">
+            <div style="font-size: 40px; color: #2ec4b6; margin-bottom: 15px; text-align: center;"><i class="fas fa-user-plus"></i></div>
+            
+            <h3 class="add-user-modal-title" style="text-align: center;">Add New User</h3>
+            
+            <form class="add-user-modal-form" id="addUserModalForm">
+                <div class="add-user-modal-row"><label>Username</label><input type="text" id="addUsername" autocomplete="off"></div>
+                <div class="add-user-modal-row"><label>Email</label><input type="email" id="addEmail" autocomplete="off"></div>
+                <div class="add-user-modal-row"><label>Password</label><input type="password" id="addPassword" autocomplete="new-password"></div>
+            </form>
+            <div class="add-user-modal-buttons">
+                <button type="button" class="add-user-modal-cancel-btn" id="addUserModalCancelBtn">Cancel</button>
+                <button type="button" class="add-user-modal-done-btn" id="addUserModalDoneBtn">Add</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="add-user-modal-overlay" id="editModalOverlay">
+        <div class="add-user-modal-box">
+            <div style="font-size: 40px; color: #fcc419; margin-bottom: 15px; text-align: center;"><i class="fas fa-edit"></i></div>
+            
+            <h3 class="add-user-modal-title" style="text-align: center;">Edit User</h3>
+            
+            <form class="add-user-modal-form">
+                <input type="hidden" id="editUserId">
+                <div class="add-user-modal-row"><label>Username</label><input type="text" id="editUsername"></div>
+                <div class="add-user-modal-row"><label>Email</label><input type="email" id="editEmail"></div>
+                </form>
+            <div class="add-user-modal-buttons">
+                <button type="button" class="add-user-modal-cancel-btn" id="editModalCancelBtn">Cancel</button>
+                <button type="button" class="add-user-modal-done-btn" id="editModalConfirmBtn">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="add-user-modal-overlay" id="deleteModalOverlay">
+        <div class="add-user-modal-box">
+            <div style="font-size: 40px; color: #e71d36; margin-bottom: 15px; text-align: center;"><i class="fas fa-trash-alt"></i></div>
+            
+            <h3 class="add-user-modal-title" style="text-align: center;">Delete Users?</h3>
+            
+            <p style="text-align:center; color:#666;">Are you sure you want to delete the selected users?</p>
+            <div class="add-user-modal-buttons">
+                <button type="button" class="add-user-modal-cancel-btn" id="deleteModalCancelBtn">Cancel</button>
+                <button type="button" class="add-user-modal-done-btn" id="deleteModalConfirmBtn" style="background:#e71d36;">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab Switching Logic
+        function switchTab(tabName, element) {
+            document.querySelectorAll('.content-section').forEach(sec => sec.classList.remove('active'));
+            document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
+            document.getElementById('section-' + tabName).classList.add('active');
+            element.classList.add('active');
+        }
+        
+        // Admin Name & Logout Logic
+        document.addEventListener("DOMContentLoaded", function() {
+            const dbUsername = localStorage.getItem('username');
+            if (dbUsername) document.getElementById('admin-name').textContent = dbUsername;
+            
+            const logoutBtn = document.getElementById('logout-btn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', function() {
+                    localStorage.removeItem('username'); localStorage.removeItem('token'); localStorage.removeItem('role');
+                    window.location.href = 'index.html';
+                });
+            }
+        });
+    </script>
+    
+    <script src="./js/managereport.js"></script>
+    <script src="./js/manageuser.js"></script>
+
+</body>
+</html>

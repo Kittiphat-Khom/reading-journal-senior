@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Preferences: Authors</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="./styles/manage-pre-author.css">
+</head>
+
+<body>
+    <div class="main-wrapper">
+        <div class="container">
+
+            <div class="header-section">
+                <div class="header-top">
+                    <div class="main-title">Manage Preferences</div>
+                    <div class="step-badge">Step 2 of 3: Select Authors</div>
+                </div>
+
+                <div class="search-row">
+                    <div class="author-subtitle-wrap">
+                        <h2 class="author-subtitle">
+                            Authors Collection
+                            <span class="total-count-badge" id="totalCountDisplay">Loading...</span>
+                        </h2>
+                        <p class="author-desc">Please select at least 3 authors or skip this step.</p>
+                    </div>
+
+                    <div class="search-right">
+                        <label for="searchInput" class="search-label-text">Search Author:</label>
+
+                        <div class="search-box">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="searchInput" placeholder="e.g. J.K. Rowling">
+                        </div>
+                        <span class="page-indicator" id="pageIndicator">Page 1 of 1</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="carousel-wrapper">
+                <button class="side-arrow" id="prevArrow" onclick="navigateCarousel(-1)" disabled>
+                    <i class="fa-solid fa-angle-left"></i>
+                </button>
+
+                <div class="author-grid" id="authorGrid">
+                    </div>
+
+                <button class="side-arrow" id="nextArrow" onclick="navigateCarousel(1)">
+                    <i class="fa-solid fa-angle-right"></i>
+                </button>
+            </div>
+
+            <div class="action-footer">
+                <button class="unselect-all-btn" id="unselectAllBtn">Deselect All</button>
+
+                <div class="footer-center">
+                    <span class="selection-status" id="selectionStatus">
+                        Selected: 0
+                    </span>
+
+                    <button class="back-footer-btn" id="backBtn">Back</button>
+                    
+                    <button class="skip-btn" id="skipBtn">Skip</button>
+                    
+                    <button class="next-btn" id="nextBtn" disabled>Next Step</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="js/manage-pre-author.js"></script>
+</body>
+</html>

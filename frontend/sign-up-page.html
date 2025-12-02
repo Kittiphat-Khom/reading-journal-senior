@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign Up</title>
+  <link rel="stylesheet" href="styles/styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+  <div class="header-fixed">
+    <div class="book-icon"></div>
+    <div class="title-text">Welcome to Reading Journal</div>
+  </div>
+
+  <div class="form-container" id="signup-container">
+    <div class="form-title">Sign Up</div>
+    <form id="signupForm">
+      <div class="input-group">
+        <label for="username_s">Username</label>
+        <input type="text" id="username_s" name="username_s" required>
+      </div>
+
+      <div class="input-group">
+        <label for="email_s">Email</label>
+        <input type="email" id="email_s" name="email_s" required>
+      </div>
+
+      <div class="input-group">
+        <label for="password_s">Password</label>
+        <input type="password" id="password_s" name="password_s" required>
+      </div>
+
+      <div class="input-group">
+        <label for="confirm_password_s">Confirm Password</label>
+        <input type="password" id="confirm_password_s" name="confirm_password_s" required>
+      </div>
+
+      <div class="button-group">
+        <button type="button" class="button secondary" onclick="window.location.href='index.html'">Back</button>
+        <button type="submit" id="btn-signup" class="button primary">Sign Up</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="form-container" id="success-message" style="display: none; text-align: center; padding: 40px 20px;">
+    <div style="color: #4CAF50; font-size: 60px; margin-bottom: 20px;">
+        <i class="fa-regular fa-envelope"></i>
+    </div>
+    <h2 style="color: #333; margin-bottom: 15px;">Verify your email</h2>
+    <p style="color: #666; font-size: 1.1em; line-height: 1.6;">
+        We've sent a verification email to:<br>
+        <strong id="display-email" style="color: #4a6fa5; font-size: 1.2em;"></strong>
+    </p>
+    <p style="color: #888; font-size: 0.9em; margin-top: 15px;">
+        Please click the link in the email to activate your account.
+    </p>
+    
+    <div style="margin-top: 30px;">
+        <button class="button primary" onclick="window.location.href='index.html'">Go to Login</button>
+    </div>
+  </div>
+
+  <script src="js/signup.js"></script> 
+</body>
+</html>

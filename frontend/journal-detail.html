@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Manage Reading Journals</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+  <link rel="stylesheet" href="styles/journal-detail.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+  <div id="loading-overlay" class="loading-overlay">
+    <div class="spinner-icon">
+      <i class="fa-solid fa-spinner fa-spin"></i>
+    </div>
+  </div>
+
+  <div class="journal-wrapper">
+    
+    <header class="topbar-detail">
+      <div class="topbar-left">
+        <h2>Manage Reading Journals</h2>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-primary" id="add-chapter-btn">Add Chapter & See All</button>
+      </div>
+    </header>
+
+    <main class="journal-container">
+      
+      <section class="book-entry-form">
+        
+        <div class="form-col cover-col">
+            <div class="book-item add-book" id="add-book-card" style="height: auto; min-height: 300px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 15px; padding: 15px;">
+              
+              <div class="book-cover">
+                <img id="cover-preview" src="" alt="Book Cover" style="display: none;" />
+                <span class="add-icon">+</span>
+              </div>
+
+              <input type="file" id="file-upload-input" accept="image/*" style="display: none;">
+              <button class="btn-upload-cover" id="btn-trigger-upload">Upload Photo</button>
+            
+            </div>
+        </div>
+
+        <div class="form-col info-col">
+           <div class="form-group">
+             <label>Title</label>
+             <input type="text" id="title" placeholder="" />
+           </div>
+           <div class="form-group">
+             <label>Author</label>
+             <input type="text" id="author" placeholder="" />
+           </div>
+           <div class="form-group">
+             <label>Genre</label>
+             <div class="genre-wrapper" style="flex:1;">
+                <select id="genre" style="width:100%;">
+                  <option value="">Select genre</option>
+                  <option value="Classics">Classics</option>
+                  <option value="Fantasy">Fantasy</option>
+                  <option value="Thriller">Thriller</option>
+                  <option value="Romance">Romance</option>
+                  <option value="Mystery">Mystery</option>
+                  <option value="__add_new__">➕ Add new...</option>
+                </select>
+             </div>
+           </div>
+           <div class="form-group">
+             <label>Start date</label>
+             <input type="text" id="start-date" placeholder="dd/mm/yyyy" onfocus="(this.type='date')" onblur="(this.type='text')" />
+           </div>
+           <div class="form-group">
+             <label>End date</label>
+             <input type="text" id="end-date" placeholder="dd/mm/yyyy" onfocus="(this.type='date')" onblur="(this.type='text')" />
+           </div>
+        </div>
+
+        <div class="form-col review-col">
+           <label>Review</label>
+           <textarea id="review" placeholder="Write your thoughts..."></textarea>
+        </div>
+
+      </section>
+
+      <hr class="divider">
+
+      <section class="stats-section">
+        
+        <div class="stats-col">
+           <div class="rating-block" data-type="stars">
+             <h3>Over all Stars</h3>
+             <div class="icons">
+                 <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                 <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                 <i class="fa-solid fa-star"></i>
+             </div>
+           </div>
+           <div class="rating-block" data-type="spicy">
+             <h3>Spicy</h3>
+             <div class="icons">
+                 <i class="fa-solid fa-pepper-hot"></i><i class="fa-solid fa-pepper-hot"></i>
+                 <i class="fa-solid fa-pepper-hot"></i><i class="fa-solid fa-pepper-hot"></i>
+                 <i class="fa-solid fa-pepper-hot"></i>
+             </div>
+           </div>
+        </div>
+
+        <div class="stats-col">
+           <div class="rating-block" data-type="drama">
+             <h3>Drama</h3>
+             <div class="icons">
+                 <i class="fa-solid fa-droplet"></i><i class="fa-solid fa-droplet"></i>
+                 <i class="fa-solid fa-droplet"></i><i class="fa-solid fa-droplet"></i>
+                 <i class="fa-solid fa-droplet"></i>
+             </div>
+           </div>
+           <div class="platform-block">
+             <h3>Platform</h3>
+             <div class="platform-options">
+                 <button class="plat-btn" data-val="Paper">Paper</button>
+                 <button class="plat-btn" data-val="E-Book">E-Book</button>
+                 <button class="plat-btn" data-val="Audio">Audio</button>
+             </div>
+           </div>
+        </div>
+
+        <div class="stats-col time-col">
+           
+           <div class="tracking-box">
+             <h3>Tracking clock</h3>
+             <div class="live-timer">00 : 00 : 00</div>
+             <div class="timer-controls">
+                 <button class="t-btn start-btn">Start</button>
+                 <button class="t-btn finish-btn">Finish</button>
+             </div>
+           </div>
+
+           <div class="total-time-wrapper">
+             <h3>Total reading time</h3>
+             <div class="digital-clock">
+                 <span class="digit-box" id="tt-h">00</span> <span class="colon">:</span>
+                 <span class="digit-box" id="tt-m">00</span> <span class="colon">:</span>
+                 <span class="digit-box" id="tt-s">00</span>
+             </div>
+           </div>
+
+        </div>
+
+        <div class="stats-col log-col">
+           <div class="log-header">
+             <h3>Reading Log</h3>
+             <a href="#" class="see-all" id="btn-open-stats">See all ></a>
+           </div>
+           
+           <ul id="reading-log-list" class="log-list">
+           </ul>
+
+           <button class="btn btn-primary save-bottom-btn" id="save-btn">Save Journal</button>
+        </div>
+
+      </section>
+
+    </main>
+  </div>
+
+  <div id="book-popup" class="popup hidden">
+      <div class="popup-content">
+        <button class="popup-close" id="close-popup">&times;</button>
+        <h3>Search Books</h3>
+        
+        <div class="search-wrapper">
+          <input type="text" id="search-input" placeholder="Type book title..." />
+          <button id="search-btn">
+            <i class="fa-solid fa-magnifying-glass"></i>
+          </button>
+        </div>
+        <div id="search-results"></div>
+        <div id="pagination"></div>
+      </div>
+  </div>
+
+  <div id="chapter-popup" class="chapter-popup hidden">
+    <div class="chapter-content">
+      
+      <div class="chapter-header">
+        <button class="btn-icon-back" id="close-chapter-popup">
+          <i class="fa-solid fa-chevron-left"></i> Manage Reading Journals
+        </button>
+        <div class="header-right-group">
+            <button class="btn-save-chapter" id="save-chapter-data-btn">Save</button>
+            <div class="">
+              <i class=""></i>
+            </div>
+        </div>
+      </div>
+
+      <div class="chapter-nav-section">
+        <h2 id="chapter-book-title">Book Title Here</h2>
+        
+        <div class="nav-image-wrapper">
+          <button class="nav-arrow" id="prev-chapter-btn"><i class="fa-solid fa-chevron-left"></i></button>
+          
+          <div class="chapter-book-cover">
+            <img id="chapter-cover-img" src="" alt="Book Cover" />
+          </div>
+          
+          <button class="nav-arrow" id="next-chapter-btn"><i class="fa-solid fa-chevron-right"></i></button>
+        </div>
+      </div>
+
+      <div class="chapter-body">
+        
+        <div class="chapter-left">
+          <div class="chapter-title-row">
+            <select id="chapter-dropdown" class="chapter-select"></select>
+            <button class="add-mini-btn" id="btn-add-new-chapter" title="Add specific chapter">+</button>
+        </div>
+          
+          <label>Review</label>
+          <textarea id="chapter-review" placeholder="Write review for this chapter..."></textarea>
+        </div>
+
+        <div class="chapter-right">
+          
+          <div class="chap-rating-row">
+            <span>Stars</span>
+            <div class="chap-icons" id="rating-stars">
+               <i class="fa-regular fa-star"></i><i class="fa-regular fa-star"></i>
+               <i class="fa-regular fa-star"></i><i class="fa-regular fa-star"></i>
+               <i class="fa-regular fa-star"></i>
+            </div>
+          </div>
+          <div class="chap-rating-row">
+            <span>Drama</span>
+            <div class="chap-icons" id="rating-drama">
+               <i class="fa-solid fa-droplet"></i><i class="fa-solid fa-droplet"></i>
+               <i class="fa-solid fa-droplet"></i><i class="fa-solid fa-droplet"></i>
+               <i class="fa-solid fa-droplet"></i>
+            </div>
+          </div>
+          <div class="chap-rating-row">
+            <span>Spicy</span>
+            <div class="chap-icons" id="rating-spicy">
+               <i class="fa-solid fa-fire"></i><i class="fa-solid fa-fire"></i>
+               <i class="fa-solid fa-fire"></i><i class="fa-solid fa-fire"></i>
+               <i class="fa-solid fa-fire"></i>
+            </div>
+          </div>
+
+          <div class="fav-pages-section">
+             <div class="sec-head">
+               <span>Favorite pages</span>
+               <button class="add-mini-btn" id="btn-add-fav-page">+</button>
+             </div>
+             <div class="fav-badges" id="fav-pages-list">
+             </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="chapter-footer-lists">
+        <div class="list-box">
+          <div class="list-head">
+              <span>Quotes</span>
+              <button class="add-mini-btn" id="btn-add-quote">+</button>
+          </div>
+          <a href="#" class="see-all-link" id="btn-see-all-quotes">See all ></a>
+          <div class="list-items" id="quote-list">
+          </div>
+        </div>
+
+        <div class="list-box">
+          <div class="list-head">
+              <span>Annotation</span>
+              <button class="add-mini-btn" id="btn-add-annotation">+</button>
+          </div>
+           <a href="#" class="see-all-link" id="btn-see-all-annotations">See all ></a>
+          <div class="list-items" id="annotation-list">
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+  
+  <div id="custom-input-modal" class="popup hidden" style="z-index: 9000;">
+      <div class="input-modal-content">
+          <h3 id="input-modal-title">Enter Value</h3>
+          <input type="text" id="input-modal-field" placeholder="Type here..." autocomplete="off">
+          <div class="input-modal-actions">
+              <button id="btn-input-cancel" class="btn-secondary">Cancel</button>
+              <button id="btn-input-confirm" class="btn-primary">Confirm</button>
+          </div>
+      </div>
+  </div>
+
+  <div id="custom-alert-modal" class="popup hidden" style="z-index: 7000;">
+      <div class="input-modal-content" style="text-align: center; align-items: center;">
+          <div id="alert-icon" style="font-size: 3.5rem; margin-bottom: 15px;"></div>
+          <h3 id="alert-title" style="font-size: 1.2rem; margin-bottom: 8px;">Title</h3>
+          <p id="alert-message" style="color: #64748b; font-size: 0.95rem; margin: 0 0 20px 0;">Message goes here...</p>
+          <button id="btn-alert-ok" class="btn-primary" style="width: 100%; justify-content: center;">OK</button>
+      </div>
+  </div>
+
+  <div id="see-all-modal" class="popup hidden" style="z-index: 8000;">
+    <div class="input-modal-content" style="max-width: 500px; width: 90%; height: 80vh; display: flex; flex-direction: column;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <h3 id="see-all-modal-title" style="margin: 0;">All Items</h3>
+        <button id="btn-close-see-all" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+      </div>
+      <div id="see-all-content-list" style="flex: 1; overflow-y: auto; border-top: 1px solid #eee; border-bottom: 1px solid #eee; padding: 10px 0;"></div>
+      <button id="btn-add-in-modal" class="btn-primary" style="width: 100%; margin-top: 15px;">+ Add New</button>
+    </div>
+  </div>
+
+  <div id="stats-modal" class="popup hidden" style="z-index: 8000;">
+      <div class="input-modal-content" style="max-width: 800px; width: 90%; height: auto; display: flex; flex-direction: column;">
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+          <h3 style="font-size: 1.2rem; color: #1e293b;"><i class="fa-solid fa-chart-simple"></i> Reading Statistics</h3>
+          <button id="btn-close-stats" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+        </div>
+
+        <div style="display: flex; justify-content: center; margin-bottom: 20px;">
+            <select id="time-range-selector" class="chapter-select" style="min-width: 160px; padding: 8px 15px; font-size: 0.95rem;">
+                <option value="week">Past 7 Days</option>
+                <option value="month">This Month</option>
+                <option value="year">This Year</option>
+            </select>
+        </div>
+
+        <div style="position: relative; height: 350px; width: 100%;">
+            <canvas id="readingChart"></canvas>
+        </div>
+
+        <div style="text-align: center; margin-top: 15px; color: #64748b; font-size: 0.9rem;">
+           <span id="chart-description">Showing reading time in minutes.</span>
+        </div>
+
+      </div>
+  </div>
+
+  <div id="toast-container"></div>
+  <script src="js/hardcover-api.js"></script> 
+  <script src="js/journal-detail.js"></script>
+</body>
+</html>
