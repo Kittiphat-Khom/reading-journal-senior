@@ -9,49 +9,38 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // ============================================================
-// ⚙️ CONFIGURATION
+// ⚙️ SMART PATH CONFIGURATION (Dynamic for Windows/Linux)
 // ============================================================
+
+// 1. หาตำแหน่ง Root ของโปรเจกต์ (senior-project)
 const projectRoot = path.resolve(__dirname, "../../../");
+
+// 2. เช็ค OS ว่าเป็น Windows หรือ Linux
 const isWindows = process.platform === "win32";
 
-// Setup Python Path
+// 3. กำหนด Path Python อัตโนมัติ
 const PYTHON_PATH = isWindows
-  ? path.join(projectRoot, "venv", "Scripts", "python.exe")
-  : path.join(projectRoot, "venv", "bin", "python");
+  ? path.join(projectRoot, "venv", "Scripts", "python.exe") // Windows
+  : path.join(projectRoot, "venv", "bin", "python");        // Linux (VPS)
 
+// 4. กำหนด Path ไฟล์ Python Script
 const TRAIN_SCRIPT_PATH = path.join(projectRoot, "backend", "ml", "model", "train_model.py");
 
-// Path for CSV Files
-const BOOKS_CSV_PATH = path.join(__dirname, "books.csv");
-const PREFS_CSV_PATH = path.join(__dirname, "user_preferences.csv");
+// 🔥 DEBUG LOG: เช็ค Path ก่อนรัน
+console.log("-------------------------------------------------");
+console.log(`🌍 OS Detected:   ${process.platform}`);
+console.log(`📂 Project Root:  ${projectRoot}`);
+console.log(`🐍 Python Path:   ${PYTHON_PATH}`);
+console.log(`📜 Train Script:  ${TRAIN_SCRIPT_PATH}`);
+console.log("-------------------------------------------------");
 
-// Helper: Delay function
+// ✅ Helper Function: สร้าง Promise เพื่อหน่วงเวลา (Delay)
 const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 // ============================================================
-// 📌 PART 1: FETCH & STREAM WRITE (Low RAM + Full Categories)
+// 📌 PART 1: DATA INGESTION (API Fetching)
+// Process: Data Mining & Collection
 // ============================================================
-
-// แปลง Object หนังสือ เป็นบรรทัด CSV
-function convertToCSVLine(b) {
-    const escape = (txt) => `"${String(txt || "").replace(/"/g, '""').replace(/[\r\n]+/g, " ").trim()}"`;
-    
-    const author = b.contributions?.[0]?.author?.name || "Unknown";
-    const rawTags = b.taggings.map(t => t.tag.tag);
-    const uniqueTags = [...new Set(rawTags)].filter(t => t.length < 20).slice(0, 8); 
-    const genres = uniqueTags.length ? uniqueTags.join("|") : "General";
-    
-    return [
-        b.id,
-        escape(b.title || "Untitled"),
-        escape(author),
-        escape(genres),
-        escape(b.description),
-        escape(b.image?.url || "")
-    ].join(",");
-}
-
-// ฟังก์ชันยิง API
 async function fetchBooksFromAPI(queryVariables, label) {
   const gql = `
     query GetBooks($limit: Int!, $offset: Int!, $tagSlug: String) {
@@ -82,19 +71,12 @@ async function fetchBooksFromAPI(queryVariables, label) {
   return [];
 }
 
-// 🔥 ฟังก์ชันหลัก: ดึงข้อมูลแล้วเขียนลงไฟล์ทันที
-async function processAndExportBooks() {
-  const TARGET_TOTAL = 30000; // 🎯 เป้าหมาย 30,000 เล่ม
-  console.log(`🔍 [ETL Process] Starting Low-Memory Extraction (Target: ${TARGET_TOTAL})...`);
+async function fetchAllBooks() {
+  const TARGET_TOTAL = 30000;
+  console.log(`🔍 [ETL Process] Starting Data Extraction (Target: ${TARGET_TOTAL} items)...`);
+  let allBooksMap = new Map();
   
-  // 1. สร้างไฟล์ books.csv และเขียน Header
-  const writeStream = fs.createWriteStream(BOOKS_CSV_PATH, { flags: 'w' });
-  writeStream.write("book_id,title,authors,genres,description,image_url\n");
-
-  const seenIds = new Set(); 
-  let totalSaved = 0;
-
-  // 🔥 RESTORED: หมวดหมู่ต้นฉบับทั้งหมดของคุณ (ครบทุกตัวอักษร)
+  // รายการ Genre แบบสวยงาม (Display Name)
   const genres = [
     "Fiction", "Fantasy", "Young Adult", "Adventure", "Science Fiction", "Classics", "Comics", "Romance", "History", "LGBTQ",
     "Action", "Comedy", "Drama", "Horror", "Thriller", "Crime", "Animation", "Mystery", "Family", "War",
@@ -130,64 +112,93 @@ async function processAndExportBooks() {
     "Travel", "General Reference", "The Americas", "Asia", "Australia and Oceania", "Europe"
   ];
 
-  // เริ่มวนลูปทีละหมวด
   for (const genreName of genres) {
-    if (totalSaved >= TARGET_TOTAL) {
-        console.log("🎉 Target Reached! Stopping fetch loop.");
-        break;
-    }
+    if (allBooksMap.size >= TARGET_TOTAL) break;
 
-    // แปลงชื่อหมวดเป็น Slug
+    // 🔥 FIX: แปลงชื่อสวยๆ ให้เป็น slug เพื่อส่งให้ Database เข้าใจ
     let tagSlug = genreName.toLowerCase()
-        .replace(/&/g, 'and')
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-+|-+$/g, '');
+        .replace(/&/g, 'and')           // เปลี่ยน & เป็น and
+        .replace(/[^a-z0-9]+/g, '-')    // เปลี่ยนสัญลักษณ์อื่นๆ และช่องว่าง เป็นขีด (-)
+        .replace(/^-+|-+$/g, '');       // ลบขีดที่หัวและท้าย (ถ้ามี)
 
-    console.log(`\n📂 Fetching Category: "${genreName}" (Current Total: ${totalSaved})`);
+    console.log(`\n📂 Fetching Category: "${genreName}" (Slug: ${tagSlug})`);
     
-    // วนลูปย่อยดึงข้อมูล (สูงสุด 100 รอบต่อหมวด)
-    for (let i = 0; i < 100; i++) {
-        if (totalSaved >= TARGET_TOTAL) break;
-
+    // Batch Processing
+    for (let i = 0; i < 4; i++) {
+        if (allBooksMap.size >= TARGET_TOTAL) break;
+        
+        // ส่ง tagSlug (ตัวเล็กมีขีด) ไป query
         const books = await fetchBooksFromAPI({ limit: 500, offset: i * 500, tagSlug: tagSlug }, `${tagSlug}-${i}`);
         
         if (!books || books.length === 0) {
-            console.log(`   ⏹️  End of genre "${genreName}". Moving to next...`);
+            console.log(`   ⚠️ No books found for "${tagSlug}" (Batch ${i+1}), skipping...`);
             break; 
         }
-
-        let batchCount = 0;
-        // เขียนลงไฟล์ทันที!
-        for (const book of books) {
-            if (!seenIds.has(book.id)) {
-                seenIds.add(book.id); 
-                writeStream.write(convertToCSVLine(book) + "\n");
-                totalSaved++;
-                batchCount++;
-            }
-        }
         
-        console.log(`   💾 Batch ${i+1}: Added ${batchCount} books. (Total Saved: ${totalSaved})`);
-
-        // ถ้าได้มาน้อยกว่า 500 แปลว่าหมดสต็อกหมวดนี้แล้ว
-        if (books.length < 500) {
-            break;
-        }
-
-        await wait(500); // Delay เบาๆ
+        books.forEach(b => allBooksMap.set(b.id, b));
+        console.log(`   📊 Batch ${i+1}: Total Unique Records: ${allBooksMap.size}`);
+        
+        // ⏳ DELAY: หน่วงเวลาระหว่าง Batch (ป้องกัน Throttle)
+        // สุ่มเวลา 1.5 - 2.5 วินาที
+        const randomDelay = Math.floor(Math.random() * 1000) + 1500;
+        console.log(`   ⏳ Cooling down for ${randomDelay}ms...`);
+        await wait(randomDelay);
     }
-    
-    await wait(1000); // พัก 1 วิระหว่างหมวด
+
+    // ⏳ DELAY: พักเบรคระหว่างหมวดหมู่ (ป้องกัน Load หนักเกินไป)
+    if (allBooksMap.size < TARGET_TOTAL) {
+        console.log(`   ☕ Taking a short break (3s) between categories...`);
+        await wait(3000); 
+    }
   }
 
-  writeStream.end();
-  console.log(`✅ Dataset Exported Successfully: ${totalSaved} books written to books.csv`);
-  seenIds.clear(); // เคลียร์ RAM
+  // Data Cleaning & Formatting
+  return Array.from(allBooksMap.values()).map(b => {
+    const author = b.contributions?.[0]?.author?.name || "Unknown";
+    const rawTags = b.taggings.map(t => t.tag.tag);
+    const uniqueTags = [...new Set(rawTags)].filter(t => t.length < 20).slice(0, 8);
+    const cleanDesc = (b.description || "").replace(/[\r\n]+/g, " ").replace(/\s+/g, ' ').trim();
+    
+    return {
+      id: b.id,
+      title: b.title || "Untitled",
+      cover: b.image?.url || "",
+      author: author,
+      genres: uniqueTags.length ? uniqueTags : ["General"],
+      description: cleanDesc
+    };
+  });
 }
 
 // ============================================================
-// 📌 PART 2: USER PREFERENCES
+// 📌 PART 2: DATA TRANSFORMATION & LOADING (CSV Export)
+// Process: Preparing Dataset for SBERT Model
 // ============================================================
+export async function exportBooks() {
+  const allBooks = await fetchAllBooks();
+  if (allBooks.length === 0) return;
+
+  console.log("💾 Writing Dataset to books.csv...");
+  
+  const csvLines = allBooks.map(b => {
+    // Data Sanitization for CSV format
+    const escape = (txt) => `"${String(txt).replace(/"/g, '""')}"`; 
+    return [
+        b.id, 
+        escape(b.title), 
+        escape(b.author), 
+        escape(b.genres.join("|")), 
+        escape(b.description), 
+        escape(b.cover)
+    ].join(",");
+  });
+
+  // Header must match Schema in train_model.py
+  csvLines.unshift("book_id,title,authors,genres,description,image_url");
+  fs.writeFileSync(path.join(__dirname, "books.csv"), csvLines.join("\n"));
+  console.log("✅ Dataset Ready.");
+}
+
 export async function exportUserPreferences() {
   console.log("📥 Exporting User Interaction Matrix...");
   try {
@@ -198,7 +209,7 @@ export async function exportUserPreferences() {
       try { books = JSON.parse(row.preferred_books || "[]"); } catch {}
       books.forEach(bookId => lines.push(`${row.user_id},book,${bookId},1`));
     });
-    fs.writeFileSync(PREFS_CSV_PATH, lines.join("\n"));
+    fs.writeFileSync(path.join(__dirname, "user_preferences.csv"), lines.join("\n"));
     console.log("✅ User Preferences Exported.");
   } catch (error) {
     console.error("❌ Error exporting prefs:", error);
@@ -206,32 +217,33 @@ export async function exportUserPreferences() {
 }
 
 // ============================================================
-// 📌 PART 3: RUN PYTHON (AI TRAINING)
+// 📌 PART 3: MODEL TRAINING TRIGGER
+// Process: Executing Python Subprocess for Vectorization
 // ============================================================
 async function runTrainModel() {
   console.log("\n🧠 Initializing Python Training Pipeline...");
-  
-  if (global.gc) { global.gc(); }
-
   return new Promise((resolve, reject) => {
-    if (!fs.existsSync(TRAIN_SCRIPT_PATH)) return reject("Script not found");
+    
+    if (!fs.existsSync(TRAIN_SCRIPT_PATH)) {
+        console.error("❌ Python script not found at:", TRAIN_SCRIPT_PATH);
+        console.error("   Please check directory structure (model vs models)");
+        return reject();
+    }
 
     const pythonProcess = spawn(PYTHON_PATH, [TRAIN_SCRIPT_PATH]);
 
-    pythonProcess.stdout.on("data", (data) => console.log(`🐍 ${data.toString().trim()}`));
+    pythonProcess.stdout.on("data", (data) => console.log(`🐍 [Python]: ${data.toString().trim()}`));
     pythonProcess.stderr.on("data", (data) => {
           const msg = data.toString().trim();
-          if(msg && !msg.includes("oneDNN")) console.log(`⚠️ Py: ${msg}`);
+          if(msg && !msg.includes("oneDNN")) console.log(`⚠️ [Python Warning]: ${msg}`);
     });
 
-    pythonProcess.on("close", (code, signal) => {
-      console.log(`🔍 Python Exit -> Code: ${code}, Signal: ${signal}`);
-      
+    pythonProcess.on("close", (code) => {
       if (code === 0) {
-        console.log("✅ Training Success!");
+        console.log("✅ Model Training & Vectorization Completed Successfully!");
         resolve();
       } else {
-        if (signal === 'SIGKILL') console.error("💀 PYTHON KILLED BY OS (OUT OF MEMORY)");
+        console.error("❌ Training Pipeline Failed with exit code:", code);
         reject(new Error("Training Failed"));
       }
     });
@@ -239,17 +251,23 @@ async function runTrainModel() {
 }
 
 // ============================================================
-// 🚀 START
+// 🚀 MAIN EXECUTION (Modified to save RAM)
 // ============================================================
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
     (async () => {
         try {
-            console.log("🚀 Starting Recommendation System Pipeline...");
+            console.log("🚀 Starting Data Export Pipeline...");
+            
+            // 1. ทำแค่ Export ข้อมูล แล้วจบ
             await exportUserPreferences();
-            await processAndExportBooks(); // จะรันนานขึ้นนิดนึงนะครับเพราะหมวดหมู่เยอะมาก
-            await runTrainModel();
-            console.log("\n✨ Pipeline Finished.");
-            process.exit(0);
+            await exportBooks();
+            
+            console.log("\n✅ Data Export Finished. Node.js will exit now to free up RAM.");
+            console.log("👉 Please run the python script manually or via a separate command.");
+            
+            // ไม่เรียก runTrainModel() ในนี้ เพื่อคืน RAM ให้ระบบ
+            process.exit(0); 
+
         } catch (e) {
             console.error("❌ Pipeline Failed:", e);
             process.exit(1);
