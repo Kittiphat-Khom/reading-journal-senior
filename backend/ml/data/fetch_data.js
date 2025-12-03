@@ -72,7 +72,7 @@ async function fetchBooksFromAPI(queryVariables, label) {
 }
 
 async function fetchAllBooks() {
-  const TARGET_TOTAL = 30000;
+  const TARGET_TOTAL = 100;
   console.log(`🔍 [ETL Process] Starting Data Extraction (Target: ${TARGET_TOTAL} items)...`);
   let allBooksMap = new Map();
   
