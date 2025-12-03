@@ -34,6 +34,9 @@ console.log(`🐍 Python Path:   ${PYTHON_PATH}`);
 console.log(`📜 Train Script:  ${TRAIN_SCRIPT_PATH}`);
 console.log("-------------------------------------------------");
 
+// ✅ Helper Function: สร้าง Promise เพื่อหน่วงเวลา (Delay)
+const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
 // ============================================================
 // 📌 PART 1: DATA INGESTION (API Fetching)
 // Process: Data Mining & Collection
@@ -67,8 +70,6 @@ async function fetchBooksFromAPI(queryVariables, label) {
   } catch (err) { console.error(`❌ Fetch Error [${label}]:`, err.message); }
   return [];
 }
-
-// ... (ส่วน import และ config ด้านบนเหมือนเดิม) ...
 
 async function fetchAllBooks() {
   const TARGET_TOTAL = 30000;
@@ -115,10 +116,6 @@ async function fetchAllBooks() {
     if (allBooksMap.size >= TARGET_TOTAL) break;
 
     // 🔥 FIX: แปลงชื่อสวยๆ ให้เป็น slug เพื่อส่งให้ Database เข้าใจ
-    // เช่น "Outdoor Sports" -> "outdoor-sports"
-    // เช่น "Art & Design" -> "art-and-design" (หรือ art-design แล้วแต่ db)
-    // สูตรนี้คือ: เป็นตัวเล็ก -> แทนที่ & เป็น and -> แทนที่ช่องว่างและขีดเป็น -
-    
     let tagSlug = genreName.toLowerCase()
         .replace(/&/g, 'and')           // เปลี่ยน & เป็น and
         .replace(/[^a-z0-9]+/g, '-')    // เปลี่ยนสัญลักษณ์อื่นๆ และช่องว่าง เป็นขีด (-)
@@ -141,11 +138,21 @@ async function fetchAllBooks() {
         books.forEach(b => allBooksMap.set(b.id, b));
         console.log(`   📊 Batch ${i+1}: Total Unique Records: ${allBooksMap.size}`);
         
-        await new Promise(r => setTimeout(r, 100)); 
+        // ⏳ DELAY: หน่วงเวลาระหว่าง Batch (ป้องกัน Throttle)
+        // สุ่มเวลา 1.5 - 2.5 วินาที
+        const randomDelay = Math.floor(Math.random() * 1000) + 1500;
+        console.log(`   ⏳ Cooling down for ${randomDelay}ms...`);
+        await wait(randomDelay);
+    }
+
+    // ⏳ DELAY: พักเบรคระหว่างหมวดหมู่ (ป้องกัน Load หนักเกินไป)
+    if (allBooksMap.size < TARGET_TOTAL) {
+        console.log(`   ☕ Taking a short break (3s) between categories...`);
+        await wait(3000); 
     }
   }
 
-  // ... (ส่วน Data Cleaning ด้านล่างเหมือนเดิม) ...
+  // Data Cleaning & Formatting
   return Array.from(allBooksMap.values()).map(b => {
     const author = b.contributions?.[0]?.author?.name || "Unknown";
     const rawTags = b.taggings.map(t => t.tag.tag);
@@ -162,8 +169,6 @@ async function fetchAllBooks() {
     };
   });
 }
-
-// ... (ส่วน exportBooks, exportUserPreferences, runTrainModel เหมือนเดิม) ...
 
 // ============================================================
 // 📌 PART 2: DATA TRANSFORMATION & LOADING (CSV Export)
