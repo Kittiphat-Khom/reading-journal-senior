@@ -68,12 +68,14 @@ async function fetchBooksFromAPI(queryVariables, label) {
   return [];
 }
 
+// ... (ส่วน import และ config ด้านบนเหมือนเดิม) ...
+
 async function fetchAllBooks() {
   const TARGET_TOTAL = 30000;
   console.log(`🔍 [ETL Process] Starting Data Extraction (Target: ${TARGET_TOTAL} items)...`);
   let allBooksMap = new Map();
   
-  // ✅ UPDATE: ใช้รายการ Genre ใหม่ทั้งหมดตามที่ระบุ
+  // รายการ Genre แบบสวยงาม (Display Name)
   const genres = [
     "Fiction", "Fantasy", "Young Adult", "Adventure", "Science Fiction", "Classics", "Comics", "Romance", "History", "LGBTQ",
     "Action", "Comedy", "Drama", "Horror", "Thriller", "Crime", "Animation", "Mystery", "Family", "War",
@@ -109,34 +111,44 @@ async function fetchAllBooks() {
     "Travel", "General Reference", "The Americas", "Asia", "Australia and Oceania", "Europe"
   ];
 
-  for (const genre of genres) {
+  for (const genreName of genres) {
     if (allBooksMap.size >= TARGET_TOTAL) break;
-    console.log(`\n📂 Fetching Category: ${genre}`);
+
+    // 🔥 FIX: แปลงชื่อสวยๆ ให้เป็น slug เพื่อส่งให้ Database เข้าใจ
+    // เช่น "Outdoor Sports" -> "outdoor-sports"
+    // เช่น "Art & Design" -> "art-and-design" (หรือ art-design แล้วแต่ db)
+    // สูตรนี้คือ: เป็นตัวเล็ก -> แทนที่ & เป็น and -> แทนที่ช่องว่างและขีดเป็น -
+    
+    let tagSlug = genreName.toLowerCase()
+        .replace(/&/g, 'and')           // เปลี่ยน & เป็น and
+        .replace(/[^a-z0-9]+/g, '-')    // เปลี่ยนสัญลักษณ์อื่นๆ และช่องว่าง เป็นขีด (-)
+        .replace(/^-+|-+$/g, '');       // ลบขีดที่หัวและท้าย (ถ้ามี)
+
+    console.log(`\n📂 Fetching Category: "${genreName}" (Slug: ${tagSlug})`);
     
     // Batch Processing
     for (let i = 0; i < 4; i++) {
         if (allBooksMap.size >= TARGET_TOTAL) break;
-        // ส่ง genre เข้าไปค้นหา (ถ้าในฐานข้อมูลไม่มี tag นี้ มันจะ return empty array แล้วลูปจะ break ไปตัวถัดไปเอง)
-        const books = await fetchBooksFromAPI({ limit: 500, offset: i * 500, tagSlug: genre }, `${genre}-${i}`);
+        
+        // ส่ง tagSlug (ตัวเล็กมีขีด) ไป query
+        const books = await fetchBooksFromAPI({ limit: 500, offset: i * 500, tagSlug: tagSlug }, `${tagSlug}-${i}`);
         
         if (!books || books.length === 0) {
-            console.log(`   ⚠️ No books found for "${genre}" (Batch ${i+1}), skipping...`);
+            console.log(`   ⚠️ No books found for "${tagSlug}" (Batch ${i+1}), skipping...`);
             break; 
         }
         
         books.forEach(b => allBooksMap.set(b.id, b));
         console.log(`   📊 Batch ${i+1}: Total Unique Records: ${allBooksMap.size}`);
         
-        // Rate Limiting
         await new Promise(r => setTimeout(r, 100)); 
     }
   }
 
-  // Data Cleaning & Formatting
+  // ... (ส่วน Data Cleaning ด้านล่างเหมือนเดิม) ...
   return Array.from(allBooksMap.values()).map(b => {
     const author = b.contributions?.[0]?.author?.name || "Unknown";
     const rawTags = b.taggings.map(t => t.tag.tag);
-    // Feature Engineering
     const uniqueTags = [...new Set(rawTags)].filter(t => t.length < 20).slice(0, 8);
     const cleanDesc = (b.description || "").replace(/[\r\n]+/g, " ").replace(/\s+/g, ' ').trim();
     
@@ -150,6 +162,8 @@ async function fetchAllBooks() {
     };
   });
 }
+
+// ... (ส่วน exportBooks, exportUserPreferences, runTrainModel เหมือนเดิม) ...
 
 // ============================================================
 // 📌 PART 2: DATA TRANSFORMATION & LOADING (CSV Export)
