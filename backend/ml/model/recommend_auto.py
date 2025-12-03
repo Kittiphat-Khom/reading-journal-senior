@@ -23,7 +23,7 @@ SEARCH_BOOST = 0.2
 
 # 3. Diversity Limits
 MAX_BOOKS_PER_AUTHOR = 3   
-MAX_TOTAL_RESULTS = 100  # ไม่จำกัดจำนวน (แสดงทั้งหมดที่มีความเกี่ยวข้อง)
+MAX_TOTAL_RESULTS = 100    # ✅ แก้ไข: จำกัดจำนวนผลลัพธ์สูงสุดแค่ 100 เล่ม
 
 # ==========================================
 # 🔧 Helper Functions
@@ -210,6 +210,10 @@ if __name__ == "__main__":
 
         # Apply Quota
         for _, row in candidates.iterrows():
+            # ✅ แก้ไข: เพิ่ม Logic ตัดจบเมื่อครบ 100 เล่ม
+            if len(final_recommendations) >= MAX_TOTAL_RESULTS:
+                break
+
             auth = row['authors']
             current_count = author_counts.get(auth, 0)
             
