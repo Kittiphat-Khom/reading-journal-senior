@@ -13,10 +13,6 @@ const __dirname = path.dirname(__filename);
 // ============================================================
 
 // 1. หาตำแหน่ง Root ของโปรเจกต์ (senior-project)
-// ไฟล์นี้อยู่: /backend/ml/data
-// ถอย 1 ครั้ง (..) -> /backend/ml
-// ถอย 2 ครั้ง (..) -> /backend
-// ถอย 3 ครั้ง (..) -> /senior-project (Root)
 const projectRoot = path.resolve(__dirname, "../../../");
 
 // 2. เช็ค OS ว่าเป็น Windows หรือ Linux
@@ -73,27 +69,60 @@ async function fetchBooksFromAPI(queryVariables, label) {
 }
 
 async function fetchAllBooks() {
-  const TARGET_TOTAL = 13000;
+  const TARGET_TOTAL = 30000;
   console.log(`🔍 [ETL Process] Starting Data Extraction (Target: ${TARGET_TOTAL} items)...`);
   let allBooksMap = new Map();
   
-  // Diversity Coverage: ครอบคลุมหมวดหมู่หลากหลายเพื่อลด Bias
+  // ✅ UPDATE: ใช้รายการ Genre ใหม่ทั้งหมดตามที่ระบุ
   const genres = [
-    "fantasy", "sci-fi", "romance", "horror", "thriller", "mystery",
-    "history", "biography", "business", "psychology", "self-help",
-    "manga", "comics", "cooking", "travel", "art", "young-adult", "classics"
+    "Fiction", "Fantasy", "Young Adult", "Adventure", "Science Fiction", "Classics", "Comics", "Romance", "History", "LGBTQ",
+    "Action", "Comedy", "Drama", "Horror", "Thriller", "Crime", "Animation", "Mystery", "Family", "War",
+    "Animals and Pets", "Other Domestic Pets",
+    "Art and Design", "Architecture", "Fashion Design", "Fine Arts", "Graphic Design & Product Design", "Interior Design", "Photography",
+    "Biography", "Business", "Historical & Political", "True Crime", "Other Biographies",
+    "Business and Economics", "Accounting", "Biographies", "Business Management", "Business Writing (Reports/Resumes)", "Economics", "Finance and Investment", "Sales and Marketing",
+    "Children's Books", "Babies / Toddlers", "Pre-Teens (Ages 7-12)", "Young Adult (Ages >12)", "Activity Books", "Comics & Popular Characters",
+    "Education & Reference",
+    "Comics and Graphic Novels", "Graphic Novels", "Manga", "Humour Comic strips", "Jokes and Puns", "Light Novels",
+    "PC & Video Games", "Puzzles & Quizzes",
+    "Computers and Internet", "Internet & Networking", "Programming Languages", "Software",
+    "English as a Foreign Language", "English For Specific Purposes", "Exams", "Grammar & Vocabulary", "Reading Skills", "Speaking & Pronunciation", "Writing Skills",
+    "Family and Relationships", "Parenting", "Relationships",
+    "Food and Drink", "Drinks", "Professional Chefs", "Types of Cuisines", "Types of Food", "Desserts",
+    "Health and Well-Being", "Alternative Healing", "Beauty Care", "Fitness and Diet", "Health and Medicine",
+    "History and Politics", "Ancient & Medieval History", "African History", "History of the Americas", "Asian History", "European History", "Middle Eastern History", "World History",
+    "Biographies and Memoirs", "Military History", "Political Science", "History of Southeast Asia", "History of Thailand",
+    "Hobbies and Collectibles", "Antiques", "Collectibles - Clocks & Watches", "Collectibles - Jewellery & Gems", "Collectibles - Toys", "Crafts", "Flower Arrangement & Garden", "Papercraft",
+    "Transport - Air/Sea/Land",
+    "Languages", "Thai", "Chinese", "English Exams", "French", "German", "Italian", "Japanese", "Spanish", "Other Asian Languages", "Other Language Of the World",
+    "Literature and Fiction", "General Fiction", "Literature", "Asian Literature", "Crime, Thrillers & Mystery", "Drama and Play", "Poetry", "Travel Literature",
+    "Military and War", "Military Intelligence & Espionage", "Strategy, Tactics & Military Science", "Terrorism & Freedom", "Fighters", "Weapons",
+    "New Age", "Fengshui", "Fortune-Telling and Divination", "Meditation & Healing", "Occult", "Paranormal", "Psychic Phenomena",
+    "Performing Arts", "Dance", "Film and TV", "Music", "Theatre",
+    "Philosophy and Psychology", "Philosophy and Theory", "Ancient Philosophy", "Eastern Philosophy", "Modern Philosophy", "Psychological Topics and Perspectives", "Psychology - History and Theory", "Psychology and Biography",
+    "Religion", "General History and Reference", "Buddhism", "Christianity", "Hinduism", "Islam",
+    "Science", "General Reference and Writings", "Applied Science", "Astronomy", "Botany", "Chemistry and Physics", "Geography and Earth Science", "Life Science", "Mathematics", "Natural and Ecology", "Zoology",
+    "Self-Enrichment", "Self Help", "Spiritual",
+    "Social Science", "Culture and Anthropology", "Gender Studies", "Law", "Media Studies", "Sociology",
+    "Sports", "Martial Arts", "Outdoor Sports", "Training and Workouts", "Water Sports",
+    "Study Guide",
+    "Travel", "General Reference", "The Americas", "Asia", "Australia and Oceania", "Europe"
   ];
 
   for (const genre of genres) {
     if (allBooksMap.size >= TARGET_TOTAL) break;
-    console.log(`\n📂 Fetching Category: ${genre.toUpperCase()}`);
+    console.log(`\n📂 Fetching Category: ${genre}`);
     
     // Batch Processing
     for (let i = 0; i < 4; i++) {
         if (allBooksMap.size >= TARGET_TOTAL) break;
+        // ส่ง genre เข้าไปค้นหา (ถ้าในฐานข้อมูลไม่มี tag นี้ มันจะ return empty array แล้วลูปจะ break ไปตัวถัดไปเอง)
         const books = await fetchBooksFromAPI({ limit: 500, offset: i * 500, tagSlug: genre }, `${genre}-${i}`);
         
-        if (!books || books.length === 0) break;
+        if (!books || books.length === 0) {
+            console.log(`   ⚠️ No books found for "${genre}" (Batch ${i+1}), skipping...`);
+            break; 
+        }
         
         books.forEach(b => allBooksMap.set(b.id, b));
         console.log(`   📊 Batch ${i+1}: Total Unique Records: ${allBooksMap.size}`);
