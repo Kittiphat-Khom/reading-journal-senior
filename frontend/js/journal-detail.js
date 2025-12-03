@@ -7,8 +7,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     const token = localStorage.getItem("token");
   
     function getCurrentTimestamp() {
-        const now = new Date();
-        return now.toLocaleDateString('th-TH') + ' ' + now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+    const now = new Date();
+    // ใช้ 'en-GB' เพื่อบังคับเป็น ค.ศ. (DD/MM/YYYY)
+    // hour12: false เพื่อบังคับเวลาแบบ 24 ชม. (14:30 ไม่ใช่ 02:30 PM)
+    return now.toLocaleDateString('en-GB') + ' ' + now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false });
     }
   
     // Variables
@@ -759,8 +761,9 @@ document.addEventListener("DOMContentLoaded", async () => {
                    try {
                      const dateObj = new Date(t);
                      if(!isNaN(dateObj)) {
-                        timeContent = dateObj.toLocaleDateString('th-TH') + ' ' + dateObj.toLocaleTimeString('th-TH', {hour: '2-digit', minute:'2-digit'});
-                     } else {
+                        // เปลี่ยน th-TH เป็น en-GB เพื่อบังคับ ค.ศ.
+                    timeContent = dateObj.toLocaleDateString('en-GB') + ' ' + dateObj.toLocaleTimeString('en-GB', {hour: '2-digit', minute:'2-digit', hour12: false});
+                    } else {
                         timeContent = t;
                      }
                    } catch(e) { timeContent = t; }
