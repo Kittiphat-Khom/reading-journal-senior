@@ -15,7 +15,6 @@ const ITEMS_PER_PAGE = 20;
 // ============================
 let selectedAuthors = new Set();
 
-// ✅ ฟังก์ชันโหลดค่าเดิม (แก้ไขให้ดึงข้อมูลจริง)
 function loadLocalAuthors() {
     try {
         const pref = JSON.parse(localStorage.getItem("preference") || "{}");
@@ -28,13 +27,11 @@ function loadLocalAuthors() {
     }
 }
 
-// ✅ ฟังก์ชันบันทึกค่า
 function saveLocalAuthors() {
     let pref = JSON.parse(localStorage.getItem("preference") || "{}");
     pref.authors = Array.from(selectedAuthors);
     
     localStorage.setItem("preference", JSON.stringify(pref));
-    
     // (Optional) Backup key
     localStorage.setItem("selectedAuthors", JSON.stringify(pref.authors));
 
@@ -61,12 +58,12 @@ const prevArrow = document.getElementById("prevArrow");
 const nextArrow = document.getElementById("nextArrow");
 
 // Data State
-let allAuthors = [];
-let filteredAuthors = [];
+let allAuthors = [];      // จะเก็บเฉพาะ 100 คนแรก
+let filteredAuthors = []; // จะเปลี่ยนไปตามการค้นหา
 let currentPage = 0;
 
 // ============================
-// API SEARCH
+// API SEARCH (ทำงานเมื่อพิมพ์ค้นหา)
 // ============================
 async function searchAuthorsFromAPI(keyword, page = 1) {
     if (!keyword || keyword.trim() === "") return [];
@@ -101,6 +98,7 @@ async function searchAuthorsFromAPI(keyword, page = 1) {
             }
         }
 
+        // จัดการกรณีข้อมูลมาเป็น String ล้วน
         if (typeof raw[0] === "string") {
             raw = raw.map(name => ({
                 id: name,
@@ -126,124 +124,51 @@ async function searchAuthorsFromAPI(keyword, page = 1) {
 }
 
 // ============================
-// LOAD AUTHORS (พร้อมระบบ Force Injection & Bucket Sort)
+// LOAD AUTHORS (แก้ไข: โหลดเฉพาะ 100 คน ไม่ดึง API ทั้งหมด)
 // ============================
-async function loadAuthors() {
-    const query = `
-        query GetAllAuthorsFromBooks {
-            books {
-                contributions {
-                    author {
-                        id
-                        name
-                        slug
-                    }
-                }
-            }
-        }
-    `;
+function loadAuthors() {
+    // รายชื่อ 100 คน (Top Priority List)
+    const priorityList = [
+        // Trending 2024-2025
+        "Han Kang", "Jon Fosse", "Samantha Harvey", "Percival Everett", "Sally Rooney",
+        "Haruki Murakami", "Rebecca Yarros", "Sarah J. Maas", "Brandon Sanderson", "Emily Henry",
+        "Colleen Hoover", "Freida McFadden", "R.F. Kuang", "Kristin Hannah", "James Clear",
+        "Morgan Housel", "Toshikazu Kawaguchi", "Matt Haig", "Walter Isaacson", "Salman Rushdie",
+        "David Nicholls", "Leigh Bardugo", "Holly Jackson", "Taylor Jenkins Reid", "Bonnie Garmus",
+        "Gabrielle Zevin", "V.E. Schwab", "Olivie Blake", "Hernan Diaz", "Abraham Verghese",
 
-    try {
-        const res = await fetch(API_URL, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ query })
-        });
+        // Modern Legends
+        "J.K. Rowling", "Stephen King", "George R.R. Martin", "Neil Gaiman", "Margaret Atwood",
+        "Kazuo Ishiguro", "Paulo Coelho", "Dan Brown", "John Grisham", "James Patterson",
+        "Danielle Steel", "Nora Roberts", "Ken Follett", "Cormac McCarthy", "Toni Morrison",
+        "Gabriel García Márquez", "Milan Kundera", "Orhan Pamuk", "Yuval Noah Harari", "Khaled Hosseini",
+        "Alice Walker", "Donna Tartt", "Hanya Yanagihara", "Malcolm Gladwell", "Rick Riordan",
+        "Michael Connelly", "David Baldacci", "Nicholas Sparks", "Gillian Flynn", "Elena Ferrante",
 
-        const result = await res.json();
-        const rawBooks = result?.data?.books;
+        // All-Time Classics
+        "William Shakespeare", "Jane Austen", "Charles Dickens", "Leo Tolstoy", "Fyodor Dostoevsky",
+        "George Orwell", "Mark Twain", "Ernest Hemingway", "F. Scott Fitzgerald", "Virginia Woolf",
+        "Franz Kafka", "Victor Hugo", "Alexandre Dumas", "Charlotte Brontë", "Emily Brontë",
+        "Oscar Wilde", "James Joyce", "Homer", "Dante Alighieri", "Miguel de Cervantes",
+        "Albert Camus", "Vladimir Nabokov", "John Steinbeck", "J.D. Salinger", "Marcel Proust",
 
-        if (!rawBooks || !Array.isArray(rawBooks)) {
-            authorGrid.innerHTML = `<div class="error">Failed to load authors</div>`;
-            return;
-        }
+        // Genre Legends (Fantasy/Sci-Fi/Mystery)
+        "J.R.R. Tolkien", "Agatha Christie", "Arthur Conan Doyle", "C.S. Lewis", "Frank Herbert",
+        "Isaac Asimov", "Arthur C. Clarke", "H.P. Lovecraft", "Edgar Allan Poe", "Roald Dahl",
+        "Dr. Seuss", "Ursula K. Le Guin", "Terry Pratchett", "H.G. Wells", "Jules Verne"
+    ];
 
-        // 1. ดึงข้อมูลดิบจาก API
-        let list = [];
-        rawBooks.forEach(book => {
-            book?.contributions?.forEach(c => {
-                if (c?.author) list.push(c.author);
-            });
-        });
+    // แปลง List ชื่อ เป็น Object ให้เหมือนกับโครงสร้าง API
+    allAuthors = priorityList.map((name, index) => ({
+        id: `static-${index}`,
+        name: name,
+        slug: name.toLowerCase().replace(/[^a-z0-9]/g, "") // สร้าง slug ง่ายๆ
+    }));
 
-        const normalize = t => t.toLowerCase().replace(/[^a-z0-9]/g, "");
-        const uniqueMap = {};
-        
-        list.forEach(a => {
-            if (a && a.name) {
-                const key = normalize(a.name);
-                if (!uniqueMap[key]) {
-                    uniqueMap[key] = {
-                        id: a.id || `temp-${key}`,
-                        name: a.name,
-                        slug: a.slug || a.name.toLowerCase().replace(/\s+/g, '-') 
-                    };
-                }
-            }
-        });
-
-        // ==================================================
-        // ✅ VIP List Injection
-        // ==================================================
-        const priorityList = [
-            "Rebecca Yarros", "Suzanne Collins", "Emily Henry", "Taylor Jenkins Reid",
-            "Freida McFadden", "Abby Jimenez", "Ali Hazelwood", "Clare Leslie Hall",
-            "Carley Fortune", "Fredrik Backman", "Charlotte McConaghy", "Lauren Roberts",
-            "Alice Feeney", "Devney Perry", "SenLinYu", "Rachel Gillig",
-            "Jeneva Rose", "B.K. Borison", "R.F. Kuang", "Elsie Silver"
-        ];
-
-        priorityList.forEach(vipName => {
-            const key = normalize(vipName);
-            if (!uniqueMap[key]) {
-                uniqueMap[key] = {
-                    id: `forced-${key}`, 
-                    name: vipName,
-                    slug: vipName.toLowerCase().replace(/\s+/g, '-') 
-                };
-            }
-        });
-
-        const allData = Object.values(uniqueMap);
-
-        // ==================================================
-        // ✅ Bucket Sort (VIP First)
-        // ==================================================
-        const priorityIndexMap = {};
-        priorityList.forEach((name, index) => {
-            priorityIndexMap[normalize(name)] = index;
-        });
-
-        const vipAuthors = [];    
-        const otherAuthors = []; 
-
-        allData.forEach(author => {
-            const nName = normalize(author.name);
-            if (priorityIndexMap.hasOwnProperty(nName)) {
-                vipAuthors.push(author);
-            } else {
-                otherAuthors.push(author);
-            }
-        });
-
-        vipAuthors.sort((a, b) => {
-            const indexA = priorityIndexMap[normalize(a.name)];
-            const indexB = priorityIndexMap[normalize(b.name)];
-            return indexA - indexB;
-        });
-
-        otherAuthors.sort((a, b) => a.name.localeCompare(b.name));
-
-        allAuthors = [...vipAuthors, ...otherAuthors];
-
-        filteredAuthors = allAuthors;
-        currentPage = 0;
-        renderFilteredAuthors();
-
-    } catch (err) {
-        console.error("Failed to load authors:", err);
-        authorGrid.innerHTML = `<div class="error">Failed to load authors (API Error)</div>`;
-    }
+    // ตั้งค่าเริ่มต้นให้แสดงผล
+    filteredAuthors = allAuthors;
+    currentPage = 0;
+    renderFilteredAuthors();
 }
 
 // ============================
@@ -272,6 +197,7 @@ function renderFilteredAuthors() {
         btn.textContent = a.name;
         btn.dataset.slug = a.slug;
 
+        // เช็คสถานะ Selected
         if (selectedAuthors.has(a.slug)) btn.classList.add("selected");
 
         btn.addEventListener("click", () => {
@@ -281,7 +207,7 @@ function renderFilteredAuthors() {
             } else {
                 selectedAuthors.delete(a.slug);
             }
-            saveLocalAuthors(); // บันทึกทันที
+            saveLocalAuthors(); 
             updateCountAuthors();
         });
 
@@ -330,22 +256,16 @@ function updateCountAuthors() {
 }
 
 // --- BUTTONS ACTIONS ---
-
 unselectAllBtn.addEventListener("click", () => {
     selectedAuthors.clear();
     saveLocalAuthors();
     renderFilteredAuthors();
-    updateCountAuthors(); // ต้อง update ปุ่ม Next ด้วย
+    updateCountAuthors();
 });
 
 skipBtn.addEventListener("click", () => {
-    // 1. ล้างค่าที่เลือกทิ้ง (Skip = ไม่เลือกอะไรเลย)
     selectedAuthors.clear();
-    
-    // 2. บันทึกค่าว่างลง LocalStorage
     saveLocalAuthors(); 
-
-    // 3. ไปหน้าถัดไป
     window.location.href = "manage-pre-book.html";
 });
 
@@ -358,22 +278,25 @@ nextBtn.addEventListener("click", () => {
     window.location.href = "manage-pre-book.html";
 });
 
-// ============================
-// BACK BUTTON (แก้ไขใหม่)
-// ============================
 backBtn.addEventListener("click", () => {
-    // ✅ ไม่ต้องล้างค่าทิ้ง ให้บันทึกสถานะปัจจุบันแล้วย้อนกลับ
-    // เพื่อให้ User กลับมาแก้ไขได้
     saveLocalAuthors(); 
     window.location.href = "manage-pre-genre.html";
 });
 
+prevArrow.addEventListener("click", () => navigateCarousel(-1));
+nextArrow.addEventListener("click", () => navigateCarousel(1));
+
+// ============================
+// SEARCH LOGIC
+// ============================
 searchInput.addEventListener("input", async () => {
     const keyword = searchInput.value.trim();
 
+    // ถ้าช่องค้นหาว่าง -> ให้ใช้ allAuthors (ซึ่งคือ 100 คนที่ Hardcode ไว้)
     if (keyword === "") {
         filteredAuthors = allAuthors;
     } else {
+        // ถ้ามีการพิมพ์ -> ให้ไปเรียก API ค้นหา
         filteredAuthors = await searchAuthorsFromAPI(keyword);
     }
 
@@ -384,10 +307,5 @@ searchInput.addEventListener("input", async () => {
 // ============================
 // INITIALIZATION
 // ============================
-
-// ✅ ลบ logic ที่สั่ง reset ค่าทิ้ง (pref.authors = []) ออกไป
-// ✅ ใส่ logic การโหลดค่าเดิมกลับมาแทน
 loadLocalAuthors(); 
-
-// เริ่มโหลดข้อมูล
-loadAuthors();
+loadAuthors(); // โหลด 100 รายชื่อทันที ไม่ต้องรอ API

@@ -17,9 +17,9 @@ MODEL_DIR = os.path.join(BASE_DIR, "models")
 
 # 1. Feature Weights (Sum must equal 1.0)
 # ปรับจูนตาม Feature Importance: ชื่อนักเขียนมีผลต่อการตัดสินใจสูงสุด
-W_AUTHOR = 0.30      # Feature รอง: ถ้าผู้แต่งตรงก็ได้โบนัส (30%)
-W_CONTENT = 0.50     # Feature หลัก: เนื้อหาคล้ายกันสำคัญที่สุด (50%)
-W_GENRE = 0.20     # Weak Feature / Broad Category (10%)
+W_GENRE = 0.38       # ปรับขึ้นเป็น Feature หลักตามผลสำรวจ
+W_CONTENT = 0.31     # ปรับลดลงเพื่อให้สมดุล
+W_AUTHOR = 0.31      # ใกล้เคียงเดิม  # Weak Feature / Broad Category (10%)
 
 # 2. Search Bonus
 SEARCH_BOOST = 0.2   # คะแนนพิเศษเมื่อคำค้นหาตรงกับชื่อเรื่อง
