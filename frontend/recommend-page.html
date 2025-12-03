@@ -269,7 +269,7 @@
     function renderDots(totalPages) {
         const dotsContainer = document.getElementById('page-indicators');
         dotsContainer.innerHTML = '';
-        const maxDots = 50; 
+        const maxDots = 20; 
         const showDots = Math.min(totalPages, maxDots);
 
         if(totalPages <= 1) return; 

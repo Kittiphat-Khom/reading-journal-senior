@@ -128,35 +128,37 @@ async function searchAuthorsFromAPI(keyword, page = 1) {
 // ============================
 function loadAuthors() {
     // รายชื่อ 100 คน (Top Priority List)
-    const priorityList = [
-        // Trending 2024-2025
-        "Han Kang", "Jon Fosse", "Samantha Harvey", "Percival Everett", "Sally Rooney",
-        "Haruki Murakami", "Rebecca Yarros", "Sarah J. Maas", "Brandon Sanderson", "Emily Henry",
-        "Colleen Hoover", "Freida McFadden", "R.F. Kuang", "Kristin Hannah", "James Clear",
-        "Morgan Housel", "Toshikazu Kawaguchi", "Matt Haig", "Walter Isaacson", "Salman Rushdie",
-        "David Nicholls", "Leigh Bardugo", "Holly Jackson", "Taylor Jenkins Reid", "Bonnie Garmus",
-        "Gabrielle Zevin", "V.E. Schwab", "Olivie Blake", "Hernan Diaz", "Abraham Verghese",
+const priorityList = [
+    // Modern / Trending
+    "Rebecca Yarros", "Suzanne Collins", "Emily Henry", "Taylor Jenkins Reid", "Freida McFadden", 
+    "Abby Jimenez", "Ali Hazelwood", "Clare Leslie Hall", "Carley Fortune", "Fredrik Backman", 
+    "Charlotte McConaghy", "Lauren Roberts", "Alice Feeney", "Devney Perry", "SenLinYu", 
+    "Rachel Gillig", "Jeneva Rose", "B.K. Borison", "R.F. Kuang",
 
-        // Modern Legends
-        "J.K. Rowling", "Stephen King", "George R.R. Martin", "Neil Gaiman", "Margaret Atwood",
-        "Kazuo Ishiguro", "Paulo Coelho", "Dan Brown", "John Grisham", "James Patterson",
-        "Danielle Steel", "Nora Roberts", "Ken Follett", "Cormac McCarthy", "Toni Morrison",
-        "Gabriel García Márquez", "Milan Kundera", "Orhan Pamuk", "Yuval Noah Harari", "Khaled Hosseini",
-        "Alice Walker", "Donna Tartt", "Hanya Yanagihara", "Malcolm Gladwell", "Rick Riordan",
-        "Michael Connelly", "David Baldacci", "Nicholas Sparks", "Gillian Flynn", "Elena Ferrante",
-
-        // All-Time Classics
-        "William Shakespeare", "Jane Austen", "Charles Dickens", "Leo Tolstoy", "Fyodor Dostoevsky",
-        "George Orwell", "Mark Twain", "Ernest Hemingway", "F. Scott Fitzgerald", "Virginia Woolf",
-        "Franz Kafka", "Victor Hugo", "Alexandre Dumas", "Charlotte Brontë", "Emily Brontë",
-        "Oscar Wilde", "James Joyce", "Homer", "Dante Alighieri", "Miguel de Cervantes",
-        "Albert Camus", "Vladimir Nabokov", "John Steinbeck", "J.D. Salinger", "Marcel Proust",
-
-        // Genre Legends (Fantasy/Sci-Fi/Mystery)
-        "J.R.R. Tolkien", "Agatha Christie", "Arthur Conan Doyle", "C.S. Lewis", "Frank Herbert",
-        "Isaac Asimov", "Arthur C. Clarke", "H.P. Lovecraft", "Edgar Allan Poe", "Roald Dahl",
-        "Dr. Seuss", "Ursula K. Le Guin", "Terry Pratchett", "H.G. Wells", "Jules Verne"
-    ];
+    // Classic Literature & Legends
+    "Fyodor Dostoevsky", "Dante Alighieri", "Lev Tolstoy", "Victor Hugo", "William Shakespeare",
+    "Johann Wolfgang von Goethe", "Miguel de Cervantes y Saavedra", "Italo Calvino", "Stendhal",
+    "Charles Baudelaire", "Marcel Proust", "Giovanni Boccaccio", "Aleksandr Pushkin",
+    "Jalaluddin Muhammad Rumi", "Franz Kafka", "Anton Chekhov", "Gabriel García Márquez",
+    "Umberto Eco", "J.R.R. Tolkien", "William Faulkner", "Aesop", "Arthur Rimbaud",
+    "Aristophanes", "Ivan Turgenev", "Sophocles", "Molière", "Charles Dickens",
+    "Maxim Gorky", "George Orwell", "Edgar Allan Poe", "Publius Vergilius Maro (Virgil)",
+    "Julio Cortázar", "Nazim Hikmet", "Oscar Wilde", "Jean de La Fontaine", "Rainer Maria Rilke",
+    "Lord Byron", "Hans Christian Andersen", "Thomas Mann", "Alexandre Dumas", "James Joyce",
+    "Louis-Ferdinand Céline", "Boris Pasternak", "Federico García Lorca", "Pablo Neruda",
+    "Borges (Jorge Luis Borges)", "Beaumarchais", "Naguib Mahfouz", "Ursula K. Le Guin",
+    "Nikolay Gogol", "Honoré de Balzac", "Ernest Hemingway", "Neil Gaiman", "Jean Racine",
+    "Albert Camus", "Jean-Paul Sartre", "Chingiz Aitmatov", "John Steinbeck", "Milan Kundera",
+    "Jules Verne", "Mark Twain", "Francois Rabelais", "Yasar Kemal", "George Bernard Shaw",
+    "Arthur Conan Doyle", "Jane Austen", "Geoffrey Chaucer", "Antoine de Saint-Exupéry",
+    "Erich Maria Remarque", "J.D. Salinger", "Virginia Woolf", "Louis Aragon", "Herman Melville",
+    "Alphonse Daudet", "Mikhail Sholokhov", "Stefan Zweig", "José Saramago", "Bertolt Brecht",
+    "Mario Vargas Llosa", "T.S. Eliot", "Guy de Maupassant", "John Keats", "Sabahattin Ali",
+    "Ahmet Hamdi Tanpinar", "John Fante", "Henri-Frédéric Blanc", "Isaac Asimov",
+    "F. Scott Fitzgerald", "J.M. Coetzee", "Kazuo Ishiguro", "Hermann Hesse",
+    "Robert Louis Stevenson", "Salman Rushdie", "Stephen King", "Aldous Huxley", "Paul Valéry",
+    "Thomas Pynchon", "H.P. Lovecraft", "Haruki Murakami", "Nikos Kazantzakis"
+];
 
     // แปลง List ชื่อ เป็น Object ให้เหมือนกับโครงสร้าง API
     allAuthors = priorityList.map((name, index) => ({
