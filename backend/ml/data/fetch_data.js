@@ -251,23 +251,17 @@ async function runTrainModel() {
 }
 
 // ============================================================
-// 🚀 MAIN EXECUTION (Modified to save RAM)
+// 🚀 MAIN EXECUTION
 // ============================================================
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
     (async () => {
         try {
-            console.log("🚀 Starting Data Export Pipeline...");
-            
-            // 1. ทำแค่ Export ข้อมูล แล้วจบ
+            console.log("🚀 Starting Recommendation System Pipeline...");
             await exportUserPreferences();
             await exportBooks();
-            
-            console.log("\n✅ Data Export Finished. Node.js will exit now to free up RAM.");
-            console.log("👉 Please run the python script manually or via a separate command.");
-            
-            // ไม่เรียก runTrainModel() ในนี้ เพื่อคืน RAM ให้ระบบ
-            process.exit(0); 
-
+            await runTrainModel();
+            console.log("\n✨ Pipeline Finished. System is ready to serve recommendations.");
+            process.exit(0);
         } catch (e) {
             console.error("❌ Pipeline Failed:", e);
             process.exit(1);

@@ -41,7 +41,7 @@ router.post('/add', async (req, res) => {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        const sql = "INSERT INTO User (username, email, password, register_date) VALUES (?, ?, ?, NOW())";
+        const sql = "INSERT INTO User (username, email, pwd, register_date, role, is_verified) VALUES (?, ?, ?, NOW(), 'user', 1)";
         await db.query(sql, [username, email, hashedPassword]);
 
         res.status(201).json({ success: true, message: "User added successfully" });
