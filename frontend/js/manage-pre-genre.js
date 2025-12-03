@@ -38,7 +38,7 @@ const RAW_GENRE_LIST = [
     "Mystery", 
     "Family", 
     "War",
-    "Animals and Pets", "Cats", "Dogs", "Other Domestic Pets", 
+    "Animals and Pets","Other Domestic Pets", 
     "Art and Design", "Architecture", "Fashion Design", "Fine Arts", "Graphic Design & Product Design", "Interior Design", "Photography", 
     "Biography", "Business", "Historical & Political", "True Crime", "Other Biographies", 
     "Business and Economics", "Accounting", "Biographies", "Business Management", "Business Writing (Reports/Resumes)", "Economics", "Finance and Investment", "Sales and Marketing", 
