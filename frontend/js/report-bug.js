@@ -1,47 +1,19 @@
+/* js/report-bug.js */
+
 document.addEventListener('DOMContentLoaded', async () => {
     
     const API_BASE_URL = 'https://reading-journal.xyz'; 
     const token = localStorage.getItem('token'); 
 
+    // 1. Check Token
     if (!token) {
         console.warn("No token found. Redirecting...");
         window.location.href = "log-in-page.html";
         return;
     }
 
-    // ✅ 1. เรียกฟังก์ชันดึงข้อมูล User (เพื่อให้ Sidebar หายหมุน)
-    await fetchUserInfo(token);
-
     // ==========================================
-    // 👤 ฟังก์ชันดึงข้อมูล User
-    // ==========================================
-    async function fetchUserInfo(token) {
-        try {
-            const res = await fetch(`${API_BASE_URL}/api/users/me`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-
-            if (!res.ok) throw new Error("Failed to fetch user info");
-
-            const user = await res.json();
-            
-            // อัปเดต Sidebar
-            const nameEl = document.getElementById('user-name');
-            const emailEl = document.getElementById('user-email');
-            
-            if (nameEl) nameEl.textContent = user.username || "User";
-            if (emailEl) emailEl.textContent = user.email || "";
-
-        } catch (err) {
-            console.error("Auth Error:", err);
-            // ถ้า Token หมดอายุ ให้เด้งออก
-            // localStorage.clear();
-            // window.location.href = "log-in-page.html";
-        }
-    }
-
-    // ==========================================
-    // 🔴 HISTORY MODAL LOGIC
+    // 🔴 HISTORY MODAL LOGIC (เฉพาะหน้านี้)
     // ==========================================
     const openHistoryBtn = document.getElementById('openHistoryBtn');
     const historyModal = document.getElementById('historyModal');
@@ -186,7 +158,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             let html = '';
             reports.forEach(report => {
-                const date = new Date(report.created_at).toLocaleDateString('en-GB', { // 👈 เปลี่ยนเป็น en-GB
+                const date = new Date(report.created_at).toLocaleDateString('en-GB', { 
                     day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute:'2-digit'
                 });
                 
@@ -219,13 +191,61 @@ document.addEventListener('DOMContentLoaded', async () => {
             listContainer.innerHTML = `<div class="empty-state" style="color:#EF4444"><i class="fa-solid fa-circle-exclamation"></i><p>Error loading reports.</p></div>`;
         }
     }
+
+    // ==========================================
+    // 🔌 LOGOUT EVENTS BINDING (Inside DOMContentLoaded)
+    // ==========================================
+    const confirmLogoutBtn = document.getElementById("confirmLogoutBtn");
+    const cancelLogoutBtn = document.getElementById("cancelLogoutBtn");
+
+    if (confirmLogoutBtn) {
+        confirmLogoutBtn.addEventListener("click", confirmLogoutAction);
+    }
+    if (cancelLogoutBtn) {
+        cancelLogoutBtn.addEventListener("click", closeLogoutModal);
+    }
+});
+
+// ==========================================
+// 🔥 GLOBAL LOGOUT LOGIC (Outside DOMContentLoaded)
+// ==========================================
+// ต้องอยู่นอกสุดเพื่อให้ HTML onclick="openLogoutModal()" มองเห็น
+
+window.openLogoutModal = function(event) {
+    if(event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+    const modal = document.getElementById("logoutModal");
+    if (modal) {
+        modal.classList.add("active");
+    } else {
+        console.error("Logout modal not found!");
+    }
+}
+
+window.closeLogoutModal = function() {
+    const modal = document.getElementById("logoutModal");
+    if (modal) modal.classList.remove("active");
+}
+
+window.confirmLogoutAction = function() {
+    const btn = document.getElementById("confirmLogoutBtn");
+    if(btn) {
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Signing out...';
+        btn.disabled = true;
+    }
     
-    // LOGOUT
-    const logoutBtn = document.getElementById("logout-btn");
-    if(logoutBtn) {
-        logoutBtn.addEventListener("click", () => {
-             localStorage.clear();
-             window.location.href = "log-in-page.html";
-        });
+    setTimeout(() => {
+        localStorage.clear(); // ล้าง Token
+        window.location.href = "log-in-page.html"; // เด้งไปหน้า Login
+    }, 800);
+}
+
+// ปิด Modal เมื่อคลิกพื้นหลัง
+window.addEventListener("click", (e) => {
+    const modal = document.getElementById("logoutModal");
+    if (e.target === modal) {
+        closeLogoutModal();
     }
 });

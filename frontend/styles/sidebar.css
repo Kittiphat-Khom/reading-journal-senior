@@ -1,0 +1,220 @@
+/* styles/sidebar.css */
+
+/* =========================================
+   1. MAIN CONTAINER
+   ========================================= */
+.sidebar {
+  position: fixed;
+  top: 0; left: -320px;
+  width: 320px;
+  height: 100%;
+  background: #ffffff;
+  box-shadow: 10px 0 30px rgba(0, 0, 0, 0.05);
+  transition: cubic-bezier(0.4, 0, 0.2, 1) 0.4s;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid #f1f5f9;
+  overflow: hidden;
+  font-family: 'Prompt', sans-serif;
+}
+
+.sidebar.active {
+  left: 0;
+}
+
+/* =========================================
+   2. TOP SECTION (USER PROFILE) - แก้ไขใหม่ 🛠️
+   ========================================= */
+.sidebar-top {
+  padding: 24px;
+  background: #ffffff;
+  border-bottom: 1px solid #f1f5f9;
+  position: relative; /* เพื่อให้ปุ่มปิดอ้างอิงตำแหน่งได้ */
+}
+
+/* การ์ด User */
+.user {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  background: #f8fafc;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  position: relative;
+  /* เพิ่ม margin-top เพื่อหลบปุ่มปิด (ถ้าจอเล็กมากๆ) */
+  margin-top: 10px; 
+}
+
+.avatar {
+  width: 52px; height: 52px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  color: #2563eb;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.5rem;
+  box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.1);
+  flex-shrink: 0; /* ไม่ให้หด */
+}
+
+.user-info {
+  flex: 1;
+  min-width: 0; /* สำคัญ! ช่วยให้ text-overflow ทำงาน */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.user-name {
+  font-weight: 700;
+  font-size: 1rem;
+  color: #0f172a;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  margin-bottom: 2px;
+}
+
+.user-sub {
+  font-size: 0.8rem;
+  color: #64748b;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* ปุ่มปิด (X) - ย้ายไปมุมขวาบนสุดของ Sidebar ไม่ทับ user */
+.close-btn {
+  position: absolute;
+  top: 15px; right: 15px;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  color: #94a3b8;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.close-btn:hover {
+  background: #f1f5f9;
+  color: #ef4444;
+  transform: rotate(90deg);
+  border-color: #cbd5e1;
+}
+
+/* =========================================
+   3. MIDDLE SECTION (MENU)
+   ========================================= */
+.sidebar-middle {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 16px;
+  scrollbar-width: none;
+}
+.sidebar-middle::-webkit-scrollbar { display: none; }
+
+.menu { list-style: none; padding: 0; margin: 0; }
+.menu li { margin-bottom: 6px; }
+
+.menu li a {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  color: #475569;
+  text-decoration: none;
+  font-size: 0.95rem;
+  font-weight: 500;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.menu li a i {
+  width: 24px; text-align: center;
+  color: #94a3b8;
+  transition: color 0.2s;
+  font-size: 1.1rem;
+}
+
+/* Hover State */
+.menu li a:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+  transform: translateX(4px);
+}
+.menu li a:hover i { color: #3b82f6; }
+
+/* Active State */
+.menu li a.active {
+  background: #eff6ff; /* สีฟ้าจางๆ */
+  color: #2563eb;
+  font-weight: 600;
+}
+.menu li a.active i { color: #2563eb; }
+
+/* =========================================
+   4. BOTTOM SECTION (LOGOUT) - สวยขึ้น ✨
+   ========================================= */
+.sidebar-bottom {
+  padding: 20px 24px 30px;
+  border-top: 1px solid #f1f5f9;
+  background: #ffffff;
+}
+
+.logout-btn {
+  width: 100%;
+  padding: 14px;
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  cursor: pointer;
+  font-family: 'Prompt', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #64748b; /* สีเทาปกติ */
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  gap: 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.logout-btn i {
+  font-size: 1.1rem;
+  transition: transform 0.3s;
+}
+
+/* Hover Effect: เปลี่ยนเป็นสีแดง */
+.logout-btn:hover {
+  background-color: #fef2f2; /* สีแดงจางๆ */
+  border-color: #fecaca;
+  color: #ef4444; /* ตัวหนังสือแดง */
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15);
+}
+
+.logout-btn:hover i {
+  transform: translateX(3px); /* ไอคอนขยับขวา */
+}
+
+/* Active Click */
+.logout-btn:active {
+  transform: translateY(0);
+}
+
+/* =========================================
+   5. OVERLAY
+   ========================================= */
+.overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(2px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  z-index: 900;
+}
+.overlay.show { opacity: 1; pointer-events: auto; }

@@ -1,3 +1,7 @@
+/* =========================================
+   FILE: manage-pre-author.js
+   ========================================= */
+
 const API_BASE_URL = 'https://reading-journal.xyz';
 
 // ============================
@@ -11,19 +15,27 @@ const ITEMS_PER_PAGE = 20;
 // ============================
 let selectedAuthors = new Set();
 
+// ✅ ฟังก์ชันโหลดค่าเดิม (แก้ไขให้ดึงข้อมูลจริง)
 function loadLocalAuthors() {
-    const pref = JSON.parse(localStorage.getItem("preference") || "{}");
-    if (Array.isArray(pref.authors)) {
-        selectedAuthors = new Set(pref.authors);
-        console.log("📌 Loaded saved authors =", pref.authors);
+    try {
+        const pref = JSON.parse(localStorage.getItem("preference") || "{}");
+        if (pref.authors && Array.isArray(pref.authors)) {
+            selectedAuthors = new Set(pref.authors);
+            console.log("📌 Loaded saved authors =", pref.authors);
+        }
+    } catch (e) {
+        console.error("Error loading authors from local storage", e);
     }
 }
 
+// ✅ ฟังก์ชันบันทึกค่า
 function saveLocalAuthors() {
     let pref = JSON.parse(localStorage.getItem("preference") || "{}");
     pref.authors = Array.from(selectedAuthors);
     
     localStorage.setItem("preference", JSON.stringify(pref));
+    
+    // (Optional) Backup key
     localStorage.setItem("selectedAuthors", JSON.stringify(pref.authors));
 
     console.log("💾 Saved authors =", pref.authors);
@@ -114,7 +126,7 @@ async function searchAuthorsFromAPI(keyword, page = 1) {
 }
 
 // ============================
-// LOAD AUTHORS (พร้อมระบบ Force Injection)
+// LOAD AUTHORS (พร้อมระบบ Force Injection & Bucket Sort)
 // ============================
 async function loadAuthors() {
     const query = `
@@ -146,7 +158,7 @@ async function loadAuthors() {
             return;
         }
 
-        // 1. ดึงข้อมูลดิบจาก API (เท่าที่ API ส่งมาให้)
+        // 1. ดึงข้อมูลดิบจาก API
         let list = [];
         rawBooks.forEach(book => {
             book?.contributions?.forEach(c => {
@@ -154,11 +166,9 @@ async function loadAuthors() {
             });
         });
 
-        // ตัวช่วยทำ Key สำหรับเช็คชื่อซ้ำ
         const normalize = t => t.toLowerCase().replace(/[^a-z0-9]/g, "");
         const uniqueMap = {};
         
-        // ใส่ข้อมูลจาก API ลง Map
         list.forEach(a => {
             if (a && a.name) {
                 const key = normalize(a.name);
@@ -166,14 +176,14 @@ async function loadAuthors() {
                     uniqueMap[key] = {
                         id: a.id || `temp-${key}`,
                         name: a.name,
-                        slug: a.slug || a.name.toLowerCase().replace(/\s+/g, '-') // สร้าง slug สำรองถ้าไม่มี
+                        slug: a.slug || a.name.toLowerCase().replace(/\s+/g, '-') 
                     };
                 }
             }
         });
 
         // ==================================================
-        // ✅ [FIXED] ส่วนสำคัญ: บังคับสร้างชื่อเหล่านี้ถ้ายังไม่มี
+        // ✅ VIP List Injection
         // ==================================================
         const priorityList = [
             "Rebecca Yarros", "Suzanne Collins", "Emily Henry", "Taylor Jenkins Reid",
@@ -183,28 +193,22 @@ async function loadAuthors() {
             "Jeneva Rose", "B.K. Borison", "R.F. Kuang", "Elsie Silver"
         ];
 
-        // วนลูปเช็ค: ถ้าชื่อ VIP ไหนไม่อยู่ใน uniqueMap ให้สร้างขึ้นมาเลย!
         priorityList.forEach(vipName => {
             const key = normalize(vipName);
             if (!uniqueMap[key]) {
-                // สร้างข้อมูลเทียมขึ้นมา (เพื่อให้มีปุ่มกด)
                 uniqueMap[key] = {
                     id: `forced-${key}`, 
                     name: vipName,
-                    // สร้าง slug แบบมาตรฐาน (ตัวพิมพ์เล็ก เว้นวรรคเป็นขีด) เพื่อให้ Database เข้าใจได้
                     slug: vipName.toLowerCase().replace(/\s+/g, '-') 
                 };
             }
         });
 
-        // แปลงกลับเป็น Array
         const allData = Object.values(uniqueMap);
 
         // ==================================================
-        // ✅ ระบบแยกตะกร้า (Bucket Sort) เพื่อเรียงลำดับ
+        // ✅ Bucket Sort (VIP First)
         // ==================================================
-        
-        // สร้าง Index Map เพื่อความเร็ว
         const priorityIndexMap = {};
         priorityList.forEach((name, index) => {
             priorityIndexMap[normalize(name)] = index;
@@ -222,20 +226,16 @@ async function loadAuthors() {
             }
         });
 
-        // เรียง VIP ตามลำดับเป๊ะๆ
         vipAuthors.sort((a, b) => {
             const indexA = priorityIndexMap[normalize(a.name)];
             const indexB = priorityIndexMap[normalize(b.name)];
             return indexA - indexB;
         });
 
-        // เรียงคนอื่นตาม A-Z
         otherAuthors.sort((a, b) => a.name.localeCompare(b.name));
 
-        // รวมร่าง
         allAuthors = [...vipAuthors, ...otherAuthors];
 
-        // Finish
         filteredAuthors = allAuthors;
         currentPage = 0;
         renderFilteredAuthors();
@@ -281,7 +281,7 @@ function renderFilteredAuthors() {
             } else {
                 selectedAuthors.delete(a.slug);
             }
-            saveLocalAuthors();
+            saveLocalAuthors(); // บันทึกทันที
             updateCountAuthors();
         });
 
@@ -335,13 +335,14 @@ unselectAllBtn.addEventListener("click", () => {
     selectedAuthors.clear();
     saveLocalAuthors();
     renderFilteredAuthors();
+    updateCountAuthors(); // ต้อง update ปุ่ม Next ด้วย
 });
 
 skipBtn.addEventListener("click", () => {
-    // 1. ล้างค่าที่เลือกทิ้ง (เพราะกด Skip แปลว่าไม่เอาที่เลือกไว้)
+    // 1. ล้างค่าที่เลือกทิ้ง (Skip = ไม่เลือกอะไรเลย)
     selectedAuthors.clear();
     
-    // 2. บันทึกค่าว่างลง LocalStorage (เพื่อล้างของเก่าถ้ามี)
+    // 2. บันทึกค่าว่างลง LocalStorage
     saveLocalAuthors(); 
 
     // 3. ไปหน้าถัดไป
@@ -358,10 +359,11 @@ nextBtn.addEventListener("click", () => {
 });
 
 // ============================
-// BACK BUTTON
+// BACK BUTTON (แก้ไขใหม่)
 // ============================
 backBtn.addEventListener("click", () => {
-    selectedAuthors.clear(); 
+    // ✅ ไม่ต้องล้างค่าทิ้ง ให้บันทึกสถานะปัจจุบันแล้วย้อนกลับ
+    // เพื่อให้ User กลับมาแก้ไขได้
     saveLocalAuthors(); 
     window.location.href = "manage-pre-genre.html";
 });
@@ -382,10 +384,10 @@ searchInput.addEventListener("input", async () => {
 // ============================
 // INITIALIZATION
 // ============================
-let pref = JSON.parse(localStorage.getItem("preference") || "{}");
-pref.authors = []; 
-localStorage.setItem("preference", JSON.stringify(pref));
-localStorage.removeItem("selectedAuthors"); 
 
-selectedAuthors.clear(); 
+// ✅ ลบ logic ที่สั่ง reset ค่าทิ้ง (pref.authors = []) ออกไป
+// ✅ ใส่ logic การโหลดค่าเดิมกลับมาแทน
+loadLocalAuthors(); 
+
+// เริ่มโหลดข้อมูล
 loadAuthors();

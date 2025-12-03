@@ -1,3 +1,7 @@
+/* =========================================
+   FILE: manage-pre-genre.js
+   ========================================= */
+
 const API_BASE_URL = 'https://reading-journal.xyz';
 
 // ============================
@@ -14,7 +18,7 @@ let currentPage = 0;
 // DATA: STATIC BOOKSHELF LIST
 // ============================
 const RAW_GENRE_LIST = [
-"Fiction", 
+    "Fiction", 
     "Fantasy", 
     "Young Adult", 
     "Adventure", 
@@ -34,8 +38,6 @@ const RAW_GENRE_LIST = [
     "Mystery", 
     "Family", 
     "War",
-
-    // --- รายการเดิมของคุณ ---
     "Animals and Pets", "Cats", "Dogs", "Other Domestic Pets", 
     "Art and Design", "Architecture", "Fashion Design", "Fine Arts", "Graphic Design & Product Design", "Interior Design", "Photography", 
     "Biography", "Business", "Historical & Political", "True Crime", "Other Biographies", 
@@ -86,23 +88,47 @@ const prevArrow = document.getElementById("prevArrow");
 const nextArrow = document.getElementById("nextArrow");
 
 // ============================
-// LOAD SAVED DATA
+// LOAD SAVED DATA (แก้ไขใหม่ให้ทำงานจริง)
 // ============================
 function loadLocalGenres() {
-    // ฟังก์ชันนี้เก็บไว้เผื่ออนาคตต้องการโหลดค่ากลับมา
-    const savedPref = JSON.parse(localStorage.getItem("preference") || "{}");
-    if (savedPref.genres && Array.isArray(savedPref.genres)) {
-        selectedGenres = new Set(savedPref.genres);
+    try {
+        // ดึงข้อมูล Preference หลัก
+        const savedPref = JSON.parse(localStorage.getItem("preference") || "{}");
+        
+        // ถ้ามีข้อมูล genres เก็บอยู่ ให้โหลดมาใส่ Set
+        if (savedPref.genres && Array.isArray(savedPref.genres)) {
+            selectedGenres = new Set(savedPref.genres);
+            console.log("📌 Loaded saved genres:", savedPref.genres);
+        } else {
+            // เผื่อกรณีเก็บแยก key (Backup)
+            const backupGenres = JSON.parse(localStorage.getItem("selectedGenres") || "[]");
+            if (Array.isArray(backupGenres) && backupGenres.length > 0) {
+                selectedGenres = new Set(backupGenres);
+                console.log("📌 Loaded backup genres:", backupGenres);
+            }
+        }
+    } catch (e) {
+        console.error("Error loading local genres:", e);
     }
 }
 
 function saveLocalGenres() {
-    let pref = JSON.parse(localStorage.getItem("preference") || "{}");
-    pref.genres = Array.from(selectedGenres);
+    try {
+        let pref = JSON.parse(localStorage.getItem("preference") || "{}");
+        
+        // แปลง Set กลับเป็น Array เพื่อบันทึก
+        pref.genres = Array.from(selectedGenres);
 
-    localStorage.setItem("preference", JSON.stringify(pref));
-    localStorage.setItem("selectedGenres", JSON.stringify(pref.genres));
-    console.log("💾 Saved genres:", pref.genres);
+        // บันทึกลง LocalStorage
+        localStorage.setItem("preference", JSON.stringify(pref));
+        
+        // (Optional) บันทึกแยก key เผื่อไว้ใช้ที่อื่น
+        localStorage.setItem("selectedGenres", JSON.stringify(pref.genres));
+        
+        console.log("💾 Saved genres:", pref.genres);
+    } catch (e) {
+        console.error("Error saving genres:", e);
+    }
 }
 
 // ============================
@@ -118,7 +144,6 @@ function loadGenres() {
         };
 
         // แปลง List ชื่อให้เป็น Object { name, slug }
-        // ใช้ Set เพื่อป้องกันชื่อซ้ำ (ใน List ที่ให้มามีซ้ำบางคำ เช่น Young Adult)
         const uniqueNames = new Set();
         
         allGenres = [];
@@ -134,12 +159,15 @@ function loadGenres() {
             }
         });
 
-        // ไม่ต้อง Sort Priority แล้ว ใช้ลำดับตาม Array ด้านบนเลย
-        // แต่ถ้าอยากเรียง A-Z ให้เปิด comment บรรทัดล่าง
+        // (Optional) เรียง A-Z
         // allGenres.sort((a, b) => a.name.localeCompare(b.name));
 
         filteredGenres = allGenres;
-        currentPage = 0;
+        
+        // คำนวณหน้าปัจจุบันใหม่ ถ้ามีการค้นหาหรือโหลดซ้ำ
+        // แต่ถ้าโหลดครั้งแรก ให้เริ่มหน้า 0
+        if (currentPage < 0) currentPage = 0;
+        
         renderFiltered();
 
     } catch (error) {
@@ -175,6 +203,7 @@ function renderFiltered() {
         btn.dataset.slug = g.slug;
         btn.textContent = g.name;
 
+        // เช็คว่าเคยเลือกไว้ไหม ถ้าเคยให้ใส่ class selected
         if (selectedGenres.has(g.slug)) btn.classList.add("selected");
 
         btn.addEventListener("click", () => {
@@ -184,6 +213,7 @@ function renderFiltered() {
             } else {
                 selectedGenres.delete(g.slug);
             }
+            // บันทึกทันทีที่กดเลือก (เพื่อให้ Back กลับมาแล้วค่าอยู่)
             saveLocalGenres();
             updateCount();
         });
@@ -238,8 +268,8 @@ function updateCount() {
 
 unselectAllBtn.addEventListener("click", () => {
     selectedGenres.clear();
-    saveLocalGenres();
-    renderFiltered();
+    saveLocalGenres(); // บันทึกค่าว่างลงไป
+    renderFiltered();  // รีเฟรชปุ่มให้หายแดง
     updateCount();
 });
 
@@ -248,6 +278,7 @@ nextBtn.addEventListener("click", () => {
         alert("Please select at least 3 genres.");
         return;
     }
+    // บันทึกก่อนไปหน้าถัดไป
     saveLocalGenres();
     window.location.href = "manage-pre-author.html";
 });
@@ -272,10 +303,21 @@ searchInput.addEventListener("input", () => {
 // START (Initial Load)
 // ============================
 
-// ล้างค่าเก่าทิ้งตาม Requirement
-localStorage.removeItem("preference"); 
-localStorage.removeItem("selectedGenres");
-selectedGenres.clear();
+// ตรวจสอบว่ามี flag ให้ล้างค่าหรือไม่ (เผื่อใช้ท่าส่ง URL ?new=1)
+const urlParams = new URLSearchParams(window.location.search);
+if (urlParams.get('new') === '1') {
+    // ถ้ามี ?new=1 ให้ล้างค่าทิ้ง (สำหรับ User ใหม่)
+    console.log("New user session: Clearing preferences.");
+    localStorage.removeItem("preference"); 
+    localStorage.removeItem("selectedGenres");
+    selectedGenres.clear();
+    
+    // ลบ query param ออกจาก URL สวยๆ (optional)
+    window.history.replaceState({}, document.title, window.location.pathname);
+} else {
+    // ถ้าไม่มี flag (เช่น กด Back กลับมา) ให้โหลดค่าเดิม
+    loadLocalGenres();
+}
 
-// โหลดข้อมูล Static
+// เริ่มโหลดข้อมูล Genres และแสดงผล
 loadGenres();

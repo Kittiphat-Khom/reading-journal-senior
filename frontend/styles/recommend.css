@@ -1,8 +1,10 @@
+/* styles/recommend.css */
+
 /* =========================================
    1. Base & Layout
    ========================================= */
 body {
-  font-family: 'Inter', 'Prompt', sans-serif; /* เพิ่ม Inter เข้ามาด้วย */
+  font-family: 'Inter', 'Prompt', sans-serif;
   margin: 0;
   background-color: #f9f7f4;
   color: #222;
@@ -19,39 +21,17 @@ body {
   display: flex; flex-direction: column; align-items: center;
 }
 
+/* ❌ ลบส่วน SIDEBAR ออกแล้ว (ใช้ styles/sidebar.css แทน) */
+
 /* =========================================
-   2. Sidebar & Topbar
+   2. Topbar (ยังเก็บไว้)
    ========================================= */
-.sidebar {
-  position: fixed; top: 0; left: -300px; width: 300px; height: 100%;
-  background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%);
-  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.08);
-  transition: left 0.3s ease, box-shadow 0.3s ease;
-  z-index: 500;
-  display: flex; flex-direction: column;
-  border-right: 1px solid rgba(0, 0, 0, 0.05);
+.topbar { 
+    display: flex; justify-content: space-between; align-items: center; 
+    height: 72px; padding: 0 24px; 
+    background-color: #f9f7f4; border-bottom: 1px solid #dcdcdc; 
+    position: fixed; top: 0; left: 0; right: 0; z-index: 300; 
 }
-.sidebar.active { left: 0; box-shadow: 6px 0 25px rgba(0, 0, 0, 0.15); }
-.sidebar-top { padding: 20px 18px 10px 18px; border-bottom: 1px solid rgba(0, 0, 0, 0.05); background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(6px); }
-.user { display: flex; align-items: center; gap: 12px; position: relative; }
-.avatar { width: 46px; height: 46px; border-radius: 12px; background: linear-gradient(135deg, #d2ebf7, #b1d8ef); display: flex; align-items: center; justify-content: center; color: #1b6f8e; font-size: 20px; box-shadow: 0 2px 6px rgba(27, 111, 142, 0.3); }
-.user-info { flex: 1; }
-.user-name { font-weight: 600; font-size: 1rem; color: #333; }
-.user-sub { font-size: 0.85rem; color: #666; }
-.close-btn { position: absolute; right: 0; top: 4px; background: none; border: none; font-size: 20px; color: #666; cursor: pointer; padding: 8px; line-height: 1; transition: color 0.2s ease; }
-.close-btn:hover { color: #111; }
-.sidebar-middle { flex: 1 1 auto; overflow-y: auto; padding-top: 12px; backdrop-filter: blur(4px); }
-.menu { list-style: none; padding: 0; margin: 0; }
-.menu li { border-bottom: 1px solid rgba(0, 0, 0, 0.04); }
-.menu li a { display: flex; align-items: center; gap: 10px; padding: 14px 20px; color: #222; text-decoration: none; font-size: 1rem; font-weight: 500; border-radius: 8px; transition: all 0.25s ease; }
-.menu li a:hover { background: rgba(52, 152, 219, 0.08); color: #2a6f86; transform: translateX(3px); }
-.menu li a.active { background: rgba(41, 128, 185, 0.15); color: #1b6f8e; font-weight: 600; box-shadow: inset 3px 0 0 #1b6f8e; }
-.sidebar-bottom { padding: 16px; border-top: 1px solid rgba(0, 0, 0, 0.05); background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(6px); margin-top: auto; }
-.logout-btn { width: 100%; padding: 10px 12px; background: #f3f6f8; border: 1px solid #ddd; border-radius: 6px; cursor: pointer; font-size: 0.95rem; font-weight: 500; color: #333; transition: all 0.2s ease; }
-.logout-btn:hover { background: #e8f2f9; color: #1b6f8e; }
-.overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.3); opacity: 0; pointer-events: none; transition: opacity 0.3s ease; z-index: 400; }
-.overlay.show { opacity: 1; pointer-events: auto; }
-.topbar { display: flex; justify-content: space-between; align-items: center; height: 72px; padding: 0 24px; background-color: #f9f7f4; border-bottom: 1px solid #dcdcdc; position: fixed; top: 0; left: 0; right: 0; z-index: 300; }
 .topbar .left, .actions { display: flex; align-items: center; gap: 20px; }
 .topbar h1 { margin: 0; font-size: 1.5rem; font-weight: normal; color: #333; }
 .menu-btn { background: none; border: none; cursor: pointer; font-size: 26px; color: #1e6892; padding: 0; transition: transform 0.2s ease; }
@@ -191,79 +171,29 @@ body {
 @media (max-width: 768px) { .nav-circle-btn { display: none; } .recommendation-wrapper { padding: 0 10px; } .book-grid { grid-template-columns: repeat(2, 1fr); } }
 
 /* =========================================
-   7. Toolbar & Shuffle Button
-   ========================================= */
-.toolbar {
-  display: flex; justify-content: flex-end; width: 100%;
-  margin-bottom: 15px; padding-right: 10px;
-}
-
-.btn-shuffle {
-  background-color: #ffffff;
-  border: 1px solid #d1d5db;
-  color: #475569;
-  padding: 8px 16px;
-  border-radius: 20px;
-  font-family: 'Prompt', sans-serif;
-  font-size: 0.9rem;
-  font-weight: 500;
-  cursor: pointer;
-  display: flex; align-items: center; gap: 8px;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-}
-
-.btn-shuffle i {
-  font-size: 0.85rem; color: #64748b; transition: transform 0.4s ease;
-}
-
-.btn-shuffle:hover {
-  border-color: #1b6f8e; color: #1b6f8e;
-  background-color: #f0f9ff;
-  box-shadow: 0 4px 8px rgba(27, 111, 142, 0.15);
-}
-
-.btn-shuffle:hover i {
-  color: #1b6f8e; transform: rotate(180deg);
-}
-
-.btn-shuffle:active { transform: scale(0.95); }
-
-/* =========================================
-   8. CUSTOM LOGOUT MODAL STYLES (เพิ่มใหม่)
+   7. CUSTOM LOGOUT MODAL STYLES (Optional: ใช้จาก sidebar.css ได้ แต่ถ้าอยาก Override เก็บไว้)
    ========================================= */
 .modal-overlay {
-  position: fixed;
-  top: 0; left: 0; width: 100%; height: 100%;
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(5px);
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(5px);
   display: flex; align-items: center; justify-content: center;
-  z-index: 9999;
-  opacity: 0; visibility: hidden;
+  z-index: 9999; opacity: 0; visibility: hidden;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .modal-overlay.active { opacity: 1; visibility: visible; }
 
 .modal-box {
-  background: #ffffff;
-  width: 90%; max-width: 380px;
-  border-radius: 24px;
-  padding: 32px;
-  text-align: center;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-  transform: scale(0.9) translateY(20px);
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  background: #ffffff; width: 90%; max-width: 380px; border-radius: 24px; padding: 32px;
+  text-align: center; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  transform: scale(0.9) translateY(20px); transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .modal-overlay.active .modal-box { transform: scale(1) translateY(0); }
 
 .modal-icon-wrapper { margin-bottom: 20px; display: flex; justify-content: center; }
 .modal-icon {
-  width: 72px; height: 72px;
-  background-color: #FEF2F2;
-  border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  color: #EF4444; font-size: 28px;
-  box-shadow: 0 0 0 8px #FFF1F2;
+  width: 72px; height: 72px; background-color: #FEF2F2;
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  color: #EF4444; font-size: 28px; box-shadow: 0 0 0 8px #FFF1F2;
 }
 
 .modal-content h3 { margin: 0 0 8px 0; color: #111827; font-size: 1.25rem; font-weight: 700; }
@@ -280,219 +210,67 @@ body {
 .btn-cancel:hover { background-color: #E5E7EB; color: #111827; }
 
 .btn-confirm { background-color: #EF4444; color: white; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3); }
-.btn-confirm:hover {
-  background-color: #DC2626; transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(239, 68, 68, 0.4);
-}
-
-
-/* ปุ่มหัวใจแบบสีแดงทึบ (เหมือนรูปขวา) */
-.fav-icon-btn {
-  width: 50px;
-  height: 50px;
-  background: #ff4757; /* เปลี่ยนพื้นหลังเป็นสีแดงชมพู */
-  border: none;        /* ลบเส้นขอบออก */
-  border-radius: 14px; /* ปรับมุมมนให้เข้ากับปุ่ม Add */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #ffffff;      /* เปลี่ยนไอคอนเป็นสีขาว */
-  font-size: 24px;
-  cursor: pointer;
-  box-shadow: 0 4px 12px rgba(255, 71, 87, 0.3); /* เพิ่มเงาสีแดงจางๆ */
-  transition: all 0.2s ease;
-}
-
-.fav-icon-btn:hover {
-  background: #ff2e40; /* สีเข้มขึ้นเมื่อเอาเมาส์ชี้ */
-  transform: translateY(-2px); /* ลอยขึ้นนิดหน่อย */
-  box-shadow: 0 8px 20px rgba(255, 71, 87, 0.4);
-}
-
-.fav-icon-btn:active {
-  transform: scale(0.95); /* ย่อลงนิดนึงตอนกด */
-}
+.btn-confirm:hover { background-color: #DC2626; transform: translateY(-1px); }
 
 /* =========================================
-   9. BOOK DETAIL MODAL STYLES (ส่วนที่ขาดหายไป)
+   8. BOOK DETAIL MODAL STYLES
    ========================================= */
 .modal {
-  display: none; /* ซ่อนไว้ก่อน */
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.55);
-  backdrop-filter: blur(3px);
-  justify-content: center;
-  align-items: center;
-  z-index: 20000 !important; /* ต้องอยู่สูงกว่า Sidebar */
+  display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(3px); justify-content: center; align-items: center;
+  z-index: 20000 !important;
 }
-
-/* เมื่อมี class active (จาก JS) ให้แสดงผล */
-.modal.active {
-  display: flex;
-  animation: fadeInModal 0.3s ease;
-}
-
-@keyframes fadeInModal {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
+.modal.active { display: flex; animation: fadeInModal 0.3s ease; }
+@keyframes fadeInModal { from { opacity: 0; } to { opacity: 1; } }
 
 .modal-content {
-  background: #ffffff;
-  padding: 30px;
-  width: 500px;
-  max-width: 90%;
-  max-height: 85vh;
-  border-radius: 18px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-  overflow-y: auto;
-  text-align: center;
-  position: relative;
+  background: #ffffff; padding: 30px; width: 500px; max-width: 90%; max-height: 85vh;
+  border-radius: 18px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); overflow-y: auto;
+  text-align: center; position: relative;
 }
 
-/* ปุ่มปิด (X) ใน Modal */
-.modal-close {
-  position: absolute;
-  top: 15px;
-  right: 20px;
-  font-size: 28px;
-  color: #888;
-  cursor: pointer;
-  transition: 0.2s;
-  z-index: 10;
-  line-height: 1;
-}
-.modal-close:hover {
-  color: #e74c3c;
-  transform: scale(1.1);
-}
+.modal-close { position: absolute; top: 15px; right: 20px; font-size: 28px; color: #888; cursor: pointer; z-index: 10; line-height: 1; }
+.modal-close:hover { color: #e74c3c; transform: scale(1.1); }
 
-/* รูปปกหนังสือใน Modal */
-.modal-image-box img {
-  width: 140px;
-  height: 210px;
-  object-fit: cover;
-  border-radius: 8px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.15);
-  margin-bottom: 10px;
-}
-
-/* ชื่อผู้แต่ง */
-.author {
-  color: #666;
-  font-size: 0.95rem;
-  margin-top: -5px;
-  margin-bottom: 15px;
-}
-
-/* คำอธิบาย */
-.description {
-  margin-top: 5px;
-  text-align: left;
-  line-height: 1.6;
-  font-size: 0.9rem;
-  color: #444;
-  max-height: 150px;
-  overflow-y: auto;
-  padding-right: 5px;
-}
-
-/* Custom Scrollbar สำหรับ Description */
+.modal-image-box img { width: 140px; height: 210px; object-fit: cover; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); margin-bottom: 10px; }
+.author { color: #666; font-size: 0.95rem; margin-top: -5px; margin-bottom: 15px; }
+.description { margin-top: 5px; text-align: left; line-height: 1.6; font-size: 0.9rem; color: #444; max-height: 150px; overflow-y: auto; padding-right: 5px; }
 .description::-webkit-scrollbar { width: 4px; }
 .description::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
 
-/* ปุ่มต่างๆ ด้านล่าง Modal */
-.button-row {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 15px;
-  margin-top: 25px;
-  border-top: 1px solid #eee;
-  padding-top: 20px;
-}
+.button-row { width: 100%; display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 25px; border-top: 1px solid #eee; padding-top: 20px; }
 
-/* ปุ่ม Add to Library */
 .add-library-btn {
-  height: 50px; /* ปรับความสูงให้เท่าปุ่มหัวใจ */
-  padding: 0 24px;
-  background: linear-gradient(135deg, #1d8cf8, #3358f4);
-  color: white;
-  border: none;
-  border-radius: 14px; /* ปรับความโค้งให้เข้ากัน */
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.25);
-  transition: all 0.2s ease;
-  flex: 1; 
-  max-width: 200px;
+  height: 50px; padding: 0 24px; background: linear-gradient(135deg, #1d8cf8, #3358f4);
+  color: white; border: none; border-radius: 14px; font-size: 15px; font-weight: 600;
+  cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.25); transition: all 0.2s ease; flex: 1; max-width: 200px;
 }
-.add-library-btn:hover {
-  background: linear-gradient(135deg, #0f7ae8, #2a4eea);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 15px rgba(0, 123, 255, 0.35);
-}
+.add-library-btn:hover { background: linear-gradient(135deg, #0f7ae8, #2a4eea); transform: translateY(-2px); }
 
+.fav-icon-btn {
+  width: 50px; height: 50px; background: #ff4757; border: none; border-radius: 14px;
+  display: flex; align-items: center; justify-content: center; color: #ffffff; font-size: 24px;
+  cursor: pointer; box-shadow: 0 4px 12px rgba(255, 71, 87, 0.3); transition: all 0.2s ease;
+}
+.fav-icon-btn:hover { background: #ff2e40; transform: translateY(-2px); }
+.fav-icon-btn:active { transform: scale(0.95); }
 
 /* =========================================
-   10. TOAST NOTIFICATION (แจ้งเตือนแบบเท่ๆ)
+   9. TOAST
    ========================================= */
-#toast-container {
-    position: fixed;
-    top: 90px; /* ให้ต่ำลงมาจาก Topbar */
-    right: 20px;
-    z-index: 100000;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
+#toast-container { position: fixed; top: 90px; right: 20px; z-index: 100000; display: flex; flex-direction: column; gap: 10px; }
 .toast {
-    min-width: 300px;
-    background: #ffffff;
-    padding: 16px 20px;
-    border-radius: 12px;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    font-family: 'Inter', 'Prompt', sans-serif;
-    font-size: 0.95rem;
-    color: #333;
-    opacity: 0;
-    transform: translateX(50px);
-    animation: slideInToast 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-    border-left: 6px solid #ccc;
-    cursor: pointer;
+  min-width: 300px; background: #ffffff; padding: 16px 20px; border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12); display: flex; align-items: center; gap: 15px;
+  font-family: 'Inter', 'Prompt', sans-serif; font-size: 0.95rem; color: #333; opacity: 0;
+  transform: translateX(50px); animation: slideInToast 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  border-left: 6px solid #ccc; cursor: pointer;
 }
-
-/* สีสำหรับสถานะต่างๆ */
-.toast.success { border-left-color: #2ecc71; }
-.toast.success i { color: #2ecc71; }
-
-.toast.error { border-left-color: #e74c3c; }
-.toast.error i { color: #e74c3c; }
-
-.toast.info { border-left-color: #3498db; }
-.toast.info i { color: #3498db; }
-
-/* Icon ใน Toast */
+.toast.success { border-left-color: #2ecc71; } .toast.success i { color: #2ecc71; }
+.toast.error { border-left-color: #e74c3c; } .toast.error i { color: #e74c3c; }
+.toast.info { border-left-color: #3498db; } .toast.info i { color: #3498db; }
 .toast i { font-size: 1.4rem; }
 .toast span { font-weight: 500; }
-
-/* Animation ตอนเข้า */
-@keyframes slideInToast {
-    to { opacity: 1; transform: translateX(0); }
-}
-
-/* Animation ตอนออก */
-@keyframes slideOutToast {
-    to { opacity: 0; transform: translateX(100%); }
-}
+@keyframes slideInToast { to { opacity: 1; transform: translateX(0); } }
+@keyframes slideOutToast { to { opacity: 0; transform: translateX(100%); } }

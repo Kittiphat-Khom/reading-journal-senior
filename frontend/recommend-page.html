@@ -6,60 +6,15 @@
   <title>Recommended Books</title>
   
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+  
+  <link rel="stylesheet" href="styles/sidebar.css" />
   <link rel="stylesheet" href="styles/recommend.css" />
-
-  <style>
-    #toast-container { position: fixed; top: 90px; right: 20px; z-index: 100000; display: flex; flex-direction: column; gap: 10px; }
-    .toast { min-width: 300px; background: #ffffff; padding: 16px 20px; border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.12); display: flex; align-items: center; gap: 15px; font-family: 'Inter', sans-serif; font-size: 0.95rem; opacity: 0; transform: translateX(50px); animation: slideInToast 0.4s forwards; border-left: 6px solid #ccc; cursor: pointer; }
-    .toast.success { border-left-color: #2ecc71; } .toast.success i { color: #2ecc71; }
-    .toast.error { border-left-color: #e74c3c; } .toast.error i { color: #e74c3c; }
-    .toast.info { border-left-color: #3498db; } .toast.info i { color: #3498db; }
-    .toast i { font-size: 1.4rem; }
-    @keyframes slideInToast { to { opacity: 1; transform: translateX(0); } }
-    @keyframes slideOutToast { to { opacity: 0; transform: translateX(100%); } }
-
-    .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); backdrop-filter: blur(3px); justify-content: center; align-items: center; z-index: 20000; }
-    .modal.active { display: flex; animation: fadeInModal 0.3s ease; }
-    @keyframes fadeInModal { from { opacity: 0; } to { opacity: 1; } }
-    .modal-content { background: #fff; padding: 30px; width: 500px; max-width: 90%; border-radius: 18px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); text-align: center; position: relative; }
-    .close-btn { position: absolute; top: 15px; right: 20px; font-size: 28px; cursor: pointer; }
-    .modal-image-box img { width: 140px; height: 210px; object-fit: cover; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); margin-bottom: 10px; }
-    .fav-icon-btn.active { background: #ff4757; color: white; border-color: #ff4757; }
-  </style>
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
 </head>
 <body>
 
-  <aside class="sidebar" id="sidebar">
-    <div class="sidebar-top">
-      <div class="user">
-        <div class="avatar"><i class="fa-solid fa-user"></i></div>
-        <div class="user-info">
-          <div class="user-name" id="user-name">Guest</div>
-          <div class="user-sub" id="user-email">Please login</div>
-        </div>
-        <button class="close-btn" onclick="toggleSidebar()">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-      </div>
-    </div>
-    <div class="sidebar-middle">
-      <ul class="menu">
-        <li><a href="dashboard-page.html"><i class="fa-solid fa-book-open"></i>Manage Reading Journals</a></li>
-        <li><a href="favorite-page.html"><i class="fa-solid fa-heart"></i>Manage Favorite List</a></li>
-        <li><a href="search-page.html"><i class="fa-solid fa-magnifying-glass"></i>Search Book</a></li>
-        <li><a href="recommend-page.html" class="active"><i class="fa-solid fa-lightbulb"></i>Search Recommended Book</a></li>
-        <li><a href="report-bug.html"><i class="fa-solid fa-bug"></i>Bug Report</a></li>
-      </ul>
-    </div>
-    <div class="sidebar-bottom">
-      <button class="logout-btn" id="logout-btn">
-        <i class="fa-solid fa-right-from-bracket"></i> Log out
-      </button>
-    </div>
-  </aside>
-
-  <div id="overlay" class="overlay" onclick="toggleSidebar()"></div>
+  <div id="sidebar-container"></div>
 
   <header class="topbar">
     <div class="left">
@@ -69,10 +24,7 @@
       <h1>Recommended Books</h1>
     </div>
     <div class="actions">
-      <div class="">
-        <i class=""></i>
       </div>
-    </div>
   </header>
 
   <main class="main-content">
@@ -130,18 +82,21 @@
           <i class="fa-solid fa-power-off"></i>
         </div>
       </div>
-      <div class="modal-content-logout">
-        <h3>Sign Out?</h3>
-        <p>Are you sure you want to end your session?</p>
+      <div class="modal-content-logout"> <div class="modal-text-wrapper">
+            <h3>Sign Out?</h3>
+            <p>Are you sure you want to end your session?</p>
+        </div>
       </div>
       <div class="modal-actions">
-        <button id="cancelLogoutBtn" class="btn-cancel">Cancel</button>
-        <button id="confirmLogoutBtn" class="btn-confirm">Yes, Sign Out</button>
+        <button id="cancelLogoutBtn" class="btn-cancel" onclick="closeLogoutModal()">Cancel</button>
+        <button id="confirmLogoutBtn" class="btn-confirm" onclick="confirmLogoutAction()">Yes, Sign Out</button>
       </div>
     </div>
   </div>
 
   <div id="toast-container"></div>
+
+  <script src="js/layoutsidebar.js"></script>
 
   <script>
     let allRecommendations = []; 
@@ -150,10 +105,7 @@
     let currentUserId = null; 
     let currentBookData = null;
 
-    function toggleSidebar() {
-      document.getElementById("sidebar").classList.toggle("active");
-      document.getElementById("overlay").classList.toggle("show");
-    }
+    // ❌ ลบ toggleSidebar() ออกแล้ว เพราะใช้จาก layoutsidebar.js
 
     async function checkAuth() {
         const userStr = localStorage.getItem("user");
@@ -162,7 +114,7 @@
         if (userStr) {
             try {
                 const user = JSON.parse(userStr);
-                updateUserProfile(user.username || user.name, user.email);
+                // updateUserProfile ไม่ต้องใช้แล้วเพราะ layoutsidebar.js ทำให้
                 currentUserId = user.id || user.user_id;
             } catch (e) {}
         }
@@ -177,7 +129,7 @@
 
             if (res.ok) {
                 const userData = await res.json();
-                updateUserProfile(userData.username, userData.email);
+                // updateUserProfile(userData.username, userData.email); // Sidebar จัดการเอง
                 currentUserId = userData.user_id;
                 localStorage.setItem("user", JSON.stringify(userData));
             }
@@ -186,42 +138,33 @@
         fetchRecommendations();
     }
 
-    function updateUserProfile(name, email) {
-        const nameEl = document.getElementById("user-name");
-        const emailEl = document.getElementById("user-email");
-        if (nameEl) nameEl.textContent = name || "User";
-        if (emailEl) emailEl.textContent = email || "";
-    }
+    // ฟังก์ชันนี้ไม่ต้องใช้แล้ว แต่ถ้าจะเก็บไว้เผื่อ Logic อื่นก็ไม่เสียหาย
+    // function updateUserProfile(name, email) { ... }
 
     document.addEventListener("DOMContentLoaded", () => {
       checkAuth(); 
       
-      const logoutBtn = document.getElementById("logout-btn");
-      const logoutModal = document.getElementById("logoutModal");
-      const cancelBtn = document.getElementById("cancelLogoutBtn");
-      const confirmBtn = document.getElementById("confirmLogoutBtn");
-
-      if (logoutBtn && logoutModal) {
-          logoutBtn.addEventListener("click", (e) => {
-              e.preventDefault();
-              logoutModal.classList.add("active");
-          });
-          cancelBtn.addEventListener("click", () => {
-              logoutModal.classList.remove("active");
-          });
-          logoutModal.addEventListener("click", (e) => {
-              if (e.target === logoutModal) logoutModal.classList.remove("active");
-          });
-          confirmBtn.addEventListener("click", () => {
-              confirmBtn.textContent = "Signing out...";
-              confirmBtn.disabled = true;
-              setTimeout(() => {
-                  localStorage.clear();
-                  window.location.href = "log-in-page.html";
-              }, 500); 
-          });
-      }
+      // ❌ ลบ Logic Logout ซ้ำซ้อนออก (เพราะ layoutsidebar.js มีให้แล้ว)
+      // แต่ถ้า Modal ในหน้านี้ ID ตรงกัน ก็จะทำงานได้ปกติ
     });
+    
+    // Override ฟังก์ชัน Logout Modal ของหน้านี้ให้เชื่อมกับ HTML
+    window.openLogoutModal = function(event) {
+        if(event) { event.preventDefault(); }
+        document.getElementById("logoutModal").classList.add("active");
+    }
+    window.closeLogoutModal = function() {
+        document.getElementById("logoutModal").classList.remove("active");
+    }
+    window.confirmLogoutAction = function() {
+        const btn = document.getElementById("confirmLogoutBtn");
+        btn.textContent = "Signing out...";
+        btn.disabled = true;
+        setTimeout(() => {
+            localStorage.clear();
+            window.location.href = "log-in-page.html";
+        }, 500);
+    }
 
     function showToast(message, type = 'success') {
         let container = document.getElementById('toast-container');
@@ -266,7 +209,6 @@
         }
     }
 
-    // ✅ กู้คืนระบบ Pagination
     function renderPage(page) {
         const container = document.getElementById('book-container');
         if (allRecommendations.length === 0) {
@@ -274,8 +216,6 @@
             return;
         }
 
-        // 🔥 Logic เดิมคือโชว์แค่ 20 เล่ม (visibleLimit)
-        // 🔥 แก้ใหม่: ให้โชว์ทั้งหมดที่ Backend ส่งมา โดยแบ่งหน้าไปเรื่อยๆ
         const totalItems = allRecommendations.length; 
         const totalPages = Math.ceil(totalItems / itemsPerPage);
 
@@ -329,7 +269,6 @@
     function renderDots(totalPages) {
         const dotsContainer = document.getElementById('page-indicators');
         dotsContainer.innerHTML = '';
-        // ถ้าหน้าเยอะเกินไป (เช่น 20 หน้า) ให้โชว์แค่ 5 จุดแรกพอ กัน UI พัง
         const maxDots = 8; 
         const showDots = Math.min(totalPages, maxDots);
 
@@ -349,8 +288,6 @@
         const totalPages = Math.ceil(totalItems / itemsPerPage);
         if (currentPage < totalPages) renderPage(currentPage + 1); 
     }
-
-    // 🔥 ลบฟังก์ชัน ShuffleBooks ออก
 
     function openBookModal(book) {
         currentBookData = book; 
@@ -376,7 +313,7 @@
 
     window.onclick = function(event) {
         if (event.target === document.getElementById("bookModal")) closeBookModal();
-        if (event.target === document.getElementById("overlay")) toggleSidebar();
+        // Overlay ไม่ต้องจัดการแล้ว layoutsidebar.js ทำให้
     }
 
     // ✅ ADD TO LIBRARY

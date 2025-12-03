@@ -1,3 +1,7 @@
+/* =========================================
+   FILE: manage-pre-book.js
+   ========================================= */
+
 const API_BASE_URL = 'https://reading-journal.xyz';
 
 // ===============================
@@ -11,16 +15,18 @@ const statusSpan = document.getElementById('selectionStatus');
 const unselectAllBtn = document.getElementById('unselectAllBtn');
 const finishBtn = document.getElementById('finishBtn');
 const searchInput = document.getElementById('searchInput');
+const backBtn = document.getElementById("backBtn"); // ปุ่มย้อนกลับ
 
 // UI Info Elements
 const pageIndicator = document.getElementById("pageIndicator");
 const totalCountDisplay = document.getElementById("totalCountDisplay");
 
-// Start Dashboard Button
+// Start Dashboard Button (หน้า Thank You)
 const startBtn = document.querySelector('.start-btn');
 
 const API_URL = "/api/search";
 
+// State Variables
 let currentSlide = 1;
 let totalSlidesCount = 1; 
 let selectedBooks = new Set(); 
@@ -30,28 +36,45 @@ let normalList = [];
 let allBooksOriginal = [];
 
 // ===============================
-// BACK BUTTON (แก้ไขใหม่)
+// ✅ 1. LOAD & SAVE LOCAL DATA (เพิ่มใหม่)
 // ===============================
-const backBtn = document.getElementById("backBtn");
-if (backBtn) {
-    backBtn.addEventListener("click", () => {
-        // 1. ล้างค่าในตัวแปร (RAM)
-        selectedBooks.clear();
-        
-        // 2. ล้างค่าใน LocalStorage (สำคัญมาก! ไม่งั้นค่าเก่าจะคาอยู่)
-        // ดึงข้อมูล preference เดิมมา
+function loadLocalBooks() {
+    try {
+        const pref = JSON.parse(localStorage.getItem("preference") || "{}");
+        // ถ้ามีข้อมูล books ใน preference ให้โหลดมาใส่ Set
+        if (pref.books && Array.isArray(pref.books)) {
+            selectedBooks = new Set(pref.books);
+            console.log("📌 Loaded saved books:", pref.books);
+        }
+    } catch (e) {
+        console.error("Error loading local books:", e);
+    }
+}
+
+function saveLocalBooks() {
+    try {
         let pref = JSON.parse(localStorage.getItem("preference") || "{}");
-        
-        // กำหนดให้หมวด books เป็นอาเรย์ว่างๆ
-        pref.books = []; 
-        
-        // บันทึกทับลงไปใหม่
+        pref.books = Array.from(selectedBooks);
         localStorage.setItem("preference", JSON.stringify(pref));
         
-        // (เผื่อ) ถ้ามีการเก็บแยก key ให้ลบออกด้วย
-        localStorage.removeItem("selectedBooks");
+        // (Optional) Backup
+        localStorage.setItem("selectedBooks", JSON.stringify(pref.books));
+    } catch (e) {
+        console.error("Error saving local books:", e);
+    }
+}
 
-        // 3. ย้อนกลับไปหน้า Author
+// ===============================
+// ✅ 2. BACK BUTTON (แก้ไขใหม่)
+// ===============================
+if (backBtn) {
+    backBtn.addEventListener("click", () => {
+        // ❌ เอา Logic การล้างค่า (clear/removeItem) ออกให้หมด
+        
+        // ✅ บันทึกค่าปัจจุบันไว้ก่อนย้อนกลับ
+        saveLocalBooks();
+
+        // ย้อนกลับไปหน้า Author
         window.location.href = "manage-pre-author.html";
     });
 }
@@ -62,6 +85,12 @@ if (backBtn) {
 function showThankYou() {
     selectionPage.style.display = "none";
     thankYouPage.style.display = "flex";
+
+    // ล้าง LocalStorage ทั้งหมดเมื่อทำรายการสำเร็จ (ตาม Flow ที่ถูกต้อง)
+    localStorage.removeItem("preference");
+    localStorage.removeItem("selectedGenres");
+    localStorage.removeItem("selectedAuthors");
+    localStorage.removeItem("selectedBooks");
 
     if (startBtn) {
         startBtn.disabled = false;
@@ -254,6 +283,11 @@ function renderBooksToSlides(list) {
             btn.style.backgroundSize = "cover";
             btn.style.backgroundPosition = "center";
 
+            // เช็คว่าเคยเลือกไว้ไหม
+            if (selectedBooks.has(book.id)) {
+                btn.classList.add('selected');
+            }
+
             btn.addEventListener("click", () => {
                 if (selectedBooks.has(book.id)) {
                     selectedBooks.delete(book.id);
@@ -262,6 +296,7 @@ function renderBooksToSlides(list) {
                     selectedBooks.add(book.id);
                     btn.classList.add("selected");
                 }
+                saveLocalBooks(); // บันทึกทุกครั้งที่กด
                 updateCount();
             });
 
@@ -271,14 +306,8 @@ function renderBooksToSlides(list) {
         container.appendChild(slideDiv);
     }
 
-    document.querySelectorAll('.genre-button').forEach(btn => {
-        const id = btn.getAttribute('data-book-id');
-        if (selectedBooks.has(id)) {
-            btn.classList.add('selected');
-        }
-    });
-
     setupSlides();
+    updateCount(); // อัปเดต UI ปุ่ม Finish
 }
 
 // ===============================
@@ -344,6 +373,7 @@ function navigateCarousel(direction) {
 // ===============================
 unselectAllBtn.addEventListener("click", () => {
     selectedBooks.clear();
+    saveLocalBooks(); // บันทึกค่าว่าง
     document.querySelectorAll('.genre-button.selected').forEach(btn =>
         btn.classList.remove('selected')
     );
@@ -384,17 +414,21 @@ searchInput.addEventListener("input", () => {
 finishBtn.addEventListener("click", async () => {
     if (selectedBooks.size < 3) return;
 
+    // โหลดข้อมูลทั้งหมดจาก LocalStorage มาเตรียมส่ง
     let selectedGenres = JSON.parse(localStorage.getItem("selectedGenres") || "[]");
     let selectedAuthors = JSON.parse(localStorage.getItem("selectedAuthors") || "[]");
-    let selectedBooksArray = Array.from(selectedBooks);
+    
+    // ถ้าใน LocalStorage ไม่มี ให้ลองดึงจาก preference object หลัก
+    const mainPref = JSON.parse(localStorage.getItem("preference") || "{}");
+    if (selectedGenres.length === 0 && mainPref.genres) selectedGenres = mainPref.genres;
+    if (selectedAuthors.length === 0 && mainPref.authors) selectedAuthors = mainPref.authors;
 
-    if (!Array.isArray(selectedGenres)) selectedGenres = [];
-    if (!Array.isArray(selectedAuthors)) selectedAuthors = [];
-    if (!Array.isArray(selectedBooksArray)) selectedBooksArray = [];
+    const selectedBooksArray = Array.from(selectedBooks);
 
     const token = localStorage.getItem("token");
     if (!token) {
-        alert("You must login first.");
+        alert("Session expired. Please login again.");
+        window.location.href = "login.html"; // Redirect ไปหน้า Login ถ้าไม่มี Token
         return;
     }
 
@@ -412,17 +446,33 @@ finishBtn.addEventListener("click", async () => {
             })
         });
 
-        const json = await res.json();
-        if (json.error) {
-            alert("Error saving preferences");
+        // ตรวจสอบ HTTP Status
+        if (!res.ok) {
+            const errorText = await res.text();
+            console.error("Server Error:", res.status, errorText);
+            
+            if (res.status === 401 || res.status === 403) {
+                 alert("Your session has expired. Please login again.");
+            } else {
+                 alert(`Failed to save: Server returned ${res.status}`);
+            }
             return;
         }
 
+        const json = await res.json();
+        
+        // ตรวจสอบ Logic Error
+        if (json.error || json.success === false) {
+            alert("Error: " + (json.message || json.error));
+            return;
+        }
+
+        // สำเร็จ!
         showThankYou();
 
     } catch (err) {
         console.error("Save error:", err);
-        alert("Failed to save preferences");
+        alert("Failed to save preferences (Network Error)");
     }
 });
 
@@ -432,5 +482,10 @@ finishBtn.addEventListener("click", async () => {
 document.addEventListener("DOMContentLoaded", () => {
     selectionPage.style.display = "block";
     thankYouPage.style.display = "none";
+    
+    // ✅ โหลดค่าเดิมที่เลือกไว้กลับมา
+    loadLocalBooks(); 
+    
+    // โหลดรายการหนังสือแสดงผล
     loadBooks();
 });

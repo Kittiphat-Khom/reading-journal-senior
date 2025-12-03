@@ -1,3 +1,5 @@
+/* search-page.css */
+
 /* === Base === */
 body {
     font-family: 'Inter', 'Prompt', sans-serif;
@@ -7,47 +9,29 @@ body {
     overflow-x: hidden;
 }
 
-/* === Sidebar === */
-.sidebar {
-    position: fixed; top: 0; left: -300px; width: 300px; height: 100%;
-    background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%);
-    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.08);
-    transition: left 0.3s ease, box-shadow 0.3s ease;
-    z-index: 500; display: flex; flex-direction: column;
-    border-right: 1px solid rgba(0, 0, 0, 0.05);
-}
-.sidebar.active { left: 0; box-shadow: 6px 0 25px rgba(0, 0, 0, 0.15); }
-.sidebar-top { padding: 20px 18px 10px 18px; border-bottom: 1px solid rgba(0, 0, 0, 0.05); background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(6px); }
-.user { display: flex; align-items: center; gap: 12px; position: relative; }
-.avatar { width: 46px; height: 46px; border-radius: 12px; background: linear-gradient(135deg, #d2ebf7, #b1d8ef); display: flex; align-items: center; justify-content: center; color: #1b6f8e; font-size: 20px; box-shadow: 0 2px 6px rgba(27, 111, 142, 0.3); }
-.user-info { flex: 1; }
-.user-name { font-weight: 600; font-size: 1rem; color: #333; }
-.user-sub { font-size: 0.85rem; color: #666; }
-.close-btn { position: absolute; right: 0; top: 4px; background: none; border: none; font-size: 20px; color: #666; cursor: pointer; padding: 8px; line-height: 1; transition: color 0.2s ease; }
-.close-btn:hover { color: #111; }
-.sidebar-middle { flex: 1 1 auto; overflow-y: auto; padding-top: 12px; backdrop-filter: blur(4px); }
-.menu { list-style: none; padding: 0; margin: 0; }
-.menu li { border-bottom: 1px solid rgba(0, 0, 0, 0.04); }
-.menu li a { display: flex; align-items: center; gap: 10px; padding: 14px 20px; color: #222; text-decoration: none; font-size: 1rem; font-weight: 500; border-radius: 8px; transition: all 0.25s ease; }
-.menu li a:hover { background: rgba(52, 152, 219, 0.08); box-shadow: inset 0 0 8px rgba(41, 128, 185, 0.2), 0 0 6px rgba(52, 152, 219, 0.2); color: #2a6f86; transform: translateX(3px); }
-.menu li a.active { background: rgba(41, 128, 185, 0.15); color: #1b6f8e; font-weight: 600; box-shadow: inset 3px 0 0 #1b6f8e; }
-.sidebar-bottom { padding: 16px; border-top: 1px solid rgba(0, 0, 0, 0.05); background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(6px); margin-top: auto; }
-.logout-btn { width: 100%; padding: 10px 12px; background: #f3f6f8; border: 1px solid #ddd; border-radius: 6px; cursor: pointer; font-size: 0.95rem; font-weight: 500; color: #333; transition: all 0.2s ease; }
-.logout-btn:hover { background: #e8f2f9; box-shadow: 0 0 10px rgba(52, 152, 219, 0.25); color: #1b6f8e; }
-
-/* === Overlay === */
-.overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.3); opacity: 0; pointer-events: none; transition: opacity 0.3s ease; z-index: 400; }
-.overlay.show { opacity: 1; pointer-events: auto; }
+/* ❌ ลบส่วน SIDEBAR ออกแล้ว (ใช้จาก styles/sidebar.css) */
 
 /* === Topbar === */
-.topbar { display: flex; justify-content: space-between; align-items: center; height: 72px; padding: 0 24px; background-color: #f9f7f4; border-bottom: 1px solid #dcdcdc; position: fixed; top: 0; left: 0; right: 0; z-index: 300; }
+.topbar { 
+    display: flex; justify-content: space-between; align-items: center; 
+    height: 72px; padding: 0 24px; 
+    background-color: #f9f7f4; border-bottom: 1px solid #dcdcdc; 
+    position: fixed; top: 0; left: 0; right: 0; z-index: 300; 
+}
 .topbar .left, .actions { display: flex; align-items: center; gap: 20px; }
 .topbar h1 { margin: 0; font-size: 1.5rem; font-weight: normal; color: #333; }
 .menu-btn { background: none; border: none; cursor: pointer; font-size: 26px; color: #1e6892; padding: 0; transition: transform 0.2s ease, color 0.2s ease; }
 .menu-btn:hover, .action-btn:hover, .close-btn:hover { color: #000; transform: scale(1.1); }
 
 /* === Search Bar === */
-.search-bar { display: flex; align-items: center; background: linear-gradient(145deg, #ffffff, #f0f0f0); border-radius: 28px; padding: 8px 18px; width: 380px; max-width: 70%; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.03); transition: all 0.3s ease; border: none; }
+.search-bar { 
+    display: flex; align-items: center; 
+    background: linear-gradient(145deg, #ffffff, #f0f0f0); 
+    border-radius: 28px; padding: 8px 18px; 
+    width: 380px; max-width: 70%; 
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.03); 
+    transition: all 0.3s ease; border: none; 
+}
 .search-bar:hover { box-shadow: 0 6px 15px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.05); }
 .search-bar:focus-within { box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15), 0 0 0 2px #5a9bd4; }
 .search-bar input { flex: 1; border: none; background: transparent; outline: none; font-size: 1.05rem; padding: 6px 8px; font-family: 'Prompt', sans-serif; color: #333; }
@@ -134,43 +118,32 @@ body {
 #custom-alert-modal { z-index: 30000 !important; }
 
 /* ====================================================================
-   🔥🔥🔥 CUSTOM LOGOUT MODAL STYLES (เพิ่มให้แล้วครับ) 🔥🔥🔥
+   🔥🔥🔥 CUSTOM LOGOUT MODAL STYLES 🔥🔥🔥
    ==================================================================== */
 .modal-overlay {
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(4px);
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px);
     display: flex; align-items: center; justify-content: center;
-    z-index: 50000 !important; /* ต้องอยู่บนสุด */
+    z-index: 50000 !important; 
     opacity: 0; visibility: hidden;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .modal-overlay.active { opacity: 1; visibility: visible; }
 
 .modal-box {
-    background: #ffffff;
-    width: 90%; max-width: 380px;
-    border-radius: 24px;
-    padding: 32px;
-    text-align: center;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
-    transform: scale(0.9);
-    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    background: #ffffff; width: 90%; max-width: 380px; border-radius: 24px; padding: 32px;
+    text-align: center; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+    transform: scale(0.9); transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .modal-overlay.active .modal-box { transform: scale(1); }
 
 .modal-icon-wrapper { margin-bottom: 20px; display: flex; justify-content: center; }
 .modal-icon {
-    width: 72px; height: 72px;
-    background-color: #FEF2F2;
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    color: #EF4444; font-size: 28px;
-    box-shadow: 0 0 0 8px #FFF1F2;
+    width: 72px; height: 72px; background-color: #FEF2F2;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    color: #EF4444; font-size: 28px; box-shadow: 0 0 0 8px #FFF1F2;
 }
 
-/* ชื่อ Class เฉพาะสำหรับ Logout Modal */
 .modal-text-wrapper h3 { margin: 0 0 8px 0; color: #111827; font-size: 1.25rem; font-weight: 700; }
 .modal-text-wrapper p { margin: 0 0 28px 0; color: #6B7280; font-size: 0.95rem; line-height: 1.5; }
 

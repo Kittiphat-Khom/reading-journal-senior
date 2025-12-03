@@ -1,5 +1,3 @@
-const API_BASE_URL = 'https://reading-journal.xyz';
-
 document.addEventListener('DOMContentLoaded', () => {
     // ⚠️ ตรวจสอบ Port
     const API_URL = '/api/admin/users';

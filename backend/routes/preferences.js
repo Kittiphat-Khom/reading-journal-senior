@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken";
 
 const router = express.Router();
 // ⚠️ ควรย้ายไปไว้ใน .env แต่ใส่ไว้ตรงนี้ก่อนเพื่อความง่าย
-const JWT_SECRET = "your_secret_key"; 
+const JWT_SECRET = process.env.JWT_SECRET || "your_secret_key";
 
 // Middleware เช็ค Token
 function verifyToken(req, res, next) {

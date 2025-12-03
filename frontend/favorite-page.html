@@ -6,42 +6,15 @@
   <title>My Favorite Books</title>
   
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
   
+  <link rel="stylesheet" href="styles/sidebar.css" />
   <link rel="stylesheet" href="styles/favorite-page.css" />
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
 </head>
 <body>
 
-  <aside class="sidebar" id="sidebar">
-    <div class="sidebar-top">
-      <div class="user">
-        <div class="avatar"><i class="fa-solid fa-user"></i></div>
-        <div class="user-info">
-          <div class="user-name" id="user-name">User</div>
-          <div class="user-sub" id="user-email">Loading...</div>
-        </div>
-        <button class="close-btn" onclick="toggleSidebar()">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-      </div>
-    </div>
-    <div class="sidebar-middle">
-      <ul class="menu">
-        <li><a href="dashboard-page.html"><i class="fa-solid fa-book-open"></i>Manage Reading Journals</a></li>
-        <li><a href="favorite-page.html" class="active"><i class="fa-solid fa-heart"></i>Manage Favorite List</a></li>
-        <li><a href="search-page.html"><i class="fa-solid fa-magnifying-glass"></i>Search Book</a></li>
-        <li><a href="recommend-page.html"><i class="fa-solid fa-lightbulb"></i>Search Recommended Book</a></li>
-        <li><a href="report-bug.html"><i class="fa-solid fa-bug"></i>Bug Report</a></li>
-      </ul>
-    </div>
-    <div class="sidebar-bottom">
-      <button class="logout-btn" onclick="openLogoutModal(event)">
-        <i class="fa-solid fa-right-from-bracket"></i> Log out
-      </button>
-    </div>
-  </aside>
-
-  <div id="overlay" class="overlay" onclick="toggleSidebar()"></div>
+  <div id="sidebar-container"></div>
 
   <header class="topbar">
     <div class="left">
@@ -51,15 +24,11 @@
       <h1>Manage Favorite List</h1>
     </div>
     <div class="actions">
-      <div class="">
-        <i class=""></i>
       </div>
-    </div>
   </header>
 
   <main class="favorite-container">
-    <div class="favorite-grid" id="favorite-grid">
-      </div>
+    <div class="favorite-grid" id="favorite-grid"></div>
 
     <div class="empty-message" id="empty-message" style="display: none;">
       <i class="fa-regular fa-folder-open"></i>
@@ -103,7 +72,7 @@
     </div>
   </div>
 
-  <div id="logoutModal" class="modal-overlay">
+  <div id="logoutModal" class="modal-overlay" style="z-index: 50000;">
     <div class="modal-box">
       <div class="modal-icon-wrapper">
         <div class="modal-icon">
@@ -123,17 +92,14 @@
 
   <div id="toast-container"></div>
 
+  <script src="js/layoutsidebar.js"></script>
+  
   <script src="js/favorite-page.js"></script>
 
   <script>
     // ตัวแปร Global สำหรับเก็บข้อมูลหนังสือที่กดดูรายละเอียด
-    let currentFavBook = null;
 
-    // ฟังก์ชันเปิด/ปิด Sidebar
-    function toggleSidebar() {
-        document.getElementById("sidebar").classList.toggle("active");
-        document.getElementById("overlay").classList.toggle("show");
-    }
+    // ❌ ลบ toggleSidebar() ออกแล้ว เพราะใช้จาก layoutsidebar.js
 
     // ฟังก์ชันเปิด Modal รายละเอียดหนังสือ
     window.openBookDetail = function(book) {
@@ -162,8 +128,36 @@
         const bookModal = document.getElementById('bookModal');
         if (event.target === bookModal) closeBookModal();
         
-        const overlay = document.getElementById("overlay");
-        if (event.target === overlay) toggleSidebar();
+        // Modal Logout จัดการโดย layoutsidebar.js แล้ว แต่ถ้าอยากให้ปิดได้ด้วยคลิกพื้นหลังที่หน้านี้เพิ่ม:
+        const logoutModal = document.getElementById('logoutModal');
+        if (event.target === logoutModal && typeof closeLogoutModal === 'function') {
+            closeLogoutModal();
+        }
+    }
+    
+    // Logic การ Logout (ถ้าไม่ได้อยู่ใน favorite-page.js หรือ layoutsidebar.js)
+    // ควรย้ายไปไว้ที่เดียวเพื่อลดความซ้ำซ้อน แต่ถ้าจำเป็นต้อง override:
+    window.openLogoutModal = function(event) {
+        if(event) { event.preventDefault(); event.stopPropagation(); }
+        const modal = document.getElementById("logoutModal");
+        if(modal) modal.classList.add("active"); // หรือใช้ style.display ตาม CSS ของคุณ
+    }
+    
+    window.closeLogoutModal = function() {
+        const modal = document.getElementById("logoutModal");
+        if(modal) modal.classList.remove("active");
+    }
+
+    window.confirmLogoutAction = function() {
+        const btn = document.getElementById("confirmLogoutBtn");
+        if(btn) {
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Signing out...';
+            btn.disabled = true;
+        }
+        setTimeout(() => {
+            localStorage.clear();
+            window.location.href = "log-in-page.html";
+        }, 800);
     }
 
     // ฟังก์ชัน Add to Library จากหน้า Favorite
@@ -203,7 +197,6 @@
             const result = await res.json();
 
             if (res.ok) {
-                // เรียกใช้ Toast ที่อยู่ในไฟล์ favorite-page.js
                 if (typeof showToast === 'function') {
                     showToast("Success", `Added "${payload.title}" to library!`, "success");
                 } else {
