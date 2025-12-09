@@ -310,11 +310,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
 /* ============================
    ✅ เลือกหนังสือ (Add Book Logic)
+   (Modified: Fix Array.from error)
 ============================ */
 function selectBook(book) {
   const addCard = document.querySelector(".add-book");
   if (!addCard) return;
 
+  // จัดการรูปภาพหน้าปก
   let coverContainer = addCard.querySelector(".book-cover");
   if (!coverContainer) {
     coverContainer = document.createElement("div");
@@ -329,36 +331,51 @@ function selectBook(book) {
   const placeholder = addCard.querySelector(".add-icon");
   if (placeholder) placeholder.style.display = "none";
 
+  // ปิด Popup
   const popup = document.getElementById("book-popup");
   popup.classList.add("hidden");
 
+  // ดึง Input fields
   const titleInput = document.getElementById("title");
   const authorInput = document.getElementById("author");
   const genreSelect = document.getElementById("genre");
 
+  // ใส่ค่า Title และ Author
   if (titleInput) titleInput.value = book.title || "";
   if (authorInput) authorInput.value = book.author || "";
 
+  // 🔥 จุดที่แก้: เช็คประเภทของ input ก่อน
   if (genreSelect) {
-    const currentOptions = Array.from(genreSelect.options).map(opt => opt.text.toLowerCase());
     const genreName = book.genre?.trim() || "Unknown";
 
-    if (!currentOptions.includes(genreName.toLowerCase())) {
-      const newOption = document.createElement("option");
-      newOption.value = genreName.toLowerCase().replace(/\s+/g, "-");
-      newOption.text = genreName;
-
-      const addNewOption = genreSelect.querySelector('option[value="__add_new__"]');
-      if (addNewOption) {
-        genreSelect.insertBefore(newOption, addNewOption);
-      } else {
-        genreSelect.appendChild(newOption);
-      }
+    // กรณีที่ 1: เป็น Dropdown (<select>)
+    if (genreSelect.tagName === "SELECT") {
+        const currentOptions = Array.from(genreSelect.options || []).map(opt => opt.text.toLowerCase());
+        
+        // ถ้าไม่มี genre นี้ในตัวเลือก ให้เพิ่มเข้าไปใหม่
+        if (!currentOptions.includes(genreName.toLowerCase())) {
+          const newOption = document.createElement("option");
+          newOption.value = genreName.toLowerCase().replace(/\s+/g, "-");
+          newOption.text = genreName;
+    
+          const addNewOption = genreSelect.querySelector('option[value="__add_new__"]');
+          if (addNewOption) {
+            genreSelect.insertBefore(newOption, addNewOption);
+          } else {
+            genreSelect.appendChild(newOption);
+          }
+        }
+        
+        // เลือก genre ที่ตรงกัน
+        const match = Array.from(genreSelect.options).find(
+          (opt) => opt.text.toLowerCase() === genreName.toLowerCase()
+        );
+        genreSelect.value = match ? match.value : "";
+    } 
+    // กรณีที่ 2: เป็น Input ธรรมดา (<input>)
+    else {
+        genreSelect.value = genreName;
     }
-    const match = Array.from(genreSelect.options).find(
-      (opt) => opt.text.toLowerCase() === genreName.toLowerCase()
-    );
-    genreSelect.value = match ? match.value : "";
   }
 
   console.log("✅ Added book:", book);

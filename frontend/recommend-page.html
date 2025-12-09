@@ -11,6 +11,38 @@
   <link rel="stylesheet" href="styles/recommend.css" />
   
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+
+  <style>
+    .sort-container {
+      display: flex;
+      align-items: center;
+      background: #fff;
+      border: 1px solid #dcdcdc;
+      border-radius: 8px;
+      padding: 0 10px;
+      height: 40px;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+    .sort-container:hover {
+      border-color: #1b6f8e;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    .sort-icon {
+      color: #666;
+      font-size: 0.9rem;
+    }
+    #sortSelect {
+      border: none;
+      background: transparent;
+      font-family: 'Inter', 'Prompt', sans-serif;
+      font-size: 0.9rem;
+      color: #333;
+      cursor: pointer;
+      outline: none;
+      padding-right: 5px;
+    }
+  </style>
 </head>
 <body>
 
@@ -23,8 +55,21 @@
       </button>
       <h1>Recommended Books</h1>
     </div>
+    
     <div class="actions">
+      <button class="how-it-works-btn" onclick="openInfoModal()">
+        <i class="fa-solid fa-wand-magic-sparkles"></i>
+        <span>How AI Works</span>
+      </button>
+
+      <div class="sort-container">
+        <i class="fa-solid fa-arrow-down-short-wide sort-icon"></i>
+        <select id="sortSelect" onchange="handleSortChange(this.value)">
+          <option value="az" selected>Title (A-Z)</option>
+          <option value="match">Match %</option>
+        </select>
       </div>
+    </div>
   </header>
 
   <main class="main-content">
@@ -94,6 +139,51 @@
     </div>
   </div>
 
+  <div id="infoModal" class="info-modal-overlay">
+    <div class="info-modal-box">
+        <button class="info-close-btn" onclick="closeInfoModal()">&times;</button>
+        
+        <div class="info-header">
+            <div class="info-icon-glow">
+                <i class="fa-solid fa-robot"></i>
+            </div>
+            <h2>How Our AI Recommends</h2>
+            <p>ระบบอัจฉริยะช่วยคัดสรรหนังสือที่คุณน่าจะชอบที่สุด โดยวิเคราะห์จาก:</p>
+        </div>
+
+        <div class="info-grid">
+            <div class="info-card">
+                <div class="icon-circle c-blue">
+                    <i class="fa-solid fa-brain"></i>
+                </div>
+                <h4>Deep Content Analysis</h4>
+                <p>AI ของเรา "อ่าน" เรื่องย่อหนังสือทุกเล่มเพื่อเข้าใจบริบทและเนื้อหาที่ลึกซึ้ง (Semantic) คล้ายกับวิธีที่มนุษย์เข้าใจ</p>
+            </div>
+
+            <div class="info-card">
+                <div class="icon-circle c-green">
+                    <i class="fa-solid fa-fingerprint"></i>
+                </div>
+                <h4>Personalized Taste</h4>
+                <p>ระบบจดจำนักเขียนที่คุณโปรดปรานและแนวหนังสือที่คุณชอบอ่าน เพื่อนำเสนอสิ่งที่ตรงใจคุณที่สุด</p>
+            </div>
+
+            <div class="info-card">
+                <div class="icon-circle c-purple">
+                    <i class="fa-solid fa-chart-pie"></i>
+                </div>
+                <h4>Smart Matching Score</h4>
+                <p>เราคำนวณคะแนนความแมตช์ (Match %) จากหลายปัจจัยผสมผสานกัน เพื่อให้ได้ผลลัพธ์ที่แม่นยำกว่าระบบทั่วไป</p>
+            </div>
+        </div>
+
+        <div class="info-footer">
+            <p>ยิ่งคุณอ่านและเก็บเข้าชั้นหนังสือมากเท่าไหร่ ระบบก็จะยิ่งรู้ใจคุณมากขึ้นเท่านั้น!</p>
+            <button class="btn-got-it" onclick="closeInfoModal()">Got it!</button>
+        </div>
+    </div>
+  </div>
+
   <div id="toast-container"></div>
 
   <script src="js/layoutsidebar.js"></script>
@@ -104,8 +194,9 @@
     const itemsPerPage = 10; 
     let currentUserId = null; 
     let currentBookData = null;
-
-    // ❌ ลบ toggleSidebar() ออกแล้ว เพราะใช้จาก layoutsidebar.js
+    
+    // ตัวแปรเก็บสถานะการ Sort (Default: A-Z)
+    let currentSortMode = 'az'; 
 
     async function checkAuth() {
         const userStr = localStorage.getItem("user");
@@ -114,7 +205,6 @@
         if (userStr) {
             try {
                 const user = JSON.parse(userStr);
-                // updateUserProfile ไม่ต้องใช้แล้วเพราะ layoutsidebar.js ทำให้
                 currentUserId = user.id || user.user_id;
             } catch (e) {}
         }
@@ -129,7 +219,6 @@
 
             if (res.ok) {
                 const userData = await res.json();
-                // updateUserProfile(userData.username, userData.email); // Sidebar จัดการเอง
                 currentUserId = userData.user_id;
                 localStorage.setItem("user", JSON.stringify(userData));
             }
@@ -138,17 +227,11 @@
         fetchRecommendations();
     }
 
-    // ฟังก์ชันนี้ไม่ต้องใช้แล้ว แต่ถ้าจะเก็บไว้เผื่อ Logic อื่นก็ไม่เสียหาย
-    // function updateUserProfile(name, email) { ... }
-
     document.addEventListener("DOMContentLoaded", () => {
       checkAuth(); 
-      
-      // ❌ ลบ Logic Logout ซ้ำซ้อนออก (เพราะ layoutsidebar.js มีให้แล้ว)
-      // แต่ถ้า Modal ในหน้านี้ ID ตรงกัน ก็จะทำงานได้ปกติ
     });
     
-    // Override ฟังก์ชัน Logout Modal ของหน้านี้ให้เชื่อมกับ HTML
+    // Logout Logic override
     window.openLogoutModal = function(event) {
         if(event) { event.preventDefault(); }
         document.getElementById("logoutModal").classList.add("active");
@@ -201,6 +284,9 @@
             else if (result.recommendations) allRecommendations = result.recommendations;
             else allRecommendations = [];
             
+            // เรียกใช้การเรียงลำดับก่อน Render ครั้งแรก
+            applySort();
+
             renderPage(1);
 
         } catch (error) {
@@ -209,7 +295,48 @@
         }
     }
 
-    function renderPage(page) {
+    // ฟังก์ชันรับค่าเมื่อมีการเปลี่ยน Dropdown
+    function handleSortChange(mode) {
+        currentSortMode = mode;
+        applySort();   // เรียงข้อมูลใหม่
+        renderPage(1); // รีเซ็ตไปหน้า 1
+    }
+
+    // Logic การเรียงลำดับ
+    function applySort() {
+        if (!allRecommendations || allRecommendations.length === 0) return;
+
+        allRecommendations.sort((a, b) => {
+            if (currentSortMode === 'az') {
+                // เรียงตามชื่อ A-Z
+                const titleA = (a.title || "").toLowerCase();
+                const titleB = (b.title || "").toLowerCase();
+                if (titleA < titleB) return -1;
+                if (titleA > titleB) return 1;
+                return 0;
+            } else if (currentSortMode === 'match') {
+                // เรียงตาม Match % (มากไปน้อย)
+                const scoreA = getMatchScore(a);
+                const scoreB = getMatchScore(b);
+                return scoreB - scoreA; // Descending (มากไปน้อย)
+            }
+        });
+    }
+
+    // Helper แปลงค่า Match เป็นตัวเลข
+    function getMatchScore(book) {
+        if (book.match_percent) {
+            // ตัดเครื่องหมาย % ออกแล้วแปลงเป็นเลข
+            return parseFloat(book.match_percent.replace('%', '')) || 0;
+        }
+        if (book.score !== undefined) {
+            // ถ้า score น้อยกว่า 1 (เช่น 0.98) ให้คูณ 100
+            return book.score <= 1 ? book.score * 100 : book.score;
+        }
+        return 0;
+    }
+
+function renderPage(page) {
         const container = document.getElementById('book-container');
         if (allRecommendations.length === 0) {
             container.innerHTML = '<div style="text-align:center; width:100%; grid-column:1/-1; margin-top:50px;">No recommendations found.</div>';
@@ -229,9 +356,12 @@
 
         container.innerHTML = '';
         booksToShow.forEach((book, index) => {
+            // 1. คำนวณลำดับ (Rank) 1-100
+            const rank = startIndex + index + 1;
+
             const title = book.title || "Untitled";
             const author = book.authors || "Unknown";
-            const reason = book.reason || "Recommended";
+            const reason = book.reason || "Recommended"; 
             let scoreVal = book.score || 0;
             if(scoreVal > 1) scoreVal = scoreVal / 100; 
             const matchText = book.match_percent ? book.match_percent : (scoreVal * 100).toFixed(0) + "%";
@@ -247,14 +377,31 @@
             card.className = 'book-card fade-in-anim';
             card.style.animationDelay = `${index * 0.05}s`;
             card.onclick = () => openBookModal(book);
-            card.innerHTML = `<div class="book-cover" style="background-image: url('${bgImage}');"></div><div class="book-info"><h3 class="book-title" title="${title}">${title}</h3><p class="book-author">by ${author}</p><div class="book-genres">${genreBadges}</div><div class="book-footer"><div class="book-reason" title="${reason}"><i class="fa-solid fa-circle-info"></i> ${reason}</div><div class="book-score">${matchText} Match</div></div></div>`;
+            
+            // 2. แก้ไข HTML: เพิ่ม div class="book-rank" และปรับโครงสร้าง
+            card.innerHTML = `
+                <div class="book-cover" style="background-image: url('${bgImage}');">
+                    <div class="book-rank">#${rank}</div>
+                </div>
+                <div class="book-info">
+                    <h3 class="book-title" title="${title}">${title}</h3>
+                    <p class="book-author">by ${author}</p>
+                    <div class="book-genres">${genreBadges}</div>
+                    <div class="book-footer">
+                        <div class="book-reason" title="${reason}">
+                            ${reason}
+                        </div>
+                        <div class="book-score">${matchText} Match</div>
+                    </div>
+                </div>`;
+            
             container.appendChild(card);
         });
 
         updateNavButtons(totalPages);
         renderDots(totalPages);
     }
-
+    
     function updateNavButtons(totalPages) {
         const prevBtn = document.getElementById('prev-slide');
         const nextBtn = document.getElementById('next-slide');
@@ -313,10 +460,9 @@
 
     window.onclick = function(event) {
         if (event.target === document.getElementById("bookModal")) closeBookModal();
-        // Overlay ไม่ต้องจัดการแล้ว layoutsidebar.js ทำให้
     }
 
-    // ✅ ADD TO LIBRARY
+    // ADD TO LIBRARY
     async function addToLibrary() {
         if (!currentUserId) {
             showToast("Please log in to add books.", "error");
@@ -369,7 +515,7 @@
         }
     }
 
-    // ✅ TOGGLE FAVORITE
+    // TOGGLE FAVORITE
     async function toggleFavorite(btn) {
         if (!currentUserId) {
             showToast("Please log in to manage favorites.", "error");
@@ -424,6 +570,27 @@
             btn.disabled = false;
         }
     }
+
+    // =========================================
+    // ✅ INFO MODAL LOGIC (How AI Works)
+    // =========================================
+    function openInfoModal() {
+        document.getElementById("infoModal").classList.add("active");
+    }
+
+    function closeInfoModal() {
+        document.getElementById("infoModal").classList.remove("active");
+    }
+
+    // ปิดเมื่อคลิกพื้นหลัง (Outside click)
+    window.addEventListener('click', function(event) {
+        const infoModal = document.getElementById("infoModal");
+        // เช็คว่าคลิกโดนพื้นหลัง modal หรือไม่
+        if (event.target === infoModal) {
+            closeInfoModal();
+        }
+    });
+
   </script>
 </body>
 </html>

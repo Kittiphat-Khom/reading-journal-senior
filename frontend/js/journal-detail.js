@@ -194,22 +194,58 @@ document.addEventListener("DOMContentLoaded", async () => {
           setVal("author", data.author);
           setVal("review", data.review);
           if(data.startdate) setVal("start-date", data.startdate.split("T")[0]);
+          // ... (ส่วนโค้ดเดิมด้านบน) ...
           if(data.enddate) setVal("end-date", data.enddate.split("T")[0]);
-  
-          const genreSelect = document.getElementById("genre");
-          if (genreSelect && data.genre) {
-              let genreValue = String(data.genre).trim();
-              let found = Array.from(genreSelect.options).find(opt => opt.value === genreValue);
-              if (!found) {
-                 const opt = document.createElement("option");
-                 opt.value = genreValue;
-                 opt.text = genreValue;
-                 genreSelect.add(opt, genreSelect.options[1]);
+
+          // ✅ แก้ไข: Logic จัดการ Genre ให้รองรับหลายอัน (ดึงมาสูงสุด 3 อัน)
+// ✅ ส่วนจัดการ Genre แบบใหม่ (สำหรับ Text Input - แก้ไขแล้ว)
+          const genreInput = document.getElementById("genre");
+
+          if (genreInput) {
+              // ล้างค่าเก่าก่อนเสมอ
+              genreInput.value = ""; 
+
+              if (data.genre) {
+                  // ตัวแปรสำหรับเก็บค่าที่จะนำไปแสดง
+                  let finalGenreString = "";
+
+                  // กรณี 1: ข้อมูลเป็น Array (เช่น ["Fantasy", "Action"])
+                  if (Array.isArray(data.genre)) {
+                      // เอามาแค่ 3 อันแรก แล้วเชื่อมด้วยเครื่องหมาย " / "
+                      finalGenreString = data.genre.slice(0, 3).join(" / ");
+                  } 
+                  // กรณี 2: ข้อมูลเป็น String
+                  else {
+                      const rawString = String(data.genre);
+                      
+                      // ลองพยายามแกะเผื่อมันเป็น String หน้าตาเหมือน Array (เช่น "['Fantasy', 'Drama']")
+                      try {
+                          // แปลง ' เป็น " เพื่อให้ JSON.parse ทำงานได้
+                          const fixedString = rawString.replace(/'/g, '"');
+                          
+                          let parsed;
+                          try { parsed = JSON.parse(fixedString); } catch(e) { parsed = null; }
+
+                          if (Array.isArray(parsed)) {
+                              finalGenreString = parsed.slice(0, 3).join(" / ");
+                          } else {
+                              // ถ้าไม่ใช่ Array ก็ใส่ข้อความดิบๆ ลงไปเลย (ลบวงเล็บ [] และฟันหนูทิ้ง)
+                              finalGenreString = rawString.replace(/[\[\]"]/g, '');
+                          }
+                      } catch (e) {
+                          // กรณี error อื่นๆ ใส่ค่าเดิมลงไป
+                          finalGenreString = rawString.replace(/[\[\]"]/g, '');
+                      }
+                  }
+                  
+                  // ใส่ค่าลงใน Input
+                  genreInput.value = finalGenreString;
               }
-              genreSelect.value = genreValue;
           }
-  
+
+          // ✅ ส่วนของรูปภาพ (เหมือนเดิม)
           const imageUrl = data.book_image || data.image;
+          
           if (imageUrl) {
               let img = document.getElementById("cover-preview");
               if (!img) { img = document.querySelector(".book-cover img"); }
@@ -264,32 +300,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
     }
   
-    // GENRE SELECTION LOGIC
-    const genreSelect = document.getElementById("genre");
-    if (genreSelect) {
-        let previousValue = genreSelect.value;
-        genreSelect.addEventListener("focus", function () { previousValue = this.value; });
-  
-        genreSelect.addEventListener("change", async function () {
-            if (this.value === "__add_new__") {
-                const newGenreName = await showInputModal("Add New Genre", "Enter genre name (e.g., Sci-Fi)");
-                if (newGenreName) {
-                    const newOption = document.createElement("option");
-                    newOption.value = newGenreName;
-                    newOption.text = newGenreName;
-                    const lastIndex = this.options.length - 1;
-                    this.add(newOption, this.options[lastIndex]);
-                    this.value = newGenreName;
-                    previousValue = newGenreName;
-                    showToast("Success", `Added genre: ${newGenreName}`, "success");
-                } else {
-                    this.value = previousValue;
-                }
-            } else {
-                previousValue = this.value;
-            }
-        });
-    }
+    // ❌ ส่วน GENRE SELECTION LOGIC เดิมถูกลบทิ้งไปแล้ว เพราะเราใช้ Input Text แทน
   
     // PHOTO UPLOAD LOGIC
     const uploadBtn = document.getElementById("btn-trigger-upload");
