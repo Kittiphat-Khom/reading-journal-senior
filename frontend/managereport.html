@@ -16,7 +16,11 @@
             </a>
             <span class="title">Manage Reports</span>
             
-            <div class="search-bar-container">
+            <button class="help-btn" onclick="openHelpModal()">
+                <i class="fas fa-question-circle"></i> Help
+            </button>
+            
+            <div class="search-bar-container" style="margin-left: auto;">
                 <input type="text" id="searchInput" placeholder="Search...">
                 <i class="fas fa-search search-icon"></i>
             </div>
@@ -46,23 +50,12 @@
                     </tr>
                 </thead>
                 <tbody id="reportTableBody">
-                    <tr>
-                        <td style="text-align: center;">14</td>
-                        <td>Login Issue</td>
-                        <td>Cannot login to system</td>
-                        <td>25 Nov 2025</td>
-                        <td style="text-align: center;"><i class="fas fa-check-circle"></i></td>
-                        <td style="text-align: center;">
-                            <button class="btn" style="background:var(--primary-color); color:#fff; padding:4px 10px; font-size:12px;">View</button>
-                        </td>
-                    </tr>
                     </tbody>
             </table>
         </div>
 
         <div class="bottom-bar-container">
-            <div class="pagination" id="paginationContainer">
-                </div>
+            <div class="pagination" id="paginationContainer"></div>
         </div>
     </div>
 
@@ -93,6 +86,70 @@
         </div>
     </div>
 
+    <div id="helpModal" class="help-modal-overlay">
+        <div class="help-modal-box">
+            <button class="help-close-btn" onclick="closeHelpModal()">&times;</button>
+            
+            <div class="help-header">
+                <div class="help-icon-glow">
+                    <i class="fas fa-book-open"></i>
+                </div>
+                <h2>How to Manage Reports</h2>
+                <p>A quick guide to handling user-reported issues.</p>
+            </div>
+    
+            <div class="help-grid">
+                <div class="help-card">
+                    <div class="icon-circle c-blue">
+                        <i class="fas fa-eye"></i>
+                    </div>
+                    <h4>View Details</h4>
+                    <p>Click the <b>View</b> button to examine report details, attached images, and existing admin notes.</p>
+                </div>
+    
+                <div class="help-card">
+                    <div class="icon-circle c-green">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <h4>Update Status</h4>
+                    <p>Once resolved, add a management note and click <b>Mark as done</b>. The system will automatically log your ID.</p>
+                </div>
+    
+                <div class="help-card">
+                    <div class="icon-circle c-purple">
+                        <i class="fas fa-filter"></i>
+                    </div>
+                    <h4>Filter & Search</h4>
+                    <p>Search reports by Title or ID, or use the Status filter to focus on pending tasks (Not Done).</p>
+                </div>
+            </div>
+    
+            <div class="help-footer">
+                <button class="btn-got-it" onclick="closeHelpModal()">Got it!</button>
+            </div>
+        </div>
+    </div>
+
     <script src="./js/managereport.js"></script>
+
+    <script>
+        function openHelpModal() {
+            const modal = document.getElementById("helpModal");
+            if(modal) modal.classList.add("active");
+        }
+
+        function closeHelpModal() {
+            const modal = document.getElementById("helpModal");
+            if(modal) modal.classList.remove("active");
+        }
+
+        // ปิดเมื่อคลิกพื้นหลัง
+        window.addEventListener('click', function(event) {
+            const helpModal = document.getElementById("helpModal");
+            if (event.target === helpModal) {
+                closeHelpModal();
+            }
+        });
+    </script>
 </body>
 </html>

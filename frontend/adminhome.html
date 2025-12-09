@@ -8,39 +8,21 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
-        /* --- CSS สำหรับ Sidebar Layout --- */
-        body {
-            margin: 0; padding: 0;
-            background-color: #F5F2EE;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            overflow-x: hidden;
-        }
+        /* --- CSS Layout เฉพาะหน้า Admin --- */
+        body { margin: 0; padding: 0; background-color: #F5F2EE; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow-x: hidden; }
         .main-wrapper { display: flex; min-height: 100vh; }
 
         /* Sidebar */
-        .sidebar {
-            width: 260px; background-color: #ffffff;
-            box-shadow: 2px 0 10px rgba(0,0,0,0.05);
-            position: fixed; height: 100vh; left: 0; top: 0;
-            display: flex; flex-direction: column; z-index: 1000;
-        }
+        .sidebar { width: 260px; background-color: #ffffff; box-shadow: 2px 0 10px rgba(0,0,0,0.05); position: fixed; height: 100vh; left: 0; top: 0; display: flex; flex-direction: column; z-index: 1000; }
         .sidebar-header { padding: 30px 20px; text-align: center; border-bottom: 1px solid #eee; }
         .profile-img-container { width: 80px; height: 80px; margin: 0 auto 10px; border-radius: 50%; overflow: hidden; background: #e0e0e0; }
         .profile-img-container img { width: 100%; height: 100%; object-fit: cover; }
         .sidebar-menu { padding: 20px 0; flex-grow: 1; }
-        .menu-item {
-            display: flex; align-items: center; padding: 15px 25px;
-            color: #555; text-decoration: none; cursor: pointer;
-            transition: all 0.3s; font-size: 15px; border-left: 4px solid transparent;
-        }
+        .menu-item { display: flex; align-items: center; padding: 15px 25px; color: #555; text-decoration: none; cursor: pointer; transition: all 0.3s; font-size: 15px; border-left: 4px solid transparent; }
         .menu-item:hover { background-color: #f8f9fa; color: #49768B; }
         .menu-item.active { background-color: #eef2ff; color: #49768B; border-left: 4px solid #4361ee; font-weight: 600; }
         .sidebar-footer { padding: 20px; border-top: 1px solid #eee; }
-        .btn-logout {
-            width: 100%; padding: 10px; background: #fff; border: 1px solid #ddd;
-            border-radius: 6px; color: #d63031; cursor: pointer; transition: 0.2s;
-            display: flex; justify-content: center; align-items: center; gap: 8px;
-        }
+        .btn-logout { width: 100%; padding: 10px; background: #fff; border: 1px solid #ddd; border-radius: 6px; color: #d63031; cursor: pointer; transition: 0.2s; display: flex; justify-content: center; align-items: center; gap: 8px; }
         .btn-logout:hover { background: #ffe6e6; border-color: #d63031; }
 
         /* Content Area */
@@ -49,23 +31,22 @@
         .content-section.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Table & Layout Styles */
+        /* Common Elements Override */
         .user-table { width: 100%; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.05); border-collapse: collapse; }
-        .top-bar-user-record {
-            background: white; padding: 15px 25px; border-radius: 10px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.02); margin-bottom: 20px;
-            display: flex; align-items: center; gap: 15px; flex-wrap: wrap;
-        }
         
-        /* Icons Actions for User Page (ตอนนี้ย้ายไปข้างล่างแล้ว แต่คง class ไว้) */
+        /* ✅ แก้ไข Top Bar ให้รองรับการจัดวางใหม่ */
+        .top-bar-user-record { background: white; padding: 15px 25px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); margin-bottom: 20px; display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
+        
         .action-icon { cursor: pointer; transition: 0.2s; font-size: 18px; }
         .action-icon:hover { transform: scale(1.1); }
         .action-icon.add { color: #2ec4b6; }
         .action-icon.edit { color: #fcc419; }
         .action-icon.delete { color: #e71d36; }
-
-        /* Pagination Style Overrides (ถ้าจำเป็น) */
         .pagination { display: flex; gap: 5px; }
+
+        /* Modal Animation */
+        @keyframes fadeInModal { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .help-modal-overlay.active { display: flex; animation: fadeInModal 0.3s; }
     </style>
 </head>
 <body>
@@ -101,8 +82,12 @@
 
             <div id="section-reports" class="content-section active">
                 <div class="top-bar-user-record">
-                    <span class="title" style="font-size: 1.2rem; font-weight: bold; margin-right: auto;">Manage Reports</span>
+                    <span class="title" style="font-size: 1.2rem; font-weight: bold;">Manage Reports</span>
                     
+                    <button class="help-btn" onclick="openHelpModal('report')" style="margin-left: auto;">
+                        <i class="fas fa-question-circle"></i> Help
+                    </button>
+
                     <div class="search-bar-container">
                         <input type="text" id="searchInput" placeholder="Search Report...">
                         <i class="fas fa-search search-icon"></i>
@@ -145,7 +130,11 @@
                 <div class="top-bar-user-record">
                     <span class="title" style="font-size: 1.2rem; font-weight: bold;">Manage User Records</span>
                     
-                    <div class="search-bar-container" style="margin-left: 20px;">
+                    <button class="help-btn" onclick="openHelpModal('user')" style="margin-left: auto;">
+                        <i class="fas fa-question-circle"></i> Help
+                    </button>
+
+                    <div class="search-bar-container">
                         <input type="text" id="searchUser" placeholder="Search ID or Username">
                         <i class="fas fa-search search-icon" id="searchBtnUser"></i>
                     </div>
@@ -154,8 +143,7 @@
                         <option value="newest">Newest to Oldest</option>
                         <option value="oldest">Oldest to Newest</option> 
                     </select>
-
-                    </div>
+                </div>
 
                 <div class="table-container">
                     <table class="user-table">
@@ -173,18 +161,16 @@
                         <tbody id="userTableBody"></tbody>
                     </table>
                 </div>
-        <div class="bottom-controls" style="position: relative; margin-top: 20px; display: flex; justify-content: center; align-items: center; min-height: 40px;">
+                <div class="bottom-controls" style="position: relative; margin-top: 20px; display: flex; justify-content: center; align-items: center; min-height: 40px;">
 
-    <div class="dashboard-actions" style="position: absolute; left: 15px; display: flex; gap: 15px;">
-        <i class="fas fa-user-plus action-icon add" id="addUserIcon" title="Add User" style="cursor: pointer; font-size: 20px; color: #49768B   ; transition: 0.2s;"></i>
-        <i class="fas fa-edit action-icon edit" id="editDataIcon" title="Edit User" style="cursor: pointer; font-size: 20px; color: #49768B; transition: 0.2s;"></i>
-        <i class="fas fa-trash-alt action-icon delete" id="deleteIcon" title="Delete User" style="cursor: pointer; font-size: 20px; color: #49768B; transition: 0.2s;"></i>
-    </div>
+                    <div class="dashboard-actions" style="position: absolute; left: 15px; display: flex; gap: 15px;">
+                        <i class="fas fa-user-plus action-icon add" id="addUserIcon" title="Add User"></i>
+                        <i class="fas fa-edit action-icon edit" id="editDataIcon" title="Edit User"></i>
+                        <i class="fas fa-trash-alt action-icon delete" id="deleteIcon" title="Delete User"></i>
+                    </div>
 
-    <div class="pagination" id="paginationUsers" style="display: flex; gap: 5px;"></div>
-
-</div>
-
+                    <div class="pagination" id="paginationUsers" style="display: flex; gap: 5px;"></div>
+                </div>
             </div>
 
         </main>
@@ -210,12 +196,75 @@
         </div>
     </div>
 
-   <div class="add-user-modal-overlay" id="addUserModalOverlay">
+    <div id="helpModalReport" class="help-modal-overlay">
+        <div class="help-modal-box">
+            <button class="help-close-btn" onclick="closeHelpModal('report')">&times;</button>
+            <div class="help-header">
+                <div class="help-icon-glow"><i class="fas fa-book-open"></i></div>
+                <h2>How to Manage Reports</h2>
+                <p>A quick guide to handling user-reported issues.</p>
+            </div>
+            <div class="help-grid">
+                <div class="help-card">
+                    <div class="icon-circle c-blue"><i class="fas fa-eye"></i></div>
+                    <h4>View Details</h4>
+                    <p>Click <b>View</b> to examine report details, attached images, and existing admin notes.</p>
+                </div>
+                <div class="help-card">
+                    <div class="icon-circle c-green"><i class="fas fa-check-circle"></i></div>
+                    <h4>Update Status</h4>
+                    <p>Once resolved, add a note and click <b>Mark as done</b>. The system logs your ID automatically.</p>
+                </div>
+                <div class="help-card">
+                    <div class="icon-circle c-purple"><i class="fas fa-filter"></i></div>
+                    <h4>Filter & Search</h4>
+                    <p>Search by Title or ID, or use Status filter to find pending tasks.</p>
+                </div>
+            </div>
+            <div class="help-footer">
+                <button class="btn-got-it" onclick="closeHelpModal('report')">Got it!</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="helpModalUser" class="help-modal-overlay">
+        <div class="help-modal-box">
+            <button class="help-close-btn" onclick="closeHelpModal('user')">&times;</button>
+            <div class="help-header">
+                <div class="help-icon-glow"><i class="fas fa-users-cog"></i></div>
+                <h2>Manage User Records</h2>
+                <p>Guide to managing system users efficiently.</p>
+            </div>
+            <div class="help-grid">
+                <div class="help-card">
+                    <div class="icon-circle c-blue"><i class="fas fa-user-plus"></i></div>
+                    <h4>Add & Edit</h4>
+                    <p>Use the <b style="color:#2ec4b6">(+) Icon</b> to create users, or the <b style="color:#fcc419">Edit Icon</b> to update their details.</p>
+                </div>
+                
+                <div class="help-card">
+                    <div class="icon-circle c-green"><i class="fas fa-check-square"></i></div>
+                    <h4>Delete & Bulk Actions</h4>
+                    <p>Use the <b>Select All</b> button or checkboxes, then click the <b style="color:#e71d36">Trash Icon</b> to remove users.</p>
+                </div>
+                
+                <div class="help-card">
+                    <div class="icon-circle c-purple"><i class="fas fa-search"></i></div>
+                    <h4>Search & Sort</h4>
+                    <p>Quickly find users by <b>ID</b> or <b>Username</b>, and sort the list by <b>Register Date</b>.</p>
+                </div>
+            </div>
+            <div class="help-footer">
+                <p>Deleting a user is permanent and cannot be undone.</p>
+                <button class="btn-got-it" onclick="closeHelpModal('user')">Got it!</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="add-user-modal-overlay" id="addUserModalOverlay">
         <div class="add-user-modal-box">
             <div style="font-size: 40px; color: #2ec4b6; margin-bottom: 15px; text-align: center;"><i class="fas fa-user-plus"></i></div>
-            
             <h3 class="add-user-modal-title" style="text-align: center;">Add New User</h3>
-            
             <form class="add-user-modal-form" id="addUserModalForm">
                 <div class="add-user-modal-row"><label>Username</label><input type="text" id="addUsername" autocomplete="off"></div>
                 <div class="add-user-modal-row"><label>Email</label><input type="email" id="addEmail" autocomplete="off"></div>
@@ -231,14 +280,12 @@
     <div class="add-user-modal-overlay" id="editModalOverlay">
         <div class="add-user-modal-box">
             <div style="font-size: 40px; color: #fcc419; margin-bottom: 15px; text-align: center;"><i class="fas fa-edit"></i></div>
-            
             <h3 class="add-user-modal-title" style="text-align: center;">Edit User</h3>
-            
             <form class="add-user-modal-form">
                 <input type="hidden" id="editUserId">
                 <div class="add-user-modal-row"><label>Username</label><input type="text" id="editUsername"></div>
                 <div class="add-user-modal-row"><label>Email</label><input type="email" id="editEmail"></div>
-                </form>
+            </form>
             <div class="add-user-modal-buttons">
                 <button type="button" class="add-user-modal-cancel-btn" id="editModalCancelBtn">Cancel</button>
                 <button type="button" class="add-user-modal-done-btn" id="editModalConfirmBtn">Save</button>
@@ -249,9 +296,7 @@
     <div class="add-user-modal-overlay" id="deleteModalOverlay">
         <div class="add-user-modal-box">
             <div style="font-size: 40px; color: #e71d36; margin-bottom: 15px; text-align: center;"><i class="fas fa-trash-alt"></i></div>
-            
             <h3 class="add-user-modal-title" style="text-align: center;">Delete Users?</h3>
-            
             <p style="text-align:center; color:#666;">Are you sure you want to delete the selected users?</p>
             <div class="add-user-modal-buttons">
                 <button type="button" class="add-user-modal-cancel-btn" id="deleteModalCancelBtn">Cancel</button>
@@ -261,7 +306,7 @@
     </div>
 
     <script>
-        // Tab Switching Logic
+        // Tab Switching
         function switchTab(tabName, element) {
             document.querySelectorAll('.content-section').forEach(sec => sec.classList.remove('active'));
             document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
@@ -269,7 +314,7 @@
             element.classList.add('active');
         }
         
-        // Admin Name & Logout Logic
+        // Admin & Logout
         document.addEventListener("DOMContentLoaded", function() {
             const dbUsername = localStorage.getItem('username');
             if (dbUsername) document.getElementById('admin-name').textContent = dbUsername;
@@ -281,6 +326,31 @@
                     window.location.href = 'index.html';
                 });
             }
+        });
+
+        // ✅ HELP MODAL LOGIC (แบบแยกประเภท)
+        function openHelpModal(type) {
+            if(type === 'report') {
+                document.getElementById("helpModalReport").classList.add("active");
+            } else if (type === 'user') {
+                document.getElementById("helpModalUser").classList.add("active");
+            }
+        }
+
+        function closeHelpModal(type) {
+            if(type === 'report') {
+                document.getElementById("helpModalReport").classList.remove("active");
+            } else if (type === 'user') {
+                document.getElementById("helpModalUser").classList.remove("active");
+            }
+        }
+
+        // ปิดเมื่อคลิกพื้นหลัง
+        window.addEventListener('click', function(event) {
+            const modalReport = document.getElementById("helpModalReport");
+            const modalUser = document.getElementById("helpModalUser");
+            if (event.target === modalReport) modalReport.classList.remove("active");
+            if (event.target === modalUser) modalUser.classList.remove("active");
         });
     </script>
     
