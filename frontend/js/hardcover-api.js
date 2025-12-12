@@ -294,8 +294,6 @@ document.addEventListener("DOMContentLoaded", () => {
     requestAnimationFrame(() => {
       if (searchInput) searchInput.focus();
     });
-
-    // ❌ ลบส่วนสุ่มหนังสือ (Random Queries) ออกไปแล้ว
   });
 
   // ✅ 5. ปิด popup เมื่อคลิกด้านนอก
@@ -310,13 +308,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
 /* ============================
    ✅ เลือกหนังสือ (Add Book Logic)
-   (Modified: Fix Array.from error)
+   (แก้ไข: เรียก lockBookFromAPI เพื่อล็อคข้อมูล)
 ============================ */
 function selectBook(book) {
   const addCard = document.querySelector(".add-book");
   if (!addCard) return;
 
-  // จัดการรูปภาพหน้าปก
+  // 1. จัดการรูปภาพหน้าปก
   let coverContainer = addCard.querySelector(".book-cover");
   if (!coverContainer) {
     coverContainer = document.createElement("div");
@@ -328,57 +326,34 @@ function selectBook(book) {
     <img src="${book.image}" alt="${book.title}" class="selected-book-cover" />
   `;
 
+  // ซ่อนไอคอนบวก
   const placeholder = addCard.querySelector(".add-icon");
   if (placeholder) placeholder.style.display = "none";
 
   // ปิด Popup
   const popup = document.getElementById("book-popup");
-  popup.classList.add("hidden");
+  if (popup) popup.classList.add("hidden");
 
-  // ดึง Input fields
-  const titleInput = document.getElementById("title");
-  const authorInput = document.getElementById("author");
-  const genreSelect = document.getElementById("genre");
-
-  // ใส่ค่า Title และ Author
-  if (titleInput) titleInput.value = book.title || "";
-  if (authorInput) authorInput.value = book.author || "";
-
-  // 🔥 จุดที่แก้: เช็คประเภทของ input ก่อน
-  if (genreSelect) {
-    const genreName = book.genre?.trim() || "Unknown";
-
-    // กรณีที่ 1: เป็น Dropdown (<select>)
-    if (genreSelect.tagName === "SELECT") {
-        const currentOptions = Array.from(genreSelect.options || []).map(opt => opt.text.toLowerCase());
-        
-        // ถ้าไม่มี genre นี้ในตัวเลือก ให้เพิ่มเข้าไปใหม่
-        if (!currentOptions.includes(genreName.toLowerCase())) {
-          const newOption = document.createElement("option");
-          newOption.value = genreName.toLowerCase().replace(/\s+/g, "-");
-          newOption.text = genreName;
-    
-          const addNewOption = genreSelect.querySelector('option[value="__add_new__"]');
-          if (addNewOption) {
-            genreSelect.insertBefore(newOption, addNewOption);
-          } else {
-            genreSelect.appendChild(newOption);
-          }
-        }
-        
-        // เลือก genre ที่ตรงกัน
-        const match = Array.from(genreSelect.options).find(
-          (opt) => opt.text.toLowerCase() === genreName.toLowerCase()
-        );
-        genreSelect.value = match ? match.value : "";
-    } 
-    // กรณีที่ 2: เป็น Input ธรรมดา (<input>)
-    else {
-        genreSelect.value = genreName;
-    }
+  // ------------------------------------------------------------------
+  // 🔥 เรียกฟังก์ชันล็อคจากไฟล์หลัก (Main Script)
+  // ------------------------------------------------------------------
+  if (typeof window.lockBookFromAPI === "function") {
+      console.log("✅ Sending book data to lockBookFromAPI");
+      window.lockBookFromAPI(
+          book.title || "", 
+          book.author || "", 
+          book.genre || "Unknown"
+      );
+  } else {
+      console.warn("⚠️ lockBookFromAPI not found! Fallback to manual assignment.");
+      // Fallback: ใส่ค่าแบบเดิม (แต่จะไม่ล็อคสีเทา)
+      const t = document.getElementById("title");
+      const a = document.getElementById("author");
+      const g = document.getElementById("genre");
+      if(t) t.value = book.title || "";
+      if(a) a.value = book.author || "";
+      if(g) g.value = book.genre || "";
   }
-
-  console.log("✅ Added book:", book);
 }
 
 /* ============================

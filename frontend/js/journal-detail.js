@@ -1,16 +1,194 @@
 document.addEventListener("DOMContentLoaded", async () => {
+
     /* ============================================================
-       PART 1: JOURNAL MAIN LOGIC (Load, Save, Timer)
+       0. INJECT CSS STYLES (เพิ่ม CSS สำหรับการล็อคช่องข้อมูล)
+       ============================================================ */
+    const style = document.createElement('style');
+    style.innerHTML = `
+        /* สไตล์เมื่อช่อง Input ถูกล็อค */
+        .input-locked {
+            background-color: #f1f5f9 !important; /* สีเทา */
+            color: #64748b !important;
+            cursor: not-allowed;
+            border-color: #cbd5e1 !important;
+        }
+        /* สไตล์เมื่อ Genre ถูกล็อค */
+        .genre-locked {
+            background-color: #f1f5f9 !important;
+            color: #64748b !important;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+    `;
+    document.head.appendChild(style);
+
+    /* ============================================================
+       PART 1: GENRE MANAGEMENT & LOCKING LOGIC
+       ============================================================ */
+    const genreInput = document.getElementById("genre");
+    let genrePopup = null;
+    let genreWrapper = null;
+
+    // 1. Setup UI for Genre
+    if (genreInput) {
+        // --- 1.1 สร้าง Wrapper ---
+        genreWrapper = document.createElement("div");
+        genreWrapper.className = "genre-wrapper";
+        genreInput.parentNode.insertBefore(genreWrapper, genreInput);
+        genreWrapper.appendChild(genreInput);
+
+        // --- 1.2 สร้าง Popup ---
+        genrePopup = document.createElement("div");
+        genrePopup.className = "genre-popup";
+
+        // --- 1.3 สร้าง List ---
+        const listContainer = document.createElement("div");
+        listContainer.className = "genre-list-container";
+
+        const commonGenres = [
+            "Fantasy", "Sci-Fi", "Romance", "Mystery", 
+            "Thriller", "Horror", "Historical", "Biography", 
+            "Self-Help", "Business", "Psychology", "Comics/Manga",
+            "Poetry", "Philosophy", "Art", "Travel"
+        ];
+
+        commonGenres.forEach(g => {
+            const opt = document.createElement("div");
+            opt.className = "genre-option";
+            opt.textContent = g;
+            opt.onclick = () => {
+                genreInput.value = g;
+                genrePopup.classList.remove("show");
+            };
+            listContainer.appendChild(opt);
+        });
+
+        // --- 1.4 สร้าง Custom Input ---
+        const customContainer = document.createElement("div");
+        customContainer.className = "genre-custom-box";
+
+        const customInput = document.createElement("input");
+        customInput.className = "genre-custom-input";
+        customInput.placeholder = "+ Add custom genre...";
+
+        const customBtn = document.createElement("button");
+        customBtn.className = "genre-custom-btn";
+        customBtn.innerHTML = '<i class="fa-solid fa-plus"></i>'; 
+
+        const addCustomHandler = (e) => {
+            e.preventDefault();
+            const val = customInput.value.trim();
+            if (val) {
+                genreInput.value = val;
+                customInput.value = ""; 
+                genrePopup.classList.remove("show");
+            }
+        };
+
+        customBtn.onclick = addCustomHandler;
+        customInput.addEventListener("keypress", (e) => {
+            if (e.key === "Enter") addCustomHandler(e);
+        });
+
+        customContainer.appendChild(customInput);
+        customContainer.appendChild(customBtn);
+
+        genrePopup.appendChild(listContainer);
+        genrePopup.appendChild(customContainer);
+        genreWrapper.appendChild(genrePopup);
+
+        // --- Events ---
+        genreInput.addEventListener("click", (e) => {
+            // เช็คว่าถ้าติด readonly (ถูกล็อค) ห้ามเปิด Popup
+            if (!genreInput.hasAttribute("readonly")) {
+                e.stopPropagation();
+                genrePopup.classList.toggle("show");
+            }
+        });
+
+        document.addEventListener("click", (e) => {
+            if (genrePopup && !genreWrapper.contains(e.target)) {
+                genrePopup.classList.remove("show");
+            }
+        });
+    }
+
+    // ============================================================
+    // 🔥 NEW FUNCTIONS: LOCK & UNLOCK (ใช้ชุดนี้แทนของเดิม)
+    // ============================================================
+
+    // 🔒 ฟังก์ชัน 1: ล็อคข้อมูล (ใช้เมื่อเลือกจาก Search API)
+    window.lockBookFromAPI = function(titleText, authorText, apiGenreData) {
+        // 1. จัดการ Title
+        const titleInput = document.getElementById("title");
+        if (titleInput) {
+            titleInput.value = titleText || "";
+            titleInput.setAttribute("readonly", true);
+            titleInput.classList.add("input-locked");
+        }
+
+        // 2. จัดการ Author
+        const authorInput = document.getElementById("author");
+        if (authorInput) {
+            authorInput.value = authorText || "";
+            authorInput.setAttribute("readonly", true);
+            authorInput.classList.add("input-locked");
+        }
+
+        // 3. จัดการ Genre
+        if (genreInput) {
+            let finalGenre = "";
+            if (Array.isArray(apiGenreData) && apiGenreData.length > 0) {
+                finalGenre = apiGenreData.slice(0, 3).join(" / ");
+            } else if (typeof apiGenreData === "string") {
+                finalGenre = apiGenreData.replace(/[\[\]"']/g, ''); 
+            }
+            genreInput.value = finalGenre || "Unknown";
+            
+            // ล็อค Genre
+            genreInput.setAttribute("readonly", true);
+            genreInput.classList.add("genre-locked");
+            if(genrePopup) genrePopup.classList.remove("show");
+        }
+    };
+
+    // 🔓 ฟังก์ชัน 2: ปลดล็อค (ใช้เมื่อกด Upload หรือจะกรอกเอง)
+    window.unlockToManualMode = function() {
+        // 1. ปลดล็อค Title
+        const titleInput = document.getElementById("title");
+        if (titleInput) {
+            titleInput.removeAttribute("readonly");
+            titleInput.classList.remove("input-locked");
+            titleInput.value = ""; 
+        }
+
+        // 2. ปลดล็อค Author
+        const authorInput = document.getElementById("author");
+        if (authorInput) {
+            authorInput.removeAttribute("readonly");
+            authorInput.classList.remove("input-locked");
+            authorInput.value = ""; 
+        }
+
+        // 3. ปลดล็อค Genre
+        if (genreInput) {
+            genreInput.removeAttribute("readonly");
+            genreInput.classList.remove("genre-locked");
+            genreInput.value = ""; 
+        }
+    };
+
+
+    /* ============================================================
+       PART 2: JOURNAL MAIN LOGIC (Load, Save, Timer, Upload)
        ============================================================ */
     const params = new URLSearchParams(window.location.search);
     const journalId = params.get("id");
     const token = localStorage.getItem("token");
   
     function getCurrentTimestamp() {
-    const now = new Date();
-    // ใช้ 'en-GB' เพื่อบังคับเป็น ค.ศ. (DD/MM/YYYY)
-    // hour12: false เพื่อบังคับเวลาแบบ 24 ชม. (14:30 ไม่ใช่ 02:30 PM)
-    return now.toLocaleDateString('en-GB') + ' ' + now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false });
+        const now = new Date();
+        return now.toLocaleDateString('en-GB') + ' ' + now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false });
     }
   
     // Variables
@@ -159,7 +337,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
     }
   
-    // Fix: Search Popup Controls
+    // Search Popup Controls
     const searchPopup = document.getElementById("book-popup");
     const closeSearchBtn = document.getElementById("close-popup");
     const openSearchBtn = document.getElementById("add-book-card"); 
@@ -167,16 +345,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (closeSearchBtn && searchPopup) {
         closeSearchBtn.addEventListener("click", () => {
             searchPopup.classList.add("hidden");
-            const searchInput = document.getElementById("search-input");
-            const searchResults = document.getElementById("search-results");
-            if(searchInput) searchInput.value = "";
-            if(searchResults) searchResults.innerHTML = "";
+            // Clear search results logic here if needed
         });
     }
   
     if (openSearchBtn && searchPopup) {
         openSearchBtn.addEventListener("click", () => {
             searchPopup.classList.remove("hidden");
+            // 💡 TIP: เมื่อเลือกหนังสือจาก Search Popup ให้เรียก:
+            // window.lockBookFromAPI(book.title, book.author, book.categories);
         });
     }
   
@@ -194,58 +371,24 @@ document.addEventListener("DOMContentLoaded", async () => {
           setVal("author", data.author);
           setVal("review", data.review);
           if(data.startdate) setVal("start-date", data.startdate.split("T")[0]);
-          // ... (ส่วนโค้ดเดิมด้านบน) ...
           if(data.enddate) setVal("end-date", data.enddate.split("T")[0]);
 
-          // ✅ แก้ไข: Logic จัดการ Genre ให้รองรับหลายอัน (ดึงมาสูงสุด 3 อัน)
-// ✅ ส่วนจัดการ Genre แบบใหม่ (สำหรับ Text Input - แก้ไขแล้ว)
-          const genreInput = document.getElementById("genre");
-
+          // จัดการ Genre
           if (genreInput) {
-              // ล้างค่าเก่าก่อนเสมอ
-              genreInput.value = ""; 
-
+              let finalGenreString = "";
               if (data.genre) {
-                  // ตัวแปรสำหรับเก็บค่าที่จะนำไปแสดง
-                  let finalGenreString = "";
-
-                  // กรณี 1: ข้อมูลเป็น Array (เช่น ["Fantasy", "Action"])
                   if (Array.isArray(data.genre)) {
-                      // เอามาแค่ 3 อันแรก แล้วเชื่อมด้วยเครื่องหมาย " / "
                       finalGenreString = data.genre.slice(0, 3).join(" / ");
-                  } 
-                  // กรณี 2: ข้อมูลเป็น String
-                  else {
-                      const rawString = String(data.genre);
-                      
-                      // ลองพยายามแกะเผื่อมันเป็น String หน้าตาเหมือน Array (เช่น "['Fantasy', 'Drama']")
-                      try {
-                          // แปลง ' เป็น " เพื่อให้ JSON.parse ทำงานได้
-                          const fixedString = rawString.replace(/'/g, '"');
-                          
-                          let parsed;
-                          try { parsed = JSON.parse(fixedString); } catch(e) { parsed = null; }
-
-                          if (Array.isArray(parsed)) {
-                              finalGenreString = parsed.slice(0, 3).join(" / ");
-                          } else {
-                              // ถ้าไม่ใช่ Array ก็ใส่ข้อความดิบๆ ลงไปเลย (ลบวงเล็บ [] และฟันหนูทิ้ง)
-                              finalGenreString = rawString.replace(/[\[\]"]/g, '');
-                          }
-                      } catch (e) {
-                          // กรณี error อื่นๆ ใส่ค่าเดิมลงไป
-                          finalGenreString = rawString.replace(/[\[\]"]/g, '');
-                      }
+                  } else {
+                      finalGenreString = String(data.genre).replace(/[\[\]"]/g, '');
                   }
-                  
-                  // ใส่ค่าลงใน Input
-                  genreInput.value = finalGenreString;
               }
+              genreInput.value = finalGenreString;
+              // หมายเหตุ: โหลดจาก DB เพื่อแก้ไข ไม่ต้องล็อค (Manual Mode)
           }
 
-          // ✅ ส่วนของรูปภาพ (เหมือนเดิม)
+          // Image Logic
           const imageUrl = data.book_image || data.image;
-          
           if (imageUrl) {
               let img = document.getElementById("cover-preview");
               if (!img) { img = document.querySelector(".book-cover img"); }
@@ -254,11 +397,11 @@ document.addEventListener("DOMContentLoaded", async () => {
                   img.src = imageUrl;
                   img.style.display = "block";
                   img.dataset.url = imageUrl; 
-                  img.setAttribute("referrerpolicy", "no-referrer");
                   if (addIcon) addIcon.style.display = "none";
               }
           }
   
+          // ... (Rest of data loading logic remains the same) ...
           const ratingMap = { stars: data.star_point, spicy: data.spicy_point, drama: data.drama_point };
           Object.entries(ratingMap).forEach(([type, value]) => {
               const val = value || 0;
@@ -268,15 +411,6 @@ document.addEventListener("DOMContentLoaded", async () => {
                   group.querySelectorAll("i").forEach((icon, index) => icon.classList.toggle("filled", index < val));
               }
           });
-  
-          if (data.platform) {
-              const dbPlat = data.platform.toLowerCase().trim();
-              document.querySelectorAll(".plat-btn").forEach(btn => {
-                  const btnVal = (btn.getAttribute("data-val") || btn.textContent).toLowerCase().trim();
-                  if (btnVal === dbPlat) btn.classList.add("active");
-                  else btn.classList.remove("active");
-              });
-          }
   
           if (data.total_reading_time) {
                totalTimeInSeconds = parseDBTime(data.total_reading_time);
@@ -289,20 +423,18 @@ document.addEventListener("DOMContentLoaded", async () => {
                       ? JSON.parse(data.reading_log) 
                       : data.reading_log;
               } catch (e) {
-                  console.error("Error parsing reading log:", e);
                   currentReadingLogs = [];
               }
           }
-  
         }
       } catch (err) {
         console.error("❌ Load Error:", err);
       }
     }
   
-    // ❌ ส่วน GENRE SELECTION LOGIC เดิมถูกลบทิ้งไปแล้ว เพราะเราใช้ Input Text แทน
-  
-    // PHOTO UPLOAD LOGIC
+// ============================================================
+    // 🔥 UPLOAD & API LOGIC (แก้ไข: ตัดส่วน Auto-fill ออกแล้ว)
+    // ============================================================
     const uploadBtn = document.getElementById("btn-trigger-upload");
     const fileInput = document.getElementById("file-upload-input");
     const coverPreview = document.getElementById("cover-preview");
@@ -310,25 +442,35 @@ document.addEventListener("DOMContentLoaded", async () => {
   
     if (uploadBtn && fileInput) {
         uploadBtn.addEventListener("click", (e) => {
-            e.preventDefault(); e.stopPropagation(); fileInput.click();
+            e.preventDefault(); 
+            e.stopPropagation(); 
+            
+            // ✅ 1. สั่งปลดล็อคทุกอย่างทันทีที่กดปุ่ม Upload
+            window.unlockToManualMode();
+
+            // 2. เปิดตัวเลือกไฟล์
+            fileInput.click();
         });
     }
   
     if (fileInput) {
         fileInput.addEventListener("click", (e) => { e.stopPropagation(); });
-        fileInput.addEventListener("change", (e) => {
+        
+        fileInput.addEventListener("change", async (e) => {
             const file = e.target.files[0];
             if (file) {
+                // ✅ ส่วนที่เหลืออยู่: แสดงรูป Preview เท่านั้น
                 const reader = new FileReader();
                 reader.onload = function(event) {
-                    const base64String = event.target.result;
                     if(coverPreview) {
-                        coverPreview.src = base64String;
+                        coverPreview.src = event.target.result;
                         coverPreview.style.display = "block";
                     }
                     if(addIcon) addIcon.style.display = "none";
                 };
                 reader.readAsDataURL(file);
+
+                // ✂️ ตัดส่วน MOCK DATA และการกรอก Title/Genre ทิ้งไปแล้วครับ
             }
         });
     }
@@ -410,6 +552,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             showToast("Required", "Please enter book title.", "error");
             return;
         }
+        
         if (!genreVal || genreVal === "") {
             showToast("Required", "Please select a genre.", "error");
             const genreEl = document.getElementById("genre");
@@ -491,7 +634,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   
     /* ============================================================
-       PART 2: CHAPTER MANAGER
+       PART 3: CHAPTER MANAGER
        ============================================================ */
     const chapterPopup = document.getElementById("chapter-popup");
     const addChapterBtn = document.getElementById("add-chapter-btn");
@@ -724,7 +867,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   
     /* ============================================================
-       PART 3: SEE ALL MODAL LOGIC (New Code)
+       PART 4: SEE ALL MODAL LOGIC
        ============================================================ */
     
     const seeAllModal = document.getElementById("see-all-modal");
@@ -772,8 +915,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                    try {
                      const dateObj = new Date(t);
                      if(!isNaN(dateObj)) {
-                        // เปลี่ยน th-TH เป็น en-GB เพื่อบังคับ ค.ศ.
-                    timeContent = dateObj.toLocaleDateString('en-GB') + ' ' + dateObj.toLocaleTimeString('en-GB', {hour: '2-digit', minute:'2-digit', hour12: false});
+                        timeContent = dateObj.toLocaleDateString('en-GB') + ' ' + dateObj.toLocaleTimeString('en-GB', {hour: '2-digit', minute:'2-digit', hour12: false});
                     } else {
                         timeContent = t;
                      }
@@ -848,7 +990,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     /* ============================================================
-       PART 4: STATISTICS CHART (Chart.js)
+       PART 5: STATISTICS CHART
        ============================================================ */
 
     let myChart = null; 
@@ -881,16 +1023,12 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
     }
 
-    // ... (ส่วนบนของไฟล์เหมือนเดิม)
-
     function updateChart(rangeType) {
-        const ctx = document.getElementById('readingChart').getContext('2d'); // เพิ่ม getContext('2d') เพื่อสร้าง Gradient
+        const ctx = document.getElementById('readingChart').getContext('2d'); 
         
-        // --- 1. สร้าง Gradient สีฟ้าสวยๆ ---
-        // ไล่สีจากบนลงล่าง (ฟ้าเข้ม -> ฟ้าจาง)
         let gradient = ctx.createLinearGradient(0, 0, 0, 400);
-        gradient.addColorStop(0, 'rgba(59, 130, 246, 0.8)'); // สีฟ้าเข้ม (#3b82f6)
-        gradient.addColorStop(1, 'rgba(59, 130, 246, 0.1)'); // สีฟ้าจางเกือบใส
+        gradient.addColorStop(0, 'rgba(59, 130, 246, 0.8)'); 
+        gradient.addColorStop(1, 'rgba(59, 130, 246, 0.1)'); 
 
         const rawLogs = currentReadingLogs || []; 
         let labels = [];
@@ -899,25 +1037,15 @@ document.addEventListener("DOMContentLoaded", async () => {
         
         const today = new Date();
         
-        // --- 2. ปรับการแสดงผล Label วันที่ให้สวยขึ้น ---
         if (rangeType === 'week') {
             for (let i = 6; i >= 0; i--) {
                 const d = new Date();
                 d.setDate(today.getDate() - i);
-                
-                // เก็บค่า Date String ไว้เช็คข้อมูล (Format เดิม: YYYY-MM-DD)
                 const checkDateStr = d.toISOString().split('T')[0];
-                
-                // สร้าง Label สวยๆ เช่น "Tue 25"
                 const options = { weekday: 'short', day: 'numeric' }; 
-                // ถ้าอยากได้ภาษาไทยให้แก้ 'en-US' เป็น 'th-TH'
                 const prettyLabel = d.toLocaleDateString('en-US', options); 
-                
                 labels.push(prettyLabel);
-                
-                const sumSeconds = rawLogs
-                    .filter(log => log.date === checkDateStr)
-                    .reduce((acc, curr) => acc + curr.time, 0);
+                const sumSeconds = rawLogs.filter(log => log.date === checkDateStr).reduce((acc, curr) => acc + curr.time, 0);
                 dataPoints.push((sumSeconds / 60).toFixed(2));
             }
             xTitle = "Last 7 Days";
@@ -926,18 +1054,13 @@ document.addEventListener("DOMContentLoaded", async () => {
             const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
             const currentMonth = String(today.getMonth() + 1).padStart(2, '0');
             const currentYear = today.getFullYear();
-            const monthName = today.toLocaleString('en-US', { month: 'short' }); // เช่น Nov
+            const monthName = today.toLocaleString('en-US', { month: 'short' });
 
             for (let i = 1; i <= daysInMonth; i++) {
                 const dayStr = String(i).padStart(2, '0');
                 const fullDate = `${currentYear}-${currentMonth}-${dayStr}`;
-                
-                // Label แสดงแค่วันที่ เช่น "01", "02"
                 labels.push(dayStr);
-
-                const sumSeconds = rawLogs
-                    .filter(log => log.date === fullDate)
-                    .reduce((acc, curr) => acc + curr.time, 0);
+                const sumSeconds = rawLogs.filter(log => log.date === fullDate).reduce((acc, curr) => acc + curr.time, 0);
                 dataPoints.push((sumSeconds / 60).toFixed(2));
             }
             xTitle = `${monthName} ${currentYear}`;
@@ -965,7 +1088,6 @@ document.addEventListener("DOMContentLoaded", async () => {
             myChart.destroy();
         }
 
-        // --- 3. Config Chart ใหม่ให้ Modern ---
         myChart = new Chart(ctx, {
             type: 'bar',
             data: {
@@ -973,45 +1095,32 @@ document.addEventListener("DOMContentLoaded", async () => {
                 datasets: [{
                     label: 'Minutes',
                     data: dataPoints,
-                    backgroundColor: gradient, // ใช้ Gradient ที่สร้างไว้
+                    backgroundColor: gradient, 
                     borderColor: 'rgba(59, 130, 246, 1)',
                     borderWidth: 1,
-                    borderRadius: 6, // มุมโค้งมน
-                    borderSkipped: false, // โค้งทั้ง 4 มุม (หรือเอาออกถ้าอยากให้โค้งแค่บน)
+                    borderRadius: 6, 
+                    borderSkipped: false, 
                     barThickness: 'flex',
-                    maxBarThickness: 40, // ขยายขนาดแท่งสูงสุดให้ดูเต็มขึ้น
-                    hoverBackgroundColor: 'rgba(37, 99, 235, 0.9)' // สีตอนเอาเมาส์ชี้เข้มขึ้น
+                    maxBarThickness: 40, 
+                    hoverBackgroundColor: 'rgba(37, 99, 235, 0.9)' 
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                animation: {
-                    duration: 1000,
-                    easing: 'easeOutQuart' // Animation นุ่มๆ ตอนกราฟขึ้น
-                },
+                animation: { duration: 1000, easing: 'easeOutQuart' },
                 scales: {
                     y: {
                         beginAtZero: true,
-                        suggestedMax: 10, // ✅ บังคับให้กราฟสูงอย่างน้อย 10 นาที (แก้ปัญหากราฟดูโล่งตอนเลขน้อยๆ)
-                        border: { display: false }, // ซ่อนเส้นแกน Y ซ้ายสุด
-                        grid: {
-                            color: '#f1f5f9', // เส้น Grid สีจางๆ
-                            tickLength: 0 // ซ่อนขีดเล็กๆ หน้าตัวเลข
-                        },
-                        ticks: { 
-                            font: { family: "'Prompt', sans-serif", size: 11 },
-                            color: '#64748b',
-                            padding: 10
-                        }
+                        suggestedMax: 10, 
+                        border: { display: false }, 
+                        grid: { color: '#f1f5f9', tickLength: 0 },
+                        ticks: { font: { family: "'Prompt', sans-serif", size: 11 }, color: '#64748b', padding: 10 }
                     },
                     x: {
-                        grid: { display: false }, // ซ่อนเส้น Grid แนวตั้ง
+                        grid: { display: false }, 
                         border: { display: false },
-                        ticks: { 
-                            font: { family: "'Prompt', sans-serif", size: 11 },
-                            color: '#64748b'
-                        }
+                        ticks: { font: { family: "'Prompt', sans-serif", size: 11 }, color: '#64748b' }
                     }
                 },
                 plugins: {
@@ -1022,17 +1131,11 @@ document.addEventListener("DOMContentLoaded", async () => {
                         bodyFont: { family: "'Prompt', sans-serif", size: 13 },
                         padding: 10,
                         cornerRadius: 8,
-                        displayColors: false, // ซ่อนสีสี่เหลี่ยมใน Tooltip
-                        callbacks: {
-                            label: function(context) {
-                                let val = context.parsed.y;
-                                return `⏱ ${val} mins`;
-                            }
-                        }
+                        displayColors: false,
+                        callbacks: { label: function(context) { return `⏱ ${context.parsed.y} mins`; } }
                     }
                 }
             }
         });
     }
-
-})
+});
