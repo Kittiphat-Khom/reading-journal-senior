@@ -56,6 +56,10 @@
       <h1>Recommended Books</h1>
     </div>
     
+    <div class="center-layout">
+        <span id="total-books-badge" class="count-badge" style="display: none;">Loading...</span>
+    </div>
+    
     <div class="actions">
       <button class="how-it-works-btn" onclick="openInfoModal()">
         <i class="fa-solid fa-wand-magic-sparkles"></i>
@@ -90,7 +94,11 @@
         </button>
     </div>
     
-    <div class="page-indicators" id="page-indicators"></div>
+    <div class="pagination-container">
+        <div class="page-status-capsule" id="page-status">
+            Page 1 / 1
+        </div>
+    </div>
   </main>
 
   <div id="bookModal" class="modal">
@@ -128,8 +136,8 @@
         </div>
       </div>
       <div class="modal-content-logout"> <div class="modal-text-wrapper">
-            <h3>Sign Out?</h3>
-            <p>Are you sure you want to end your session?</p>
+          <h3>Sign Out?</h3>
+          <p>Are you sure you want to end your session?</p>
         </div>
       </div>
       <div class="modal-actions">
@@ -139,7 +147,7 @@
     </div>
   </div>
 
-<div id="infoModal" class="info-modal-overlay">
+  <div id="infoModal" class="info-modal-overlay">
     <div class="info-modal-box">
         <button class="info-close-btn" onclick="closeInfoModal()">&times;</button>
         
@@ -194,8 +202,6 @@
     const itemsPerPage = 10; 
     let currentUserId = null; 
     let currentBookData = null;
-    
-    // ตัวแปรเก็บสถานะการ Sort (Default: A-Z)
     let currentSortMode = 'az'; 
 
     async function checkAuth() {
@@ -284,8 +290,16 @@
             else if (result.recommendations) allRecommendations = result.recommendations;
             else allRecommendations = [];
             
-            // เรียกใช้การเรียงลำดับก่อน Render ครั้งแรก
             applySort();
+
+            // อัปเดตตัวเลขจำนวนหนังสือ (ID เดิม แต่ตำแหน่ง HTML เปลี่ยน)
+            const totalBadge = document.getElementById("total-books-badge");
+            if (allRecommendations.length > 0) {
+                totalBadge.textContent = `${allRecommendations.length} Books`;
+                totalBadge.style.display = "inline-flex"; // ใช้ inline-flex เพื่อจัดกลาง text
+            } else {
+                totalBadge.style.display = "none";
+            }
 
             renderPage(1);
 
@@ -295,51 +309,47 @@
         }
     }
 
-    // ฟังก์ชันรับค่าเมื่อมีการเปลี่ยน Dropdown
     function handleSortChange(mode) {
         currentSortMode = mode;
-        applySort();   // เรียงข้อมูลใหม่
-        renderPage(1); // รีเซ็ตไปหน้า 1
+        applySort();
+        renderPage(1);
     }
 
-    // Logic การเรียงลำดับ
     function applySort() {
         if (!allRecommendations || allRecommendations.length === 0) return;
 
         allRecommendations.sort((a, b) => {
             if (currentSortMode === 'az') {
-                // เรียงตามชื่อ A-Z
                 const titleA = (a.title || "").toLowerCase();
                 const titleB = (b.title || "").toLowerCase();
                 if (titleA < titleB) return -1;
                 if (titleA > titleB) return 1;
                 return 0;
             } else if (currentSortMode === 'match') {
-                // เรียงตาม Match % (มากไปน้อย)
                 const scoreA = getMatchScore(a);
                 const scoreB = getMatchScore(b);
-                return scoreB - scoreA; // Descending (มากไปน้อย)
+                return scoreB - scoreA;
             }
         });
     }
 
-    // Helper แปลงค่า Match เป็นตัวเลข
     function getMatchScore(book) {
         if (book.match_percent) {
-            // ตัดเครื่องหมาย % ออกแล้วแปลงเป็นเลข
             return parseFloat(book.match_percent.replace('%', '')) || 0;
         }
         if (book.score !== undefined) {
-            // ถ้า score น้อยกว่า 1 (เช่น 0.98) ให้คูณ 100
             return book.score <= 1 ? book.score * 100 : book.score;
         }
         return 0;
     }
 
-function renderPage(page) {
+    function renderPage(page) {
         const container = document.getElementById('book-container');
+        const pageStatus = document.getElementById('page-status');
+        
         if (allRecommendations.length === 0) {
             container.innerHTML = '<div style="text-align:center; width:100%; grid-column:1/-1; margin-top:50px;">No recommendations found.</div>';
+            if(pageStatus) pageStatus.style.display = 'none';
             return;
         }
 
@@ -356,7 +366,6 @@ function renderPage(page) {
 
         container.innerHTML = '';
         booksToShow.forEach((book, index) => {
-            // 1. คำนวณลำดับ (Rank) 1-100
             const rank = startIndex + index + 1;
 
             const title = book.title || "Untitled";
@@ -378,7 +387,6 @@ function renderPage(page) {
             card.style.animationDelay = `${index * 0.05}s`;
             card.onclick = () => openBookModal(book);
             
-            // 2. แก้ไข HTML: เพิ่ม div class="book-rank" และปรับโครงสร้าง
             card.innerHTML = `
                 <div class="book-cover" style="background-image: url('${bgImage}');">
                     <div class="book-rank">#${rank}</div>
@@ -399,7 +407,12 @@ function renderPage(page) {
         });
 
         updateNavButtons(totalPages);
-        renderDots(totalPages);
+        
+        // อัปเดตเลขหน้า
+        if (pageStatus) {
+            pageStatus.style.display = 'flex';
+            pageStatus.innerHTML = `<span style="color:#94a3b8; font-weight:400;">Page</span> ${currentPage} <span style="color:#cbd5e1;">/</span> ${totalPages}`;
+        }
     }
     
     function updateNavButtons(totalPages) {
@@ -411,22 +424,6 @@ function renderPage(page) {
         
         prevBtn.style.opacity = currentPage === 1 ? "0.5" : "1";
         nextBtn.style.opacity = (currentPage === totalPages || totalPages === 0) ? "0.5" : "1";
-    }
-
-    function renderDots(totalPages) {
-        const dotsContainer = document.getElementById('page-indicators');
-        dotsContainer.innerHTML = '';
-        const maxDots = 20; 
-        const showDots = Math.min(totalPages, maxDots);
-
-        if(totalPages <= 1) return; 
-
-        for (let i = 1; i <= showDots; i++) {
-            const dot = document.createElement('div');
-            dot.className = `dot ${i === currentPage ? 'active' : ''}`;
-            dot.onclick = () => renderPage(i);
-            dotsContainer.appendChild(dot);
-        }
     }
 
     window.prevPage = function() { if (currentPage > 1) renderPage(currentPage - 1); }
@@ -462,7 +459,6 @@ function renderPage(page) {
         if (event.target === document.getElementById("bookModal")) closeBookModal();
     }
 
-    // ADD TO LIBRARY
     async function addToLibrary() {
         if (!currentUserId) {
             showToast("Please log in to add books.", "error");
@@ -515,7 +511,6 @@ function renderPage(page) {
         }
     }
 
-    // TOGGLE FAVORITE
     async function toggleFavorite(btn) {
         if (!currentUserId) {
             showToast("Please log in to manage favorites.", "error");
@@ -571,9 +566,6 @@ function renderPage(page) {
         }
     }
 
-    // =========================================
-    // ✅ INFO MODAL LOGIC (How AI Works)
-    // =========================================
     function openInfoModal() {
         document.getElementById("infoModal").classList.add("active");
     }
@@ -582,10 +574,8 @@ function renderPage(page) {
         document.getElementById("infoModal").classList.remove("active");
     }
 
-    // ปิดเมื่อคลิกพื้นหลัง (Outside click)
     window.addEventListener('click', function(event) {
         const infoModal = document.getElementById("infoModal");
-        // เช็คว่าคลิกโดนพื้นหลัง modal หรือไม่
         if (event.target === infoModal) {
             closeInfoModal();
         }

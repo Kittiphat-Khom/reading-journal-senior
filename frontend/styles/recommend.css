@@ -429,3 +429,119 @@ body {
     font-weight: 600; cursor: pointer; transition: 0.2s;
 }
 .btn-got-it:hover { background: #334155; transform: scale(1.05); }
+
+
+/* =========================================
+   ✅ NEW: Total Count Badge (ใน Header)
+   ========================================= */
+.count-badge {
+  display: inline-block;
+  vertical-align: middle;
+  margin-left: 12px;
+  
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #0f172a; /* สีตัวอักษรเข้ม */
+  background-color: #f1f5f9; /* สีพื้นหลังเทาฟ้าจางๆ */
+  border: 1px solid #cbd5e1;
+  
+  padding: 4px 12px;
+  border-radius: 20px; /* ทรงแคปซูล */
+  transform: translateY(-2px); /* ขยับขึ้นนิดนึงให้ตรงกลาง */
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+/* =========================================
+   ✅ NEW: Pagination Text (แทนจุดไข่ปลา)
+   ========================================= */
+.pagination-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 25px;
+  padding-bottom: 20px;
+  position: relative;
+}
+
+.page-status-capsule {
+  background: #ffffff;
+  color: #334155;
+  font-size: 0.9rem;
+  font-weight: 600;
+  font-feature-settings: "tnum"; /* ใช้ตัวเลขความกว้างเท่ากัน */
+  
+  padding: 8px 24px;
+  border-radius: 30px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+  
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  
+  transition: all 0.3s ease;
+  user-select: none;
+}
+
+/* เพิ่มลูกเล่นตอน Hover ที่ตัวบอกเลขหน้า */
+.page-status-capsule:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+  transform: translateY(-2px);
+}
+
+
+/* เพิ่มส่วนนี้เข้าไปใน styles/recommend.css */
+
+/* จัดให้อยู่กึ่งกลาง Absolute Center */
+.center-layout {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10;
+    pointer-events: none; /* เพื่อให้คลิกทะลุได้ ถ้ามันไปบังอะไร */
+}
+
+/* ปรับดีไซน์ Badge ให้ดูเด่นขึ้นอีกนิด */
+.count-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    
+    background-color: #fff; /* พื้นขาว */
+    color: #1b6f8e;         /* ตัวหนังสือสีธีมหลัก */
+    font-size: 0.9rem;
+    font-weight: 700;
+    
+    padding: 6px 18px;      /* เพิ่มความกว้าง */
+    border-radius: 30px;    /* ทรงแคปซูลมนๆ */
+    border: 2px solid #e0f2fe; /* ขอบสีฟ้าอ่อน */
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05); /* เงาจางๆ */
+    
+    white-space: nowrap;    /* ไม่ให้ตัวหนังสือขึ้นบรรทัดใหม่ */
+    transition: all 0.3s ease;
+}
+
+/* Effect ตอนเมาส์ชี้ */
+.center-layout:hover .count-badge {
+    transform: scale(1.05);
+    border-color: #1b6f8e;
+    box-shadow: 0 6px 15px rgba(27, 111, 142, 0.15);
+}
+
+/* =========================================
+   Responsive: จอมือถือ (ซ่อนหรือย้าย)
+   ========================================= */
+@media (max-width: 768px) {
+    /* ถ้าจอมือถือเล็กมาก ชื่อจะยาวมาชน ให้ซ่อนไปก่อน หรือย้ายที่ได้ */
+    .center-layout {
+        display: none; 
+        /* หรือถ้าอยากให้โชว์อยู่ ให้แก้เป็น:
+           position: static;
+           transform: none;
+           margin-top: 10px;
+        */
+    }
+}
