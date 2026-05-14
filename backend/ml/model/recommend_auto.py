@@ -55,6 +55,7 @@ def score_to_tier(raw_score):
 def get_fallback_books(n=15):
     try:
         idx_path = os.path.join(MODEL_DIR, "book_index.pkl")
+        print(f"[Fallback] MODEL_DIR={MODEL_DIR} exists={os.path.exists(idx_path)}", file=sys.stderr)
         if os.path.exists(idx_path):
             df = pd.read_pickle(idx_path)
             # Filter: must have author and image
@@ -283,4 +284,6 @@ if __name__ == "__main__":
         print(json.dumps(results, ensure_ascii=False))
 
     except Exception as e:
+        print(f"[RECOMMEND ERROR] {type(e).__name__}: {e}", file=sys.stderr)
+        import traceback; traceback.print_exc(file=sys.stderr)
         print(json.dumps(get_fallback_books(), ensure_ascii=False))
