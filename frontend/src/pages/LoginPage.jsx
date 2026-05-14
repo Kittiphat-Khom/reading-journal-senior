@@ -71,6 +71,7 @@ export default function LoginPage() {
       const data = res.data;
       const role = (data.role || data.user?.role || '').toLowerCase();
       localStorage.setItem('role', role);
+      localStorage.setItem('has_preferences', data.has_preferences ? 'true' : 'false');
       const redirect = role === 'admin' ? '/admin'
         : data.has_preferences ? '/dashboard'
         : '/preferences/genres';

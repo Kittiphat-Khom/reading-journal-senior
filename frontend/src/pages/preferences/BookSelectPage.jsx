@@ -119,6 +119,7 @@ export default function BookSelectPage() {
       localStorage.removeItem('pref_genres');
       localStorage.removeItem('pref_authors');
       localStorage.removeItem('pref_books');
+      localStorage.setItem('has_preferences', 'true');
       setDone(true);
     } catch {
       showToast('Error', 'Failed to save preferences', 'error');

@@ -39,7 +39,9 @@ function PublicRoute({ children }) {
   const { user, loading } = useAuth();
   if (loading) return null;
   if (!user) return children;
-  return <Navigate to={user.role === 'admin' ? '/admin' : '/dashboard'} replace />;
+  if (user.role === 'admin') return <Navigate to="/admin" replace />;
+  const hasPrefs = localStorage.getItem('has_preferences') === 'true';
+  return <Navigate to={hasPrefs ? '/dashboard' : '/preferences/genres'} replace />;
 }
 
 export default function App() {
