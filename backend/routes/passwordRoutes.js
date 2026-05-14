@@ -2,23 +2,11 @@ import express from "express";
 import db from "../db.js";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 
 const router = express.Router();
-
-// ✅ 1. กำหนด BASE_URL (เพื่อให้ใช้ได้ทั้ง Localhost และ Server จริง)
-// ถ้าใน Server มีการตั้งค่า process.env.BASE_URL ก็จะใช้ค่า IP นั้น
-// ถ้าไม่มี (รันในเครื่อง) ก็จะใช้ http://localhost:5000 อัตโนมัติ
 const BASE_URL = process.env.BASE_URL || "http://localhost:5000";
-
-// ตั้งค่า Email Sender
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: 'banyaphon.rang@bumail.net', 
-        pass: 'xbco razp lcpu wdfs' // App Password
-    }
-});
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 // 🟢 1. ลืมรหัสผ่าน (Forgot Password)
 router.post("/forgot-password", async (req, res) => {
@@ -52,9 +40,10 @@ router.post("/forgot-password", async (req, res) => {
     // ✅ แก้ไขตรงนี้: ใช้ BASE_URL แทน localhost
     const resetLink = `${BASE_URL}/reset-password-page.html?token=${token}`; 
 
-    // ส่งอีเมล
-    const mailOptions = {
-      from: '"Reading Journal" <banyaphon.rang@bumail.net>', 
+    res.json({ message: "If the email is registered, you will receive a reset link." });
+
+    resend.emails.send({
+      from: 'Reading Journal <onboarding@resend.dev>',
       to: email,
       subject: "Reset Your Password",
       html: `
@@ -65,11 +54,7 @@ router.post("/forgot-password", async (req, res) => {
         <br>
         <p><small>If you didn't request this, please ignore this email.</small></p>
       `
-    };
-
-    await transporter.sendMail(mailOptions); 
-
-    res.json({ message: "If the email is registered, you will receive a reset link." });
+    }).catch(err => console.error("Email send failed:", err.message));
 
   } catch (error) {
     console.error("FORGOT-PASSWORD ERROR:", error); 

@@ -3,24 +3,12 @@ import db from "../db.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || "your_secret_key";
-
-// ✅ 1. กำหนด BASE_URL (เพื่อให้ใช้ได้ทั้ง Localhost และ Server จริง)
-// ถ้าใน Server มีการตั้งค่า process.env.BASE_URL ก็จะใช้ค่า IP นั้น
-// ถ้าไม่มี (รันในเครื่อง) ก็จะใช้ http://localhost:5000 อัตโนมัติ
 const BASE_URL = process.env.BASE_URL || "http://localhost:5000";
-
-// ตั้งค่า Email Sender
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: 'banyaphon.rang@bumail.net', 
-        pass: 'xbco razp lcpu wdfs' 
-    }
-});
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 // ==========================================
 // 🟢 1. สมัครสมาชิก (Register)
@@ -58,8 +46,10 @@ router.post("/register", async (req, res) => {
     // ✅ แก้ไขตรงนี้: ใช้ BASE_URL แทน localhost
     const verifyUrl = `${BASE_URL}/verify-email.html?token=${verificationToken}`; 
 
-    const mailOptions = {
-        from: 'Reading Journal <banyaphon.rang@bumail.net>',
+    res.status(201).json({ message: "สมัครสมาชิกสำเร็จ! กรุณาตรวจสอบอีเมลเพื่อยืนยันตัวตนก่อนเข้าสู่ระบบ" });
+
+    resend.emails.send({
+        from: 'Reading Journal <onboarding@resend.dev>',
         to: email,
         subject: 'Confirm your Registration',
         html: `
@@ -68,11 +58,7 @@ router.post("/register", async (req, res) => {
             <a href="${verifyUrl}" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Verify Email</a>
             <p>Or copy this link: ${verifyUrl}</p>
         `
-    };
-
-    await transporter.sendMail(mailOptions);
-
-    res.status(201).json({ message: "สมัครสมาชิกสำเร็จ! กรุณาตรวจสอบอีเมลเพื่อยืนยันตัวตนก่อนเข้าสู่ระบบ" });
+    }).catch(err => console.error("Email send failed:", err.message));
 
   } catch (error) {
     console.error("Register Error:", error);
