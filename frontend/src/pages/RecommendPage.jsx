@@ -19,14 +19,6 @@ const parseMatch = (m) => {
   return isNaN(n) ? null : String(n);
 };
 
-// Deterministic pseudo-rating from book id (3.0–4.5, consistent per book)
-const pseudoRating = (id = '') => {
-  let h = 0;
-  const s = String(id);
-  for (let i = 0; i < s.length; i++) h = s.charCodeAt(i) + ((h << 5) - h);
-  const steps = [3.0, 3.2, 3.4, 3.5, 3.6, 3.8, 4.0, 4.2, 4.3, 4.5];
-  return steps[Math.abs(h) % steps.length];
-};
 
 const matchToStars = (m, rating) => {
   // If real rating exists (from Hardcover), use it directly (scale 0–5)
@@ -48,7 +40,6 @@ const Plus = (p) => <svg viewBox="0 0 24 24" width="13" height="13" fill="none" 
 const Check = (p) => <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="m5 12 5 5 9-11"/></svg>;
 const Heart = (p) => <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>;
 const HeartFill = (p) => <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" {...p}><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>;
-const RotateCw = (p) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M21 2v6h-6"/><path d="M21 13a9 9 0 1 1-3-7.7L21 8"/></svg>;
 const ChevL = (p) => <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="m15 6-6 6 6 6"/></svg>;
 const ChevR = (p) => <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="m9 6 6 6-6 6"/></svg>;
 
@@ -126,8 +117,8 @@ function DualHero({ book1, book2, added1, onAdd1, favorited1, onFavorite1, onOpe
 }
 
 /* ── AlsoPanel ── */
+// eslint-disable-next-line no-unused-vars
 function AlsoPanel({ books, poolBooks, addedMap, onAdd, favMap, onFav, onOpen }) {
-  const PER_PAGE = 5;
   const displayBooks = books;
 
   return (
@@ -219,6 +210,7 @@ const MOODS = [
   { key: 'm3', em: '🗝️', title: 'Escape reality', sub: 'Fantasy & sci-fi worlds' },
   { key: 'm4', em: '💡', title: 'Make me think', sub: 'Literary & ideas' },
 ];
+// eslint-disable-next-line no-unused-vars
 function Moods({ active, onPick }) {
   return (
     <section className="rc-moods-row">
