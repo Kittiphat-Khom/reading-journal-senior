@@ -1,11 +1,9 @@
 #!/bin/bash
-# Find libstdc++.so.6 in Nix store and add to LD_LIBRARY_PATH
-# so pip-installed numpy C extensions can load on Railway
-LIB=$(find /nix/store -maxdepth 4 -name "libstdc++.so.6" 2>/dev/null | head -1)
-if [ -n "$LIB" ]; then
-  export LD_LIBRARY_PATH="$(dirname "$LIB"):${LD_LIBRARY_PATH:-}"
-  echo "[start.sh] LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
-else
-  echo "[start.sh] libstdc++.so.6 not found in /nix/store"
-fi
+# Add all Nix Python 3.12 site-packages to PYTHONPATH
+# so subprocess spawned by Node.js can find numpy/pandas from Nix packages
+while IFS= read -r dir; do
+  export PYTHONPATH="$dir:${PYTHONPATH:-}"
+done < <(find /nix/store -maxdepth 5 -name "site-packages" -path "*/python3.12/*" 2>/dev/null)
+
+echo "[start.sh] PYTHONPATH=$PYTHONPATH"
 exec npm start
