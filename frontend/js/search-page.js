@@ -12,47 +12,8 @@ document.addEventListener("DOMContentLoaded", () => {
     loadAllCategories();
     setupModalButtons();
     setupModalClose();
-    
-    // ✅ Setup Logout
     setupLogoutModal();
-
-    // ✅ ตั้งค่าปุ่ม OK ของ Custom Alert
-    const btnAlert = document.getElementById("btn-alert-ok");
-    if(btnAlert) btnAlert.addEventListener("click", closeAlert);
 });
-
-// ===================================================
-//  ✅ CUSTOM ALERT HELPER
-// ===================================================
-function showAlert(title, message, type = 'success') {
-    return new Promise((resolve) => {
-        const modal = document.getElementById("custom-alert-modal");
-        const titleEl = document.getElementById("alert-title");
-        const msgEl = document.getElementById("alert-message");
-        const iconEl = document.getElementById("alert-icon");
-        const btn = document.getElementById("btn-alert-ok");
-
-        titleEl.textContent = title;
-        msgEl.textContent = message;
-
-        if (type === 'success') {
-            iconEl.innerHTML = '<i class="fa-solid fa-circle-check" style="color: #10b981;"></i>';
-        } else if (type === 'error') {
-            iconEl.innerHTML = '<i class="fa-solid fa-circle-exclamation" style="color: #ef4444;"></i>';
-        } else {
-            iconEl.innerHTML = '<i class="fa-solid fa-circle-info" style="color: #3b82f6;"></i>';
-        }
-
-        modal.style.display = "flex"; 
-        btn.focus();
-        modal.dataset.resolve = resolve;
-    });
-}
-
-function closeAlert() {
-    const modal = document.getElementById("custom-alert-modal");
-    modal.style.display = "none";
-}
 
 // ===================================================
 //  🔐 USER AUTHENTICATION
@@ -504,16 +465,16 @@ async function openSeeAllModal(categoryName) {
     else if (categoryName === "Top Rated") books = await fetchTopRatedBooks();
     else if (genreMap[categoryName]) books = await fetchBooksByGenre(genreMap[categoryName]);
 
-    grid.innerHTML = "";
+    gridEl.innerHTML = "";
 
     if (!books || books.length === 0) {
-        grid.innerHTML = '<p style="text-align:center; width:100%; grid-column: 1/-1;">No books found.</p>';
+        gridEl.innerHTML = '<p style="text-align:center; width:100%; grid-column: 1/-1;">No books found.</p>';
         return;
     }
 
     books.forEach(book => {
         const card = createBookCard(book);
-        grid.appendChild(card);
+        gridEl.appendChild(card);
     });
 }
 

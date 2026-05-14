@@ -20,6 +20,9 @@ function verifyToken(req, res, next) {
     req.user = decoded; 
     next();
   } catch (err) {
+    if (err.name === 'TokenExpiredError') {
+      return res.status(401).json({ message: "Token expired" });
+    }
     return res.status(403).json({ message: "Invalid token" });
   }
 }
@@ -54,7 +57,7 @@ router.post("/add", verifyToken, async (req, res) => {
       startdate || null, enddate || null, review || null,
       total_reading_time || "00:00:00",
       star_point ?? null, spicy_point ?? null, drama_point ?? null,
-      book_image || null, user_id, platform || null, logData 
+      book_image || null, user_id, platform || null, logData
     ]);
 
     res.json({ message: "✅ Journal saved successfully!" });
@@ -104,10 +107,15 @@ router.get("/", verifyToken, async (req, res) => {
   try {
     const user_id = req.user.id;
     const [rows] = await db.query(
-      "SELECT * FROM Journal WHERE user_id = ? ORDER BY id DESC",
+      "SELECT *, UNIX_TIMESTAMP(updated_at) AS updated_ts, UNIX_TIMESTAMP(created_at) AS created_ts FROM Journal WHERE user_id = ? ORDER BY id DESC",
       [user_id]
     );
-    res.json(rows);
+    const data = rows.map(r => ({
+      ...r,
+      updated_at: r.updated_ts ? new Date(r.updated_ts * 1000).toISOString() : null,
+      created_at: r.created_ts ? new Date(r.created_ts * 1000).toISOString() : null,
+    }));
+    res.json(data);
   } catch (err) {
     console.error("❌ Error fetching journals:", err);
     res.status(500).json({ error: "Failed to fetch journals" });
@@ -145,11 +153,12 @@ router.put("/:id", verifyToken, async (req, res) => {
 
     const user_id = req.user.id;
 
+    const now = new Date();
     const sql = `
       UPDATE Journal
       SET title=?, author=?, genre=?, startdate=?, enddate=?, review=?,
-          total_reading_time=?, star_point=?, spicy_point=?, drama_point=?, 
-          book_image=?, platform=?, reading_log=?
+          total_reading_time=?, star_point=?, spicy_point=?, drama_point=?,
+          book_image=?, platform=?, reading_log=?, updated_at=?
       WHERE id=? AND user_id=?
     `;
 
@@ -159,7 +168,7 @@ router.put("/:id", verifyToken, async (req, res) => {
       total_reading_time || null, star_point ?? null,
       spicy_point ?? null, drama_point ?? null,
       book_image || null, platform || null, reading_log || '[]',
-      req.params.id, user_id
+      now, req.params.id, user_id
     ]);
 
     res.json({ message: "✏️ Journal updated successfully" });

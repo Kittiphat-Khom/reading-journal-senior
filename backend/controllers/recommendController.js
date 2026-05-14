@@ -19,11 +19,11 @@ const projectRoot = path.resolve(__dirname, "../../");
 // เช็คว่าเครื่องนี้เป็น Windows หรือไม่?
 const isWindows = process.platform === "win32";
 
-// ถ้าเป็น Windows ให้ชี้ไปที่ Scripts/python.exe
-// ถ้าเป็น Linux/Mac ให้ชี้ไปที่ bin/python
-const PYTHON_PATH = isWindows
+const venvPython = isWindows
   ? path.join(projectRoot, "venv", "Scripts", "python.exe")
   : path.join(projectRoot, "venv", "bin", "python");
+
+const PYTHON_PATH = fs.existsSync(venvPython) ? venvPython : (isWindows ? "python" : "python3");
 
 // ชี้ไปที่ไฟล์ Python Script โดยอ้างอิงจาก Root
 const SCRIPT_PATH = path.join(projectRoot, "backend", "ml", "model", "recommend_auto.py");

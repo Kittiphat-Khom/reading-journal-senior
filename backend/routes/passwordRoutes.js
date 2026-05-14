@@ -50,7 +50,7 @@ router.post("/forgot-password", async (req, res) => {
     );
 
     // ✅ แก้ไขตรงนี้: ใช้ BASE_URL แทน localhost
-    const resetLink = `${BASE_URL}/reset-password-page.html?token=${token}`; 
+    const resetLink = `${BASE_URL}/reset-password?token=${token}`;
 
     // ส่งอีเมล
     const mailOptions = {
@@ -67,7 +67,11 @@ router.post("/forgot-password", async (req, res) => {
       `
     };
 
-    await transporter.sendMail(mailOptions); 
+    try {
+      await transporter.sendMail(mailOptions);
+    } catch (mailErr) {
+      console.error("Email send failed (non-fatal):", mailErr.message);
+    }
 
     res.json({ message: "If the email is registered, you will receive a reset link." });
 

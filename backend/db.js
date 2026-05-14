@@ -24,7 +24,10 @@ const pool = mysql.createPool({
     port: process.env.MYSQLPORT || 3306,
     waitForConnections: true,
     connectionLimit: 10,
-    queueLimit: 0
+    queueLimit: 0,
+    timezone: '+00:00',
+    enableKeepAlive: true,
+    keepAliveInitialDelay: 0,
 });
 
 // ทดสอบการเชื่อมต่อ

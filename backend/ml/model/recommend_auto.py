@@ -42,24 +42,40 @@ def get_jaccard_sim(user_genres, book_genres):
     intersection = len(s_user.intersection(s_book))
     return intersection / len(s_user)
 
+def score_to_tier(raw_score):
+    """แปลง raw score เป็น tier label + honest percentage."""
+    pct = int(round(raw_score * 100))
+    if raw_score >= 0.60:   tier = "Excellent Match"
+    elif raw_score >= 0.40: tier = "Strong Match"
+    elif raw_score >= 0.25: tier = "Good Match"
+    elif raw_score >= 0.10: tier = "Possible Match"
+    else:                   tier = "Popular Pick"
+    return pct, tier
+
 def get_fallback_books(n=15):
     try:
         idx_path = os.path.join(MODEL_DIR, "book_index.pkl")
         if os.path.exists(idx_path):
             df = pd.read_pickle(idx_path)
-            sample = df.sample(n=min(n, len(df)))
+            # Filter: must have author and image
+            df_valid = df[
+                df['authors'].notna() & (df['authors'] != '') & (df['authors'] != 'Unknown') &
+                df['image_url'].notna() & (df['image_url'] != '')
+            ]
+            sample = df_valid.sample(n=min(n, len(df_valid)))
             results = []
             for _, row in sample.iterrows():
                 results.append({
                     "id": str(row['book_id']),
                     "title": str(row['title']),
-                    "image_url": str(row['image_url']),
-                    "authors": str(row['authors']),
-                    "genres": str(row['genres']),
+                    "image": str(row['image_url']),
+                    "author": str(row['authors']),
+                    "genre": str(row['genres']).replace('|', '/'),
                     "description": str(row['description']) if 'description' in row else "",
-                    "score": 0.85,
-                    "match_percent": "85%",
-                    "reason": "Popular Recommendation"
+                    "score": 0.0,
+                    "match_percent": "Popular",
+                    "tier": "Popular Pick",
+                    "reason": "Browse our library"
                 })
             return results
     except: pass
@@ -200,8 +216,13 @@ if __name__ == "__main__":
         
         # 🔥 Filter: ใช้ 0.01 เพื่อให้แสดงผลเยอะๆ (Unlimited) 
         # ยอมรับว่าคะแนนต่ำกว่า 50% จะติดมาด้วย (แต่จะอยู่ท้ายๆ)
-        candidates = df[df['final_total'] >= 0.334].sort_values(by='final_total', ascending=False)
-        
+        # Filter: score threshold + must have author and image
+        candidates = df[
+            (df['final_total'] >= 0.10) &
+            df['authors'].notna() & (df['authors'] != '') & (df['authors'] != 'Unknown') &
+            df['image_url'].notna() & (df['image_url'] != '')
+        ].sort_values(by='final_total', ascending=False)
+
         if candidates.empty:
             print(json.dumps(get_fallback_books(), ensure_ascii=False)); sys.exit(0)
 
@@ -210,34 +231,31 @@ if __name__ == "__main__":
 
         # Apply Quota
         for _, row in candidates.iterrows():
-            # ✅ แก้ไข: เพิ่ม Logic ตัดจบเมื่อครบ 100 เล่ม
             if len(final_recommendations) >= MAX_TOTAL_RESULTS:
                 break
 
             auth = row['authors']
             current_count = author_counts.get(auth, 0)
-            
+
             if current_count < MAX_BOOKS_PER_AUTHOR:
                 final_recommendations.append(row)
                 author_counts[auth] = current_count + 1
 
         results = []
         for row in final_recommendations:
-            raw_score = row['final_total']
-            
-            # Visual Scaling
-            display_score = min(raw_score * 1.5, 0.99) 
-            display_percent = int(display_score * 100)
+            raw_score = float(row['final_total'])
+            pct, tier = score_to_tier(raw_score)
 
             results.append({
                 "id": str(row['book_id']),
                 "title": row['title'],
-                "image_url": row['image_url'],
-                "authors": row['authors'],
-                "genres": row['genres'],
+                "image": str(row['image_url']),
+                "author": str(row['authors']),
+                "genre": str(row['genres']).replace('|', '/'),
                 "description": str(row['description']) if 'description' in row else "No description available.",
                 "score": round(raw_score, 3),
-                "match_percent": f"{display_percent}%",
+                "match_percent": f"{pct}%",
+                "tier": tier,
                 "reason": row['final_reason']
             })
 

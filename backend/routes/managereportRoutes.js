@@ -21,12 +21,14 @@ router.get('/', async (req, res) => {
     try {
         // 1. เพิ่ม managed_by, managed_at, management_note ใน SELECT
         const sql = `
-            SELECT 
-                report_id, title, description, report_image, 
-                is_done, created_at,
-                managed_by, managed_at, management_note 
-            FROM Report 
-            ORDER BY created_at DESC
+            SELECT
+                r.report_id, r.title, r.description, r.report_image,
+                r.is_done, r.created_at,
+                r.managed_by, r.managed_at, r.management_note,
+                u.username
+            FROM Report r
+            LEFT JOIN User u ON u.user_id = r.user_id
+            ORDER BY r.created_at DESC
         `;
         const [rows] = await db.query(sql);
         
@@ -42,7 +44,7 @@ router.get('/', async (req, res) => {
                 is_done: (report.is_done === 1),
                 image: imageBase64,
                 created_at: report.created_at,
-                // 2. ส่งค่ากลับ Frontend
+                username: report.username,
                 managed_by: report.managed_by,
                 managed_at: report.managed_at,
                 management_note: report.management_note

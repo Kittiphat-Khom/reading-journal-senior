@@ -1,0 +1,26 @@
+{
+  "name": "reading-journal-senior",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently --names \"API,PROXY,WEB\" --prefix-colors \"cyan,yellow,green\" \"npm --prefix backend start\" \"node backend/proxy.js\" \"npm --prefix frontend start\"",
+    "build": "npm --prefix frontend run build",
+    "start": "npm --prefix backend start"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Kittiphat-Khom/reading-journal-senior.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Kittiphat-Khom/reading-journal-senior/issues"
+  },
+  "homepage": "https://github.com/Kittiphat-Khom/reading-journal-senior#readme",
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}

@@ -19,6 +19,7 @@ function verifyToken(req, res, next) {
     req.user = decoded;
     next();
   } catch (err) {
+    if (err.name === 'TokenExpiredError') return res.status(401).json({ message: "Token expired" });
     return res.status(403).json({ message: "Invalid token" });
   }
 }
@@ -52,7 +53,7 @@ router.post("/save", verifyToken, async (req, res) => {
       preferred_books = VALUES(preferred_books)
     `;
 
-    await db.execute(sql, [user_id, authorsJSON, genresJSON, booksJSON]);
+    await db.query(sql, [user_id, authorsJSON, genresJSON, booksJSON]);
 
     // ❌ ลบบรรทัด saveUserPreferences() ออกแล้ว เพราะไฟล์นั้นถูกลบไปแล้ว
     // ข้อมูลจะถูกดึงไปทำ CSV ตอนที่คุณรัน fetch_data.js เองทีหลัง
@@ -73,8 +74,8 @@ router.get("/", verifyToken, async (req, res) => {
   try {
     const user_id = req.user.id;
 
-    const [rows] = await db.execute(
-      "SELECT * FROM MPC WHERE user_id = ? LIMIT 1",
+    const [rows] = await db.query(
+      "SELECT preferred_authors, preferred_genres, preferred_books FROM MPC WHERE user_id = ? LIMIT 1",
       [user_id]
     );
 
@@ -96,8 +97,8 @@ router.get("/", verifyToken, async (req, res) => {
     });
 
   } catch (err) {
-    console.error("❌ Error fetching preferences:", err);
-    res.status(500).json({ error: "Failed to fetch preferences" });
+    console.error("❌ Error fetching preferences:", err.message, err.code);
+    res.status(500).json({ error: "Failed to fetch preferences", detail: err.message, code: err.code });
   }
 });
 

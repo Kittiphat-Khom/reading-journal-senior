@@ -1,0 +1,291 @@
+/* styles/sidebar.css */
+
+/* =========================================
+   1. MAIN CONTAINER
+   ========================================= */
+.sidebar {
+  position: fixed;
+  top: 0; left: 0;
+  width: 300px;
+  height: 100%;
+  background: #ffffff;
+  box-shadow: 4px 0 24px rgba(15, 23, 42, 0.1);
+  transform: translateX(-300px);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: 'Prompt', sans-serif;
+}
+
+.sidebar.active {
+  transform: translateX(0);
+}
+
+/* =========================================
+   2. TOP SECTION — gradient hero
+   ========================================= */
+.sidebar-top {
+  position: relative;
+  padding: 36px 24px 28px;
+  background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 60%, #60a5fa 100%);
+  text-align: center;
+  overflow: hidden;
+}
+
+.sidebar-top::before {
+  content: '';
+  position: absolute;
+  top: -40px; right: -40px;
+  width: 130px; height: 130px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.07);
+}
+
+.sidebar-top::after {
+  content: '';
+  position: absolute;
+  bottom: -20px; left: -20px;
+  width: 90px; height: 90px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.05);
+}
+
+.close-btn {
+  position: absolute;
+  top: 14px; right: 14px;
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.25);
+  color: rgba(255,255,255,0.85);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.8rem;
+  transition: all 0.2s;
+  z-index: 10;
+}
+
+.close-btn:hover {
+  background: rgba(255,255,255,0.25);
+  color: #fff;
+  transform: rotate(90deg);
+}
+
+.avatar-hero {
+  width: 68px; height: 68px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.2);
+  border: 3px solid rgba(255,255,255,0.5);
+  color: #fff;
+  font-size: 1.8rem;
+  font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 12px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+  position: relative;
+  z-index: 1;
+}
+
+.user-name-hero {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 4px;
+  position: relative; z-index: 1;
+}
+
+.user-email-hero {
+  font-size: 0.78rem;
+  color: rgba(255,255,255,0.7);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 220px;
+  margin: 0 auto;
+  position: relative; z-index: 1;
+}
+
+/* =========================================
+   3. MIDDLE SECTION (MENU)
+   ========================================= */
+.sidebar-middle {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 12px;
+  scrollbar-width: none;
+  background: #f8fafc;
+}
+.sidebar-middle::-webkit-scrollbar { display: none; }
+
+.menu-section-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #94a3b8;
+  letter-spacing: 0.1em;
+  padding: 0 8px;
+  margin: 4px 0 10px;
+}
+
+.menu { list-style: none; padding: 0; margin: 0; }
+.menu li { margin-bottom: 4px; }
+
+.menu li a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 12px;
+  color: #475569;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.menu-icon-wrap {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  background: var(--item-bg, #f1f5f9);
+  color: var(--item-color, #64748b);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+/* Hover State */
+.menu li a:hover {
+  background: #fff;
+  color: var(--item-color, #1e293b);
+  border-color: #e2e8f0;
+  transform: translateX(3px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.menu li a:hover .menu-icon-wrap {
+  transform: scale(1.1);
+}
+
+/* Active State */
+.menu li a.active {
+  background: #fff;
+  color: var(--item-color, #2563eb);
+  font-weight: 600;
+  border-color: var(--item-bg, #eff6ff);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+}
+
+.menu li a.active .menu-icon-wrap {
+  background: var(--item-color, #2563eb);
+  color: #fff;
+  box-shadow: 0 4px 10px color-mix(in srgb, var(--item-color, #2563eb) 35%, transparent);
+}
+
+/* =========================================
+   4. BOTTOM SECTION (LOGOUT)
+   ========================================= */
+.sidebar-bottom {
+  padding: 16px 16px 28px;
+  border-top: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.logout-btn {
+  width: 100%;
+  padding: 12px;
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  cursor: pointer;
+  font-family: 'Prompt', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all 0.25s ease;
+}
+
+.logout-btn i { font-size: 1rem; transition: transform 0.25s; }
+
+.logout-btn:hover {
+  background-color: #fef2f2;
+  border-color: #fecaca;
+  color: #ef4444;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.12);
+}
+
+.logout-btn:hover i { transform: translateX(3px); }
+.logout-btn:active { transform: scale(0.98); }
+
+/* =========================================
+   5. OVERLAY
+   ========================================= */
+.overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(2px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  z-index: 900;
+}
+.overlay.show { opacity: 1; pointer-events: auto; }
+
+/* =========================================
+   6. LOGOUT MODAL
+   ========================================= */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 50000;
+  opacity: 0; visibility: hidden;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+.modal-overlay.active { opacity: 1; visibility: visible; }
+
+.modal-box {
+  background: #fff;
+  width: 90%; max-width: 340px;
+  border-radius: 20px;
+  padding: 32px 28px 28px;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  transform: scale(0.94) translateY(8px);
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.modal-overlay.active .modal-box { transform: scale(1) translateY(0); }
+
+.modal-icon-wrapper { display: flex; justify-content: center; margin-bottom: 14px; }
+.modal-icon {
+  width: 52px; height: 52px;
+  background: #FEF2F2;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: #EF4444; font-size: 20px;
+  box-shadow: 0 0 0 6px #FFF1F2;
+}
+
+.modal-text-wrapper { text-align: center; }
+.modal-text-wrapper h3 { margin: 0 0 6px; color: #111827; font-size: 1.1rem; font-weight: 700; }
+.modal-text-wrapper p  { margin: 0 0 20px; color: #6B7280; font-size: 0.875rem; line-height: 1.5; }
+
+.modal-actions { display: flex; gap: 10px; }
+.modal-actions button {
+  flex: 1; padding: 10px 12px;
+  border-radius: 10px; border: none;
+  font-size: 0.9rem; font-weight: 600; cursor: pointer;
+  transition: all 0.2s ease;
+}
+.btn-secondary { background: #F3F4F6; color: #374151; }
+.btn-secondary:hover { background: #E5E7EB; }
+.btn-danger { background: #EF4444; color: #fff; box-shadow: 0 3px 8px rgba(239,68,68,0.3); }
+.btn-danger:hover { background: #DC2626; transform: translateY(-1px); }

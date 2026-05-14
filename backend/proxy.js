@@ -26,7 +26,20 @@ const HARDCOVER_TOKEN =
 
 const HARD_COVER_GRAPHQL = "https://api.hardcover.app/v1/graphql";
 
+// 🗄️ In-memory cache
+const cache = new Map();
+const CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
 
+function getCached(key) {
+  const entry = cache.get(key);
+  if (!entry) return null;
+  if (Date.now() - entry.ts > CACHE_TTL_MS) { cache.delete(key); return null; }
+  return entry.data;
+}
+
+function setCached(key, data) {
+  cache.set(key, { data, ts: Date.now() });
+}
 
 
 
@@ -39,6 +52,12 @@ const HARD_COVER_GRAPHQL = "https://api.hardcover.app/v1/graphql";
 app.post("/api/search", async (req, res) => {
 
   try {
+
+    const cacheKey = JSON.stringify(req.body);
+    const cached = getCached(cacheKey);
+    if (cached) {
+      return res.json(cached);
+    }
 
     console.log("🔹 Forwarding search:", req.body);
 
@@ -84,7 +103,7 @@ app.post("/api/search", async (req, res) => {
 
     const data = JSON.parse(raw);
 
-
+    setCached(cacheKey, data);
 
     console.log("📦 Hardcover response:", data);
 
@@ -160,7 +179,7 @@ app.post("/api/preferences/save", async (req, res) => {
 
 // ======================================
 
-const PORT = 3000;
+const PORT = 3001;
 
 app.listen(PORT, () =>
 

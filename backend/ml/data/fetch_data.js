@@ -15,13 +15,20 @@ const __dirname = path.dirname(__filename);
 // 1. หาตำแหน่ง Root ของโปรเจกต์ (senior-project)
 const projectRoot = path.resolve(__dirname, "../../../");
 
-// 2. เช็ค OS ว่าเป็น Windows หรือ Linux
+// 2. เช็ค OS
 const isWindows = process.platform === "win32";
 
-// 3. กำหนด Path Python อัตโนมัติ
-const PYTHON_PATH = isWindows
-  ? path.join(projectRoot, "venv", "Scripts", "python.exe") // Windows
-  : path.join(projectRoot, "venv", "bin", "python");        // Linux (VPS)
+// 3. Python path — ใช้ venv ถ้ามี ไม่งั้น fallback system python
+const venvPython = isWindows
+  ? path.join(projectRoot, "venv", "Scripts", "python.exe")
+  : path.join(projectRoot, "venv", "bin", "python");
+const PYTHON_PATH = fs.existsSync(venvPython) ? venvPython : (isWindows ? "python" : "python3");
+
+// 4. CLI args
+const args = process.argv.slice(2);
+const FETCH_LIMIT = (() => { const i = args.indexOf('--limit'); return i !== -1 ? parseInt(args[i+1]) || 1000 : 1000; })();
+const APPEND_MODE = args.includes('--append');
+const CSV_PATH = path.join(__dirname, "books.csv");
 
 // 4. กำหนด Path ไฟล์ Python Script
 const TRAIN_SCRIPT_PATH = path.join(projectRoot, "backend", "ml", "model", "train_model.py");
@@ -60,7 +67,7 @@ async function fetchBooksFromAPI(queryVariables, label) {
   `;
   
   try {
-    const response = await fetch("http://localhost:3000/api/search", {
+    const response = await fetch("http://localhost:3001/api/search", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ query: gql, variables: queryVariables })
@@ -72,9 +79,19 @@ async function fetchBooksFromAPI(queryVariables, label) {
 }
 
 async function fetchAllBooks() {
-  const TARGET_TOTAL = 20000;
-  console.log(`🔍 [ETL Process] Starting Data Extraction (Target: ${TARGET_TOTAL} items)...`);
+  const TARGET_TOTAL = FETCH_LIMIT;
+  console.log(`🔍 [ETL Process] Fetching ${TARGET_TOTAL} books (append=${APPEND_MODE})...`);
+
+  // โหลด CSV เดิมถ้า --append
   let allBooksMap = new Map();
+  if (APPEND_MODE && fs.existsSync(CSV_PATH)) {
+    const existing = fs.readFileSync(CSV_PATH, 'utf-8').split('\n').slice(1).filter(Boolean);
+    existing.forEach(line => {
+      const id = line.split(',')[0];
+      if (id) allBooksMap.set(id, { _raw: line });
+    });
+    console.log(`📂 Loaded ${allBooksMap.size} existing books from CSV`);
+  }
   
   // รายการ Genre แบบสวยงาม (Display Name)
   const genres = [
@@ -176,27 +193,27 @@ async function fetchAllBooks() {
 // ============================================================
 export async function exportBooks() {
   const allBooks = await fetchAllBooks();
-  if (allBooks.length === 0) return;
+  if (allBooks.length === 0) { console.log("⚠️ No new books fetched."); return; }
 
   console.log("💾 Writing Dataset to books.csv...");
-  
-  const csvLines = allBooks.map(b => {
-    // Data Sanitization for CSV format
-    const escape = (txt) => `"${String(txt).replace(/"/g, '""')}"`; 
-    return [
-        b.id, 
-        escape(b.title), 
-        escape(b.author), 
-        escape(b.genres.join("|")), 
-        escape(b.description), 
-        escape(b.cover)
-    ].join(",");
-  });
+  const escape = (txt) => `"${String(txt).replace(/"/g, '""')}"`;
 
-  // Header must match Schema in train_model.py
-  csvLines.unshift("book_id,title,authors,genres,description,image_url");
-  fs.writeFileSync(path.join(__dirname, "books.csv"), csvLines.join("\n"));
-  console.log("✅ Dataset Ready.");
+  // ถ้า append mode — โหลด rows เดิมแล้วผสาน
+  let existingLines = [];
+  if (APPEND_MODE && fs.existsSync(CSV_PATH)) {
+    existingLines = fs.readFileSync(CSV_PATH, 'utf-8').split('\n').slice(1).filter(Boolean);
+  }
+
+  // IDs ที่มีอยู่แล้ว (ป้องกัน duplicate)
+  const existingIds = new Set(existingLines.map(l => l.split(',')[0]));
+
+  const newLines = allBooks
+    .filter(b => !existingIds.has(String(b.id)))
+    .map(b => [b.id, escape(b.title), escape(b.author), escape(b.genres.join("|")), escape(b.description), escape(b.cover)].join(","));
+
+  const allLines = ["book_id,title,authors,genres,description,image_url", ...existingLines, ...newLines];
+  fs.writeFileSync(CSV_PATH, allLines.join("\n"));
+  console.log(`✅ Dataset Ready: ${existingLines.length} existing + ${newLines.length} new = ${existingLines.length + newLines.length} total books`);
 }
 
 export async function exportUserPreferences() {

@@ -223,16 +223,11 @@ function createFavoriteCard(book) {
   const removeBtn = card.querySelector(".remove-btn");
   if(removeBtn) {
       removeBtn.addEventListener("click", async (e) => {
-        e.stopPropagation(); 
+        e.stopPropagation();
         const idToDelete = removeBtn.getAttribute("data-id");
         const bookTitle = removeBtn.getAttribute("data-title");
-        
-        if(typeof showConfirm === 'function') {
-            const confirmed = await showConfirm(bookTitle);
-            if(confirmed) deleteFavorite(idToDelete, card);
-        } else if(confirm(`Remove "${bookTitle}"?`)) {
-            deleteFavorite(idToDelete, card);
-        }
+        const confirmed = await showConfirm(bookTitle);
+        if(confirmed) deleteFavorite(idToDelete, card);
       });
   }
 
@@ -349,19 +344,12 @@ function showConfirm(bookTitle) {
         const btnYes = document.getElementById("btn-confirm-yes");
         const btnCancel = document.getElementById("btn-confirm-cancel");
 
-        if(!modal) {
-            // Fallback ถ้าไม่มี Modal HTML
-            resolve(confirm(`Remove "${bookTitle}"?`));
-            return;
-        }
-
         textEl.textContent = `Remove "${bookTitle}" from favorites?`;
         modal.classList.add("show");
 
-        // สร้าง handler เพื่อให้ removeEventListener ได้ถูกต้อง
         const handleYes = () => { cleanup(); resolve(true); };
         const handleCancel = () => { cleanup(); resolve(false); };
-        
+
         const cleanup = () => {
             modal.classList.remove("show");
             btnYes.removeEventListener("click", handleYes);
@@ -373,29 +361,3 @@ function showConfirm(bookTitle) {
     });
 }
 
-function showToast(title, message, type = 'success') {
-    const container = document.getElementById("toast-container");
-    if(!container) {
-        alert(`${title}: ${message}`);
-        return;
-    }
-
-    const toast = document.createElement("div");
-    toast.className = `toast ${type}`;
-    let iconClass = type === 'error' ? "fa-circle-exclamation" : "fa-circle-check";
-    
-    toast.innerHTML = `
-        <div class="toast-icon"><i class="fa-solid ${iconClass}"></i></div>
-        <div class="toast-content">
-            <h4>${title}</h4>
-            <p>${message}</p>
-        </div>
-    `;
-    container.appendChild(toast);
-    
-    // Auto remove
-    setTimeout(() => {
-        toast.style.animation = "fadeOutRight 0.5s forwards";
-        toast.addEventListener("animationend", () => toast.remove());
-    }, 3000);
-}
