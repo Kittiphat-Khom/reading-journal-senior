@@ -1,12 +1,11 @@
 [phases.setup]
-nixPkgs = ["nodejs_20", "python312", "python312Packages.pip", "stdenv.cc.cc.lib"]
+nixPkgs = ["nodejs_20", "python312", "python312Packages.numpy", "python312Packages.pandas"]
 
 [phases.install]
 cmds = [
   "npm install",
   "npm --prefix backend install",
-  "npm --prefix frontend install",
-  "pip install --break-system-packages -r backend/ml/model/requirements.txt"
+  "npm --prefix frontend install"
 ]
 
 [phases.build]

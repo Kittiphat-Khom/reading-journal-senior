@@ -66,7 +66,10 @@ async function handleRecommend(user_id, res) {
         console.log(`[Recommend] books from journal: ${userData.books.length}, genres: ${userData.genres.length}, authors: ${userData.authors.length}`);
         console.log(`[Recommend] userData sent to Python:`, JSON.stringify(userData));
 
-        const py = spawn(PYTHON_PATH, [SCRIPT_PATH, JSON.stringify(userData)]);
+        console.log(`[Recommend] PYTHON_PATH=${PYTHON_PATH}`);
+        const py = spawn(PYTHON_PATH, [SCRIPT_PATH, JSON.stringify(userData)], {
+            env: { ...process.env }
+        });
         let output = "", errorLog = "";
 
         py.stdout.on("data", (chunk) => { output += chunk.toString(); });
