@@ -67,25 +67,32 @@ app.use("/api/favorites", favoritesRoutes);
 app.use("/api/reports", reportRoutes); // 👈 จุดสำคัญ: Route นี้ต้องมี
 
 // ==========================================
-// 🌉 5. BRIDGE: SEARCH PROXY (Port 5000 -> 3000)
+// 🌉 5. SEARCH: direct Hardcover GraphQL proxy
 // ==========================================
-// ✅ เพิ่มส่วนนี้: รับงานจากหน้าเว็บ แล้วส่งต่อให้ Proxy Port 3000
+const HARDCOVER_TOKEN = "Bearer eyJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJIYXJkY292ZXIiLCJ2ZXJzaW9uIjoiOCIsImp0aSI6IjJjNWQ4MGFkLTQ3ZDctNDdkNy1iNDBmLTkxNmQ3MjJiNjI1ZiIsImFwcGxpY2F0aW9uSWQiOjIsInN1YiI6IjMyOTY4IiwiYXVkIjoiMSIsImlkIjoiMzI5NjgiLCJsb2dnZWRJbiI6dHJ1ZSwiaWF0IjoxNzYyNjg3MTQyLCJleHAiOjE3OTQyMjMxNDIsImh0dHBzOi8vaGFzdXJhLmlvL2p3dC9jbGFpbXMiOnsieC1oYXN1cmEtYWxsb3dlZC1yb2xlcyI6WyJ1c2VyIl0sIngtaGFzdXJhLWRlZmF1bHQtcm9sZSI6InVzZXIiLCJ4LWhhc3VyYS1yb2xlIjoidXNlciIsIlgtaGFzdXJhLXVzZXItaWQiOiIzMjk2OCJ9LCJ1c2VyIjp7ImlkIjozMjk2OH19.Xfga0PncD1OeqUb6hiCTJCBPEkJOFeLmtQwLrpQg-Qk";
+const hardcoverCache = new Map();
+
 app.post("/api/search", async (req, res) => {
     try {
-        // ส่งต่อ Request ไปหา Port 3000
-        const response = await fetch("http://localhost:3001/api/search", {
+        const cacheKey = JSON.stringify(req.body);
+        const cached = hardcoverCache.get(cacheKey);
+        if (cached && Date.now() - cached.ts < 10 * 60 * 1000) return res.json(cached.data);
+
+        const response = await fetch("https://api.hardcover.app/v1/graphql", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "application/json", "Authorization": HARDCOVER_TOKEN },
             body: JSON.stringify(req.body)
         });
-        
-        // รับผลลัพธ์กลับมาส่งให้หน้าเว็บ
-        const data = await response.json();
+        const raw = await response.text();
+        if (raw.startsWith("<!DOCTYPE") || raw.startsWith("<html")) {
+            return res.status(500).json({ error: "Hardcover returned HTML" });
+        }
+        const data = JSON.parse(raw);
+        hardcoverCache.set(cacheKey, { data, ts: Date.now() });
         res.json(data);
     } catch (err) {
-        console.error("Bridge Error:", err);
-        // ถ้า Port 3000 ไม่เปิด จะฟ้อง error นี้
-        res.status(500).json({ error: "Cannot connect to Proxy Server (Port 3000). Please ensure proxy.js is running." });
+        console.error("Search Error:", err);
+        res.status(500).json({ error: err.message });
     }
 });
 
