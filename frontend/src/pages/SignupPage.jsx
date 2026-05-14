@@ -1,7 +1,6 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import client from '../api/client';
-import { useAuth } from '../context/AuthContext';
 import '../styles/auth.css';
 
 function LeftPanel() {
@@ -41,7 +40,6 @@ function LeftPanel() {
 
 export default function SignupPage() {
   const navigate = useNavigate();
-  const { login } = useAuth();
   const [form, setForm] = useState({ username: '', email: '', password: '' });
   const [errs, setErrs] = useState({});
   const [loading, setLoading] = useState(false);
@@ -118,8 +116,8 @@ export default function SignupPage() {
     if (code.length < 6) { setOtpError('Please enter all 6 digits.'); return; }
     setOtpLoading(true);
     try {
-      const { data } = await client.post('/api/users/verify-otp', { email: form.email, code });
-      login(data.token, data.user, navigate, '/preferences/genres');
+      await client.post('/api/users/verify-otp', { email: form.email, code });
+      setVerified(true);
     } catch (err) {
       setOtpError(err.response?.data?.message || 'Invalid code. Please try again.');
     } finally {

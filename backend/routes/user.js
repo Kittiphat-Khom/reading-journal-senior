@@ -43,8 +43,7 @@ router.post("/register", async (req, res) => {
     }
 
     // Hash Password
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
+    const hashedPassword = await bcrypt.hash(password, 8);
 
     // สร้าง OTP 6 หลัก
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
@@ -103,14 +102,12 @@ router.post("/verify-otp", async (req, res) => {
             return res.status(400).json({ message: "Invalid OTP code. Please try again." });
         }
 
-        const user = users[0];
         await db.query(
             "UPDATE User SET is_verified = 1, verification_token = NULL WHERE user_id = ?",
-            [user.user_id]
+            [users[0].user_id]
         );
 
-        const token = jwt.sign({ id: user.user_id, role: user.role }, JWT_SECRET, { expiresIn: "1h" });
-        res.json({ message: "Email verified!", token, user: { id: user.user_id, username: user.username, role: user.role }, has_preferences: false });
+        res.json({ message: "Email verified! You can now log in." });
 
     } catch (error) {
         console.error("Verify OTP Error:", error);
