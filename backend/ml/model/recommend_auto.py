@@ -65,10 +65,9 @@ def score_to_tier(raw_score):
 
 def get_fallback_books(n=15):
     try:
-        idx_path = os.path.join(MODEL_DIR, "book_index.pkl")
-        print(f"[Fallback] MODEL_DIR={MODEL_DIR} exists={os.path.exists(idx_path)}", file=sys.stderr)
+        idx_path = os.path.join(MODEL_DIR, "book_index.csv")
         if os.path.exists(idx_path):
-            df = pd.read_pickle(idx_path)
+            df = pd.read_csv(idx_path)
             # Filter: must have author and image
             df_valid = df[
                 df['authors'].notna() & (df['authors'] != '') & (df['authors'] != 'Unknown') &
@@ -102,13 +101,13 @@ if __name__ == "__main__":
         # ---------------------------------------------------------
         # 1. Load Data & Models
         # ---------------------------------------------------------
-        idx_path = os.path.join(MODEL_DIR, "book_index.pkl")
+        idx_path = os.path.join(MODEL_DIR, "book_index.csv")
         sim_path = os.path.join(MODEL_DIR, "cosine_sim.pkl")
-        
+
         if not os.path.exists(idx_path) or not os.path.exists(sim_path):
             print(json.dumps(get_fallback_books(), ensure_ascii=False)); sys.exit(0)
 
-        df = pd.read_pickle(idx_path)
+        df = pd.read_csv(idx_path)
         cosine_sim = pickle.load(open(sim_path, "rb"))
 
         # ---------------------------------------------------------
