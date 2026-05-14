@@ -104,6 +104,8 @@ app.use("/api/reviews", reviewRoutes);
 // ==========================================
 // 🛠️ TEST & START
 // ==========================================
+app.get("/api/health", (req, res) => res.json({ status: "ok" }));
+
 app.get("/test", async (req, res) => {
   try {
     const [rows] = await db.query("SELECT NOW() AS time");

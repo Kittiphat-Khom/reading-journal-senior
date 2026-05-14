@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import '../../styles/styles-admin.css';
 
@@ -13,6 +13,7 @@ const ADMIN_SECTIONS = [
 
 export default function AdminHomePage() {
   const { logout } = useAuth();
+  const navigate = useNavigate();
   return (
     <div style={{ minHeight: '100vh', background: '#f5f2ee', fontFamily: "'Prompt', sans-serif" }}>
       {/* Header */}
@@ -27,7 +28,7 @@ export default function AdminHomePage() {
           </div>
         </div>
         <button
-          onClick={logout}
+          onClick={() => logout(navigate)}
           style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8, padding: '8px 18px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: 10, cursor: 'pointer', fontSize: '0.9rem', fontWeight: 600, color: '#64748b', transition: 'all 0.2s' }}
           onMouseEnter={(e) => { e.currentTarget.style.background = '#fef2f2'; e.currentTarget.style.color = '#ef4444'; e.currentTarget.style.borderColor = '#fecaca'; }}
           onMouseLeave={(e) => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.color = '#64748b'; e.currentTarget.style.borderColor = '#e2e8f0'; }}

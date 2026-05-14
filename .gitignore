@@ -17,4 +17,4 @@ __pycache__/
 # 4. ไฟล์ Log
 *.log
 
-*.pkl
+# *.pkl  # allow committing trained model files for deployment

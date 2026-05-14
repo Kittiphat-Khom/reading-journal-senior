@@ -38,7 +38,8 @@ function PrivateRoute({ children }) {
 function PublicRoute({ children }) {
   const { user, loading } = useAuth();
   if (loading) return null;
-  return user ? <Navigate to="/dashboard" replace /> : children;
+  if (!user) return children;
+  return <Navigate to={user.role === 'admin' ? '/admin' : '/dashboard'} replace />;
 }
 
 export default function App() {

@@ -19,7 +19,19 @@ const parseMatch = (m) => {
   return isNaN(n) ? null : String(n);
 };
 
-const matchToStars = (m) => {
+// Deterministic pseudo-rating from book id (3.0–4.5, consistent per book)
+const pseudoRating = (id = '') => {
+  let h = 0;
+  const s = String(id);
+  for (let i = 0; i < s.length; i++) h = s.charCodeAt(i) + ((h << 5) - h);
+  const steps = [3.0, 3.2, 3.4, 3.5, 3.6, 3.8, 4.0, 4.2, 4.3, 4.5];
+  return steps[Math.abs(h) % steps.length];
+};
+
+const matchToStars = (m, rating) => {
+  // If real rating exists (from Hardcover), use it directly (scale 0–5)
+  if (rating && typeof rating === 'number' && rating > 0) return Math.min(5, rating);
+  // Fallback: derive from match %
   const n = parseInt(m, 10);
   if (isNaN(n)) return 3.5;
   if (n >= 92) return 5;
@@ -41,8 +53,9 @@ const ChevL = (p) => <svg viewBox="0 0 24 24" width="16" height="16" fill="none"
 const ChevR = (p) => <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="m9 6 6 6-6 6"/></svg>;
 
 /* ── Stars ── */
-function Stars({ match }) {
-  const v = matchToStars(match);
+function Stars({ match, rating, showScore }) {
+  const v = matchToStars(match, rating);
+  const label = v.toFixed(1);
   return (
     <span className="rc-stars">
       {[1, 2, 3, 4, 5].map((n) => (
@@ -51,57 +64,44 @@ function Stars({ match }) {
           <path d="m12 2 3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
         </svg>
       ))}
+      {showScore && <span className="rc-stars-score">{label}</span>}
     </span>
   );
 }
 
-/* ── Hero ── */
-function Hero({ book, added, onAdd, favorited, onFavorite, onOpen }) {
+/* ── DualHero: ONE card, 2 books side-by-side ── */
+function HalfBook({ book, added, onAdd, favorited, onFavorite, onOpen, ribbon, rank }) {
   const [c1, c2] = titleGradient(book.title);
   const img = book.image || book.book_image;
   const match = parseMatch(book.match_percent);
-
+  const genres = book.genre ? String(book.genre).split(/[/,|]/).map(g => g.trim()).filter(Boolean).slice(0, 2) : [];
   return (
-    <section className="rc-hero" onClick={onOpen}>
-      <div className="rc-hero-cover" style={{ background: `linear-gradient(135deg,${c1},${c2})` }}>
+    <div className="rc-dhalf" onClick={onOpen}>
+      <div className="rc-dhalf-cover" style={{ background: `linear-gradient(135deg,${c1},${c2})` }}>
         <div className="rc-hero-cover-stripes" />
         {img && <img src={img} alt={book.title} onError={(e) => { e.target.style.display = 'none'; }} />}
+        {rank && <span className="rc-dhalf-rank">#{rank}</span>}
         <div className="rc-hero-cover-text">
-          <span className="rc-hero-cover-ribbon">Top pick</span>
+          <span className="rc-hero-cover-ribbon">{ribbon}</span>
           <div className="rc-hero-ctitle">{book.title}</div>
           <div className="rc-hero-csub">{book.author}</div>
         </div>
       </div>
-
-      <div className="rc-hero-info">
-        {match && (
-          <div className="rc-ring" style={{ '--p': parseInt(match) }}>
-            <div className="rc-ring-inner">
-              <span className="rc-ring-pct">{match}%</span>
-              <span className="rc-ring-lbl">match</span>
-            </div>
-          </div>
-        )}
-
-        <span className="rc-ftag"><Sparkle /> Hand-picked for you</span>
+      <div className="rc-dhalf-info">
+        <span className="rc-ftag"><Sparkle /> {ribbon}</span>
         <h2 className="rc-hero-title">{book.title}</h2>
         <div className="rc-hero-author">by {book.author || 'Unknown Author'}</div>
-
         <div className="rc-hero-stars-row">
-          <Stars match={match} />
+          <Stars match={match} rating={book.rating} showScore />
           {match
             ? <span className="rc-hero-match-pill match">{match}% match</span>
             : book.tier && <span className="rc-hero-match-pill tier">{book.tier}</span>
           }
         </div>
-
-        {book.genre && (() => {
-          const genres = String(book.genre).split(/[/,|]/).map(g => g.trim()).filter(Boolean).slice(0, 3);
-          return <div className="rc-hero-genres">{genres.map((g, i) => <span key={i} className="rc-gpill">{g}</span>)}</div>;
-        })()}
-
+        {genres.length > 0 && (
+          <div className="rc-hero-genres">{genres.map((g, i) => <span key={i} className="rc-gpill">{g}</span>)}</div>
+        )}
         {book.reason && <div className="rc-hero-reason"><Wand /> {book.reason}</div>}
-
         <div className="rc-hero-ctas" onClick={(e) => e.stopPropagation()}>
           <button className="rc-btn rc-btn-primary" onClick={onAdd}>
             {added ? <><Check /> Added</> : <><Plus /> Add to shelf</>}
@@ -111,28 +111,29 @@ function Hero({ book, added, onAdd, favorited, onFavorite, onOpen }) {
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+function DualHero({ book1, book2, added1, onAdd1, favorited1, onFavorite1, onOpen1, added2, onAdd2, favorited2, onFavorite2, onOpen2 }) {
+  return (
+    <section className="rc-dual-hero">
+      <HalfBook book={book1} added={added1} onAdd={onAdd1} favorited={favorited1} onFavorite={onFavorite1} onOpen={onOpen1} ribbon="Top pick" rank={1} />
+      <div className="rc-dual-divider" />
+      <HalfBook book={book2} added={added2} onAdd={onAdd2} favorited={favorited2} onFavorite={onFavorite2} onOpen={onOpen2} ribbon="Also for you" rank={2} />
     </section>
   );
 }
 
 /* ── AlsoPanel ── */
-function AlsoPanel({ books, allBooks, startIdx, addedMap, onAdd, favMap, onFav, onOpen }) {
-  const [shift, setShift] = React.useState(0);
-  const pool = allBooks && allBooks.length > 5 ? allBooks : books;
-  const displayBooks = allBooks && allBooks.length > 5
-    ? Array.from({ length: 5 }, (_, i) => pool[(startIdx + shift + i) % pool.length])
-    : books;
-  const canRefresh = pool.length > 5;
+function AlsoPanel({ books, poolBooks, addedMap, onAdd, favMap, onFav, onOpen }) {
+  const PER_PAGE = 5;
+  const displayBooks = books;
 
   return (
     <section className="rc-alsopanel">
       <div className="rc-alsohead">
         <h3>More picks <em>for you</em></h3>
-        {canRefresh && (
-          <button className="rc-also-refresh" onClick={() => setShift(s => (s + 5) % pool.length)} title="Show more">
-            <RotateCw width={12} height={12} /> More
-          </button>
-        )}
       </div>
       <div className="rc-alsolist">
         {displayBooks.map((book, i) => {
@@ -140,8 +141,11 @@ function AlsoPanel({ books, allBooks, startIdx, addedMap, onAdd, favMap, onFav, 
           const img = book.image || book.book_image;
           const match = parseMatch(book.match_percent);
           const genres = book.genre ? String(book.genre).split(/[/,|]/).map(g => g.trim()).filter(Boolean) : [];
+          const isAdded = addedMap[i];
+          const isFav = favMap[i];
           return (
             <div key={i} className="rc-arow" onClick={() => onOpen(book)}>
+              <span className="rc-arow-num">{i + 1}</span>
               <div className="rc-acov" style={{ background: `linear-gradient(135deg,${c1},${c2})` }}>
                 {img ? <img src={img} alt={book.title} onError={(e) => { e.target.style.display = 'none'; }} /> : <span className="rc-acov-text">{book.title}</span>}
               </div>
@@ -149,18 +153,22 @@ function AlsoPanel({ books, allBooks, startIdx, addedMap, onAdd, favMap, onFav, 
                 <div className="rc-at">{book.title}</div>
                 <div className="rc-au">by {book.author || 'Unknown'}</div>
                 <div className="rc-ameta">
-                  {match ? <span className={`rc-mtag ${parseInt(match) < 85 ? 'warm' : ''}`}>● {match}%</span> : <span className="rc-mtag warm">Popular</span>}
-                  <Stars match={match} />
+                  {match
+                    ? <span className={`rc-mtag ${parseInt(match) < 85 ? 'warm' : ''}`}>● {match}% match</span>
+                    : <span className="rc-mtag warm">{book.tier || 'Popular'}</span>
+                  }
+                  <Stars match={match} rating={book.rating} showScore />
                   {genres[0] && <span className="rc-ameta-genre">{genres[0]}</span>}
                 </div>
               </div>
               <div className="rc-aact" onClick={(e) => e.stopPropagation()}>
-                <button className={`rc-smallAdd ${addedMap[i] ? 'added' : ''}`} onClick={() => onAdd(book)}>
-                  {addedMap[i] ? <Check width={11} height={11} /> : <Plus width={11} height={11} />}
-                  {addedMap[i] ? 'Added' : 'Add'}
+                <button className={`rc-smallAdd ${isAdded ? 'added' : ''}`} onClick={() => onAdd(book)}>
+                  {isAdded ? <Check width={11} height={11} /> : <Plus width={11} height={11} />}
+                  {isAdded ? 'Added' : 'Add to shelf'}
                 </button>
-                <button className={`rc-savePin ${favMap[i] ? 'on' : ''}`} onClick={() => onFav(book)}>
-                  {favMap[i] ? <HeartFill width={13} height={13} style={{ color: '#d96673' }} /> : <Heart width={13} height={13} />}
+                <button className={`rc-savePin ${isFav ? 'on' : ''}`} onClick={() => onFav(book)}>
+                  {isFav ? <HeartFill width={11} height={11} style={{ color: '#d96673' }} /> : <Heart width={11} height={11} />}
+                  {isFav ? 'Saved' : 'Save'}
                 </button>
               </div>
             </div>
@@ -172,7 +180,7 @@ function AlsoPanel({ books, allBooks, startIdx, addedMap, onAdd, favMap, onFav, 
 }
 
 /* ── Extra book card (bottom grid) ── */
-function ExtraCard({ book, added, onAdd, onOpen }) {
+function ExtraCard({ book, rank, added, onAdd, onOpen }) {
   const [c1, c2] = titleGradient(book.title);
   const img = book.image || book.book_image;
   const match = parseMatch(book.match_percent);
@@ -181,6 +189,7 @@ function ExtraCard({ book, added, onAdd, onOpen }) {
     <article className="rc-ecard" onClick={onOpen}>
       <div className="rc-ecard-top" style={{ background: `linear-gradient(135deg,${c1},${c2})` }}>
         {img && <img src={img} alt={book.title} onError={(e) => { e.target.style.display = 'none'; }} />}
+        {rank && <span className="rc-ecard-rank">#{rank}</span>}
         {(match || book.tier) && (
           <span className="rc-ecard-badge">{match ? `${match}%` : book.tier}</span>
         )}
@@ -189,7 +198,7 @@ function ExtraCard({ book, added, onAdd, onOpen }) {
         <div className="rc-ecard-title">{book.title}</div>
         <div className="rc-ecard-author">by {book.author || '—'}</div>
         <div className="rc-ecard-foot">
-          <Stars match={match} />
+          <Stars match={match} rating={book.rating} showScore />
           {genres[0] && <span className="rc-ecard-genre">{genres[0]}</span>}
           <button
             className={`rc-ecard-add ${added ? 'added' : ''}`}
@@ -240,7 +249,6 @@ export default function RecommendPage() {
   const [selectedBook, setSelectedBook] = useState(null);
   const [added, setAdded] = useState({});
   const [favorited, setFavorited] = useState({});
-  const [mood, setMood] = useState(null);
 
   useEffect(() => {
     getRecommendations()
@@ -249,31 +257,121 @@ export default function RecommendPage() {
       .finally(() => setLoading(false));
   }, [showToast]);
 
-  // Build pages: each page = hero + 5 panel + 4 extra (circular)
-  const PANEL = 5;
-  const EXTRA = 8;
-  const TOTAL_PER_PAGE = 1 + PANEL + EXTRA; // 14
-  const rawPages = books.length === 0 ? [] : books.map((hero, i) => {
-    const pick = (offset) => books[(i + offset) % books.length];
-    return {
-      hero,
-      list: Array.from({ length: PANEL }, (_, j) => pick(j + 1)),
-      extra: Array.from({ length: EXTRA }, (_, j) => pick(j + PANEL + 1)),
+  // Parse score from book (score field = 0.0–1.0, or 0 if Popular fallback)
+  const getScore = (b) => typeof b.score === 'number' ? b.score : 0;
+
+  // Check if user has real preferences (any book scored above Popular threshold)
+  const hasPreference = books.some(b => getScore(b) >= 0.10);
+
+  // Build pages
+  const filteredPages = React.useMemo(() => {
+    if (books.length === 0) return [];
+
+    const sorted = [...books].sort((a, b) => getScore(b) - getScore(a));
+
+    if (!hasPreference) {
+      // No preference → sort by real rating desc
+      const byRating = [...books].sort((a, b) => (b.rating || 0) - (a.rating || 0));
+      const pages = [];
+      const pageSize = 15; // 2 hero + 5 list + 8 extra
+      const totalPages = Math.min(6, Math.ceil(byRating.length / pageSize));
+      const allUsed = new Set();
+      // Pass 1: pick pages
+      for (let p = 0; p < totalPages; p++) {
+        const offset = p * pageSize;
+        const pick = (i) => byRating[(offset + i) % byRating.length];
+        for (let i = 0; i < pageSize; i++) {
+          const b = byRating[(offset + i) % byRating.length];
+          if (b) allUsed.add(b.book_id || b.title);
+        }
+        pages.push({
+          hero:  pick(0),
+          hero2: pick(1),
+          list:  Array.from({ length: 5 }, (_, i) => pick(i + 2)),
+          extra: Array.from({ length: 8 }, (_, i) => pick(i + 7)),
+        });
+      }
+      // Pass 2: each page gets fullMore rotated by (i * 5) so Refresh shows different books per page
+      const fullMore = byRating.filter(b => !allUsed.has(b.book_id || b.title));
+      return pages.map((p, i) => {
+        const offset = (i * 5) % Math.max(fullMore.length, 1);
+        return { ...p, morePool: [...fullMore.slice(offset), ...fullMore.slice(0, offset)] };
+      });
+    }
+
+    // Has preference → split by score threshold
+    const highBooks = sorted.filter(b => getScore(b) >= 0.80);
+    const midBooks  = sorted.filter(b => getScore(b) >= 0.60);
+    const heroPool  = sorted.slice(0, Math.max(6, sorted.length));
+    const heroStep  = Math.ceil(heroPool.length / 6);
+
+    const pages = [];
+    const globalUsed = new Set();
+
+    const pickFrom = (pool, n) => {
+      const result = [];
+      for (const b of pool) {
+        if (result.length >= n) break;
+        const key = b.book_id || b.title;
+        if (!globalUsed.has(key)) { result.push(b); globalUsed.add(key); }
+      }
+      if (result.length < n) {
+        for (const b of sorted) {
+          if (result.length >= n) break;
+          const key = b.book_id || b.title;
+          if (!globalUsed.has(key)) { result.push(b); globalUsed.add(key); }
+        }
+      }
+      return result;
     };
-  });
-  // One page every TOTAL_PER_PAGE books (non-overlapping heroes)
-  const filteredPages = rawPages.filter((_, i) => i % TOTAL_PER_PAGE === 0).slice(0, 6);
+
+    const panelPool = midBooks.length >= 5 ? midBooks : sorted;
+    const extraPool = highBooks.length >= 4 ? highBooks : sorted;
+
+    // Pass 1: pick all pages (globalUsed fills up)
+    for (let p = 0; p < Math.min(6, heroPool.length); p++) {
+      const hero  = heroPool[p * heroStep] || heroPool[p] || sorted[0];
+      const hero2 = heroPool[p * heroStep + 1] || heroPool[p + 1] || sorted[1] || hero;
+      globalUsed.add(hero.book_id  || hero.title);
+      globalUsed.add(hero2.book_id || hero2.title);
+      const list  = pickFrom(panelPool, 5);
+      const extra = pickFrom(extraPool, 8);
+      pages.push({ hero, hero2, list, extra });
+    }
+
+    // Pass 2: each page gets fullMore rotated by (i * 5) so Refresh shows different books per page
+    const fullMore = sorted.filter(b => !globalUsed.has(b.book_id || b.title));
+    return pages.map((p, i) => {
+      const offset = (i * 5) % Math.max(fullMore.length, 1);
+      return { ...p, morePool: [...fullMore.slice(offset), ...fullMore.slice(0, offset)] };
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [books]);
   const totalPages = filteredPages.length;
   const goPage = (i) => setPageIdx(Math.max(0, Math.min(totalPages - 1, i)));
 
+  const pendingAdd = React.useRef(new Set());
+
   const doAdd = async (book, key) => {
+    // Use title as dedup key if no explicit key given
+    const trackKey = key ?? `title-${book.title}`;
+    // Guard: already added or request in-flight
+    if (added[trackKey] || pendingAdd.current.has(trackKey)) return;
+    pendingAdd.current.add(trackKey);
     try {
       await addJournalFromSearch({ title: book.title, author: book.author, book_image: book.image || book.book_image, genre: book.genre });
-      showToast('Added', `"${book.title}" added to journals`, 'success');
-      setAdded((a) => ({ ...a, [key]: true }));
+      showToast('Added', `"${book.title}" added to shelf`, 'success');
+      setAdded((a) => ({ ...a, [trackKey]: true }));
       setSelectedBook(null);
     } catch (err) {
-      showToast('Error', err.response?.data?.message || 'Failed', 'error');
+      if (err.response?.status === 409) {
+        setAdded((a) => ({ ...a, [trackKey]: true }));
+        showToast('Already added', `"${book.title}" is already in your shelf`, 'info');
+      } else {
+        showToast('Error', err.response?.data?.message || 'Failed', 'error');
+      }
+    } finally {
+      pendingAdd.current.delete(trackKey);
     }
   };
 
@@ -311,25 +409,32 @@ export default function RecommendPage() {
             <button className="rc-pagerNav right" onClick={() => goPage(pageIdx + 1)} disabled={pageIdx >= totalPages - 1}><ChevR /></button>
 
             <div className="rc-pagerstage">
-              {filteredPages.map((pg, pi) => (
+              {filteredPages.map((pg, pi) => {
+                  return (
                 <div key={pi} className={`rc-pagerframe ${pi === pageIdx ? 'on' : ''}`} aria-hidden={pi !== pageIdx}>
 
-                  {/* col-left row-1: Hero */}
-                  <Hero
-                    book={pg.hero}
-                    added={!!added[`${pi}-h`]}
-                    onAdd={() => doAdd(pg.hero, `${pi}-h`)}
-                    favorited={!!favorited[`${pi}-h`]}
-                    onFavorite={() => doFav(pg.hero, `${pi}-h`)}
-                    onOpen={() => setSelectedBook(pg.hero)}
+                  {/* col-left row-1: dual hero (1 card, 2 books split L/R) */}
+                  <DualHero
+                    book1={pg.hero}
+                    added1={!!added[`${pi}-h`]}
+                    onAdd1={() => doAdd(pg.hero, `${pi}-h`)}
+                    favorited1={!!favorited[`${pi}-h`]}
+                    onFavorite1={() => doFav(pg.hero, `${pi}-h`)}
+                    onOpen1={() => setSelectedBook(pg.hero)}
+                    book2={pg.hero2 || pg.hero}
+                    added2={!!added[`${pi}-h2`]}
+                    onAdd2={() => doAdd(pg.hero2 || pg.hero, `${pi}-h2`)}
+                    favorited2={!!favorited[`${pi}-h2`]}
+                    onFavorite2={() => doFav(pg.hero2 || pg.hero, `${pi}-h2`)}
+                    onOpen2={() => setSelectedBook(pg.hero2 || pg.hero)}
                   />
 
                   {/* col-right rows-1+2: AlsoPanel (full height) */}
                   <AlsoPanel
+                    key={pi}
                     books={pg.list}
-                    allBooks={books}
-                    startIdx={books.indexOf(pg.hero) + 1}
-                    addedMap={pg.list.reduce((a, _, i2) => { a[i2] = !!added[`${pi}-l${i2}`]; return a; }, {})}
+                    poolBooks={pg.morePool || []}
+                    addedMap={pg.list.reduce((a, b, i2) => { a[i2] = !!added[`title-${b.title}`]; return a; }, {})}
                     onAdd={(b) => doAdd(b)}
                     favMap={pg.list.reduce((a, _, i2) => { a[i2] = !!favorited[`${pi}-l${i2}`]; return a; }, {})}
                     onFav={(b) => doFav(b)}
@@ -341,6 +446,7 @@ export default function RecommendPage() {
                     {pg.extra.map((book, i2) => (
                       <ExtraCard
                         key={i2} book={book}
+                        rank={i2 + 3}
                         added={!!added[`${pi}-e${i2}`]}
                         onAdd={() => doAdd(book, `${pi}-e${i2}`)}
                         onOpen={() => setSelectedBook(book)}
@@ -348,10 +454,9 @@ export default function RecommendPage() {
                     ))}
                   </div>
 
-                  {/* row-3 full width: Moods */}
-                  <Moods active={mood} onPick={setMood} />
                 </div>
-              ))}
+                  );
+                })}
             </div>
 
             {totalPages > 1 && (
