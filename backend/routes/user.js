@@ -58,27 +58,24 @@ router.post("/register", async (req, res) => {
     // DEV: log OTP to console
     console.log(`[OTP] ${email} → ${otp}`);
 
-    try {
-      await transporter.sendMail({
-        from: `Reading Journal <${process.env.EMAIL_USER}>`,
-        to: email,
-        subject: 'Your Reading Journal Verification Code',
-        html: `
-          <div style="font-family: sans-serif; max-width: 420px; margin: auto; padding: 32px; background: #f9fafb; border-radius: 12px;">
-            <h2 style="color: #1e293b; margin-bottom: 8px;">Welcome to Reading Journal!</h2>
-            <p style="color: #475569;">Use the code below to verify your email address.</p>
-            <div style="font-size: 36px; font-weight: 700; letter-spacing: 10px; color: #2563eb; text-align: center; padding: 24px; background: #eff6ff; border-radius: 10px; margin: 24px 0;">
-              ${otp}
-            </div>
-            <p style="color: #94a3b8; font-size: 13px;">If you didn't create an account, you can ignore this email.</p>
-          </div>
-        `
-      });
-    } catch (mailErr) {
-      console.error("Email send failed (non-fatal):", mailErr.message);
-    }
-
+    // respond immediately — email sends in background
     res.status(201).json({ message: "Registration successful! Please enter the 6-digit code sent to your email." });
+
+    transporter.sendMail({
+      from: `Reading Journal <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: 'Your Reading Journal Verification Code',
+      html: `
+        <div style="font-family: sans-serif; max-width: 420px; margin: auto; padding: 32px; background: #f9fafb; border-radius: 12px;">
+          <h2 style="color: #1e293b; margin-bottom: 8px;">Welcome to Reading Journal!</h2>
+          <p style="color: #475569;">Use the code below to verify your email address.</p>
+          <div style="font-size: 36px; font-weight: 700; letter-spacing: 10px; color: #2563eb; text-align: center; padding: 24px; background: #eff6ff; border-radius: 10px; margin: 24px 0;">
+            ${otp}
+          </div>
+          <p style="color: #94a3b8; font-size: 13px;">If you didn't create an account, you can ignore this email.</p>
+        </div>
+      `
+    }).catch(err => console.error("Email send failed (non-fatal):", err.message));
 
   } catch (error) {
     console.error("Register Error:", error);
