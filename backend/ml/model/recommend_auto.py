@@ -75,7 +75,8 @@ def get_fallback_books(n=15):
                     "score": 0.0,
                     "match_percent": "Popular",
                     "tier": "Popular Pick",
-                    "reason": "Browse our library"
+                    "reason": "Browse our library",
+                    "rating": round(float(row['rating']), 2) if 'rating' in row and row['rating'] else 3.5
                 })
             return results
     except: pass
@@ -134,19 +135,33 @@ if __name__ == "__main__":
         user_profile_vector = None
         if liked_ids:
             valid_vecs = []
+            matched_titles = []
+            all_titles_normalized = [(normalize_text(t), t) for t in all_titles]
+
             for item in liked_ids:
                 query = str(item).strip()
                 idx = id_to_idx.get(query)
+
+                # exact normalized match
                 if idx is None:
                     idx = title_to_idx.get(normalize_text(query))
+
+                # fuzzy match — cutoff 0.6: เข้มพอไม่ให้ผิด แต่รับ edition/subtitle ต่างกันได้
                 if idx is None:
-                      matches = difflib.get_close_matches(query, all_titles, n=1, cutoff=0.8)
-                      if matches:
-                          idx = title_to_idx.get(normalize_text(matches[0]))
+                    matches = difflib.get_close_matches(normalize_text(query),
+                                                        [n for n, _ in all_titles_normalized],
+                                                        n=1, cutoff=0.6)
+                    if matches:
+                        idx = title_to_idx.get(matches[0])
 
                 if idx is not None:
                     valid_vecs.append(cosine_sim[idx])
-            
+                    matched_titles.append(df.iloc[idx]['title'])
+                else:
+                    print(f"[Profile] no match for: {query}", file=sys.stderr)
+
+            print(f"[Profile] matched {len(valid_vecs)}/{len(liked_ids)}: {matched_titles}", file=sys.stderr)
+
             if valid_vecs:
                 user_profile_vector = np.mean(valid_vecs, axis=0)
 
@@ -218,7 +233,7 @@ if __name__ == "__main__":
         # ยอมรับว่าคะแนนต่ำกว่า 50% จะติดมาด้วย (แต่จะอยู่ท้ายๆ)
         # Filter: score threshold + must have author and image
         candidates = df[
-            (df['final_total'] >= 0.10) &
+            (df['final_total'] >= 0.04) &
             df['authors'].notna() & (df['authors'] != '') & (df['authors'] != 'Unknown') &
             df['image_url'].notna() & (df['image_url'] != '')
         ].sort_values(by='final_total', ascending=False)
@@ -256,7 +271,8 @@ if __name__ == "__main__":
                 "score": round(raw_score, 3),
                 "match_percent": f"{pct}%",
                 "tier": tier,
-                "reason": row['final_reason']
+                "reason": row['final_reason'],
+                "rating": round(float(row['rating']), 2) if 'rating' in row and row['rating'] else 3.5
             })
 
         # Fill with fallback if needed

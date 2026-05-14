@@ -26,7 +26,8 @@ const PYTHON_PATH = fs.existsSync(venvPython) ? venvPython : (isWindows ? "pytho
 
 // 4. CLI args
 const args = process.argv.slice(2);
-const FETCH_LIMIT = (() => { const i = args.indexOf('--limit'); return i !== -1 ? parseInt(args[i+1]) || 1000 : 1000; })();
+const FETCH_LIMIT = (() => { const i = args.indexOf('--limit'); return i !== -1 ? parseInt(args[i+1]) || 5000 : 5000; })();
+const PER_GENRE  = (() => { const i = args.indexOf('--per-genre'); return i !== -1 ? parseInt(args[i+1]) || 500 : 500; })();
 const APPEND_MODE = args.includes('--append');
 const CSV_PATH = path.join(__dirname, "books.csv");
 
@@ -61,7 +62,7 @@ async function fetchBooksFromAPI(queryVariables, label) {
         limit: $limit
         offset: $offset
       ) {
-        id, title, description, image { url }, contributions(limit: 1) { author { name } }, taggings(limit: 10) { tag { tag } }
+        id, title, description, rating, image { url }, contributions(limit: 1) { author { name } }, taggings(limit: 10) { tag { tag } }
       }
     }
   `;
@@ -93,40 +94,25 @@ async function fetchAllBooks() {
     console.log(`📂 Loaded ${allBooksMap.size} existing books from CSV`);
   }
   
-  // รายการ Genre แบบสวยงาม (Display Name)
+  // Genre list — เฉพาะที่มีหนังสือจริงๆ บน Hardcover
   const genres = [
-    "Fiction", "Fantasy", "Young Adult", "Adventure", "Science Fiction", "Classics", "Comics", "Romance", "History", "LGBTQ",
-    "Action", "Comedy", "Drama", "Horror", "Thriller", "Crime", "Animation", "Mystery", "Family", "War",
-    "Animals and Pets", "Other Domestic Pets",
-    "Art and Design", "Architecture", "Fashion Design", "Fine Arts", "Graphic Design & Product Design", "Interior Design", "Photography",
-    "Biography", "Business", "Historical & Political", "True Crime", "Other Biographies",
-    "Business and Economics", "Accounting", "Biographies", "Business Management", "Business Writing (Reports/Resumes)", "Economics", "Finance and Investment", "Sales and Marketing",
-    "Children's Books", "Babies / Toddlers", "Pre-Teens (Ages 7-12)", "Young Adult (Ages >12)", "Activity Books", "Comics & Popular Characters",
-    "Education & Reference",
-    "Comics and Graphic Novels", "Graphic Novels", "Manga", "Humour Comic strips", "Jokes and Puns", "Light Novels",
-    "PC & Video Games", "Puzzles & Quizzes",
-    "Computers and Internet", "Internet & Networking", "Programming Languages", "Software",
-    "English as a Foreign Language", "English For Specific Purposes", "Exams", "Grammar & Vocabulary", "Reading Skills", "Speaking & Pronunciation", "Writing Skills",
-    "Family and Relationships", "Parenting", "Relationships",
-    "Food and Drink", "Drinks", "Professional Chefs", "Types of Cuisines", "Types of Food", "Desserts",
-    "Health and Well-Being", "Alternative Healing", "Beauty Care", "Fitness and Diet", "Health and Medicine",
-    "History and Politics", "Ancient & Medieval History", "African History", "History of the Americas", "Asian History", "European History", "Middle Eastern History", "World History",
-    "Biographies and Memoirs", "Military History", "Political Science", "History of Southeast Asia", "History of Thailand",
-    "Hobbies and Collectibles", "Antiques", "Collectibles - Clocks & Watches", "Collectibles - Jewellery & Gems", "Collectibles - Toys", "Crafts", "Flower Arrangement & Garden", "Papercraft",
-    "Transport - Air/Sea/Land",
-    "Languages", "Thai", "Chinese", "English Exams", "French", "German", "Italian", "Japanese", "Spanish", "Other Asian Languages", "Other Language Of the World",
-    "Literature and Fiction", "General Fiction", "Literature", "Asian Literature", "Crime, Thrillers & Mystery", "Drama and Play", "Poetry", "Travel Literature",
-    "Military and War", "Military Intelligence & Espionage", "Strategy, Tactics & Military Science", "Terrorism & Freedom", "Fighters", "Weapons",
-    "New Age", "Fengshui", "Fortune-Telling and Divination", "Meditation & Healing", "Occult", "Paranormal", "Psychic Phenomena",
-    "Performing Arts", "Dance", "Film and TV", "Music", "Theatre",
-    "Philosophy and Psychology", "Philosophy and Theory", "Ancient Philosophy", "Eastern Philosophy", "Modern Philosophy", "Psychological Topics and Perspectives", "Psychology - History and Theory", "Psychology and Biography",
-    "Religion", "General History and Reference", "Buddhism", "Christianity", "Hinduism", "Islam",
-    "Science", "General Reference and Writings", "Applied Science", "Astronomy", "Botany", "Chemistry and Physics", "Geography and Earth Science", "Life Science", "Mathematics", "Natural and Ecology", "Zoology",
-    "Self-Enrichment", "Self Help", "Spiritual",
-    "Social Science", "Culture and Anthropology", "Gender Studies", "Law", "Media Studies", "Sociology",
-    "Sports", "Martial Arts", "Outdoor Sports", "Training and Workouts", "Water Sports",
-    "Study Guide",
-    "Travel", "General Reference", "The Americas", "Asia", "Australia and Oceania", "Europe"
+    // Fiction core
+    "Fiction", "Fantasy", "Science Fiction", "Horror", "Thriller", "Mystery",
+    "Crime", "Romance", "Classics", "Young Adult", "Historical Fiction",
+    "Literary Fiction", "Dystopian", "Paranormal", "Urban Fantasy",
+    // Non-fiction core
+    "Biography", "History", "Self Help", "Psychology", "Philosophy",
+    "Business", "True Crime", "Politics", "Science", "Economics",
+    "Health", "Travel", "Memoir",
+    // Genre fiction
+    "Adventure", "Action", "Comics", "Graphic Novels", "Manga",
+    "LGBTQ", "War", "Spy", "Supernatural", "Magic",
+    // Popular sub-genres
+    "Cozy Mystery", "Dark Fantasy", "Epic Fantasy", "Space Opera",
+    "Cyberpunk", "Steampunk", "Mythology", "Folklore",
+    // Other
+    "Family", "Comedy", "Poetry", "Spirituality", "Religion",
+    "Music", "Art", "Photography", "Nature", "Cooking"
   ];
 
   for (const genreName of genres) {
@@ -140,20 +126,23 @@ async function fetchAllBooks() {
 
     console.log(`\n📂 Fetching Category: "${genreName}" (Slug: ${tagSlug})`);
     
-    // Batch Processing
-    for (let i = 0; i < 4; i++) {
+    // Batch Processing (cap per genre at PER_GENRE)
+    let genreAdded = 0;
+    for (let i = 0; i < 10; i++) {
         if (allBooksMap.size >= TARGET_TOTAL) break;
-        
-        // ส่ง tagSlug (ตัวเล็กมีขีด) ไป query
-        const books = await fetchBooksFromAPI({ limit: 500, offset: i * 500, tagSlug: tagSlug }, `${tagSlug}-${i}`);
-        
+        if (genreAdded >= PER_GENRE) break;
+
+        const batchSize = Math.min(500, PER_GENRE - genreAdded);
+        const books = await fetchBooksFromAPI({ limit: batchSize, offset: i * 500, tagSlug: tagSlug }, `${tagSlug}-${i}`);
+
         if (!books || books.length === 0) {
             console.log(`   ⚠️ No books found for "${tagSlug}" (Batch ${i+1}), skipping...`);
-            break; 
+            break;
         }
-        
+
         books.forEach(b => allBooksMap.set(b.id, b));
-        console.log(`   📊 Batch ${i+1}: Total Unique Records: ${allBooksMap.size}`);
+        genreAdded += books.length;
+        console.log(`   📊 Batch ${i+1}: Genre ${genreAdded}/${PER_GENRE} | Total: ${allBooksMap.size}`);
         
         // ⏳ DELAY: หน่วงเวลาระหว่าง Batch (ป้องกัน Throttle)
         // สุ่มเวลา 1.5 - 2.5 วินาที
@@ -169,10 +158,10 @@ async function fetchAllBooks() {
     }
   }
 
-  // Data Cleaning & Formatting
-  return Array.from(allBooksMap.values()).map(b => {
+  // Data Cleaning & Formatting (skip _raw existing entries)
+  return Array.from(allBooksMap.values()).filter(b => !b._raw).map(b => {
     const author = b.contributions?.[0]?.author?.name || "Unknown";
-    const rawTags = b.taggings.map(t => t.tag.tag);
+    const rawTags = (b.taggings || []).filter(t => t.tag).map(t => t.tag.tag);
     const uniqueTags = [...new Set(rawTags)].filter(t => t.length < 20).slice(0, 8);
     const cleanDesc = (b.description || "").replace(/[\r\n]+/g, " ").replace(/\s+/g, ' ').trim();
     
@@ -182,7 +171,8 @@ async function fetchAllBooks() {
       cover: b.image?.url || "",
       author: author,
       genres: uniqueTags.length ? uniqueTags : ["General"],
-      description: cleanDesc
+      description: cleanDesc,
+      rating: b.rating || ""
     };
   });
 }
@@ -209,9 +199,9 @@ export async function exportBooks() {
 
   const newLines = allBooks
     .filter(b => !existingIds.has(String(b.id)))
-    .map(b => [b.id, escape(b.title), escape(b.author), escape(b.genres.join("|")), escape(b.description), escape(b.cover)].join(","));
+    .map(b => [b.id, escape(b.title), escape(b.author), escape(b.genres.join("|")), escape(b.description), escape(b.cover), b.rating ?? ""].join(","));
 
-  const allLines = ["book_id,title,authors,genres,description,image_url", ...existingLines, ...newLines];
+  const allLines = ["book_id,title,authors,genres,description,image_url,rating", ...existingLines, ...newLines];
   fs.writeFileSync(CSV_PATH, allLines.join("\n"));
   console.log(`✅ Dataset Ready: ${existingLines.length} existing + ${newLines.length} new = ${existingLines.length + newLines.length} total books`);
 }

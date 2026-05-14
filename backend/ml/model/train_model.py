@@ -66,7 +66,7 @@ def train():
             pickle.dump(cosine_sim, f)
             
         # 2. Save Book Metadata (for lookup)
-        meta_cols = ["book_id", "title", "image_url", "authors", "genres", "description"]
+        meta_cols = ["book_id", "title", "image_url", "authors", "genres", "description", "rating"]
         save_cols = [c for c in meta_cols if c in books.columns]
         books[save_cols].to_pickle(os.path.join(MODEL_DIR, "book_index.pkl"))
         

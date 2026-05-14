@@ -43,6 +43,17 @@ router.post("/add", verifyToken, async (req, res) => {
     const user_id = req.user.id;
     const logData = reading_log || '[]';
 
+    // Duplicate check — same title + user
+    if (title) {
+      const [existing] = await db.query(
+        'SELECT id FROM Journal WHERE user_id = ? AND LOWER(title) = LOWER(?) LIMIT 1',
+        [user_id, title]
+      );
+      if (existing.length > 0) {
+        return res.status(409).json({ message: 'Already in your shelf', alreadyExists: true });
+      }
+    }
+
     const sql = `
       INSERT INTO Journal (
         title, author, genre, startdate, enddate, review,

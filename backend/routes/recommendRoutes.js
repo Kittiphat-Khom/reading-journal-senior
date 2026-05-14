@@ -40,15 +40,30 @@ async function handleRecommend(user_id, res) {
         } catch { }
 
         console.log(`[Recommend] user_id=${user_id} MPC rows=${rows.length}`);
+        const parseField = (val) => {
+            if (!val) return [];
+            if (Array.isArray(val)) return val;                          // MySQL already parsed JSON column
+            if (typeof val !== 'string') return [];
+            try { const p = JSON.parse(val); if (Array.isArray(p)) return p; } catch {}
+            return val.split(',').map(s => s.trim()).filter(Boolean);    // comma-separated fallback
+        };
+
         if (rows.length > 0) {
             const row = rows[0];
             console.log(`[Recommend] genres=${row.preferred_genres} authors=${row.preferred_authors}`);
-            try {
-                if (row.preferred_books) userData.books = JSON.parse(row.preferred_books);
-                if (row.preferred_authors) userData.authors = JSON.parse(row.preferred_authors);
-                if (row.preferred_genres) userData.genres = JSON.parse(row.preferred_genres);
-            } catch { }
+            userData.authors = parseField(row.preferred_authors);
+            userData.genres  = parseField(row.preferred_genres);
         }
+
+        // ดึงหนังสือจาก Journal ของ user (title-based lookup ใน Python)
+        const [journalRows] = await db.query(
+            `SELECT title FROM Journal WHERE user_id = ? AND title IS NOT NULL LIMIT 50`,
+            [user_id]
+        );
+        if (journalRows.length > 0) {
+            userData.books = journalRows.map(r => r.title);
+        }
+        console.log(`[Recommend] books from journal: ${userData.books.length}, genres: ${userData.genres.length}, authors: ${userData.authors.length}`);
         console.log(`[Recommend] userData sent to Python:`, JSON.stringify(userData));
 
         const py = spawn(PYTHON_PATH, [SCRIPT_PATH, JSON.stringify(userData)]);
@@ -58,7 +73,9 @@ async function handleRecommend(user_id, res) {
         py.stderr.on("data", (err) => { errorLog += err.toString(); });
 
         py.on("close", (code) => {
+            console.log(`[Recommend] Python exit code=${code} outputLen=${output.length} stderr=${errorLog.slice(0,200)}`);
             if (code !== 0) {
+                console.error(`[Recommend] Python failed: ${errorLog}`);
                 return res.json({ success: true, data: [] });
             }
             try {
@@ -68,12 +85,14 @@ async function handleRecommend(user_id, res) {
                     ? JSON.parse(output.substring(start, end))
                     : JSON.parse(output);
                 res.json({ success: true, data: recommendations });
-            } catch {
+            } catch (parseErr) {
+                console.error(`[Recommend] JSON parse error: ${parseErr.message}, output preview: ${output.slice(0,300)}`);
                 res.status(500).json({ error: "Failed to parse recommendation results" });
             }
         });
 
     } catch (err) {
+        console.error(`[Recommend] ERROR:`, err.message);
         res.status(500).json({ error: "Internal Database Error" });
     }
 }
