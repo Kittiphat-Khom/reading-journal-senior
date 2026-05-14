@@ -53,15 +53,20 @@ async function handleRecommend(user_id, res) {
             console.log(`[Recommend] genres=${row.preferred_genres} authors=${row.preferred_authors}`);
             userData.authors = parseField(row.preferred_authors);
             userData.genres  = parseField(row.preferred_genres);
+            // preferred_books จาก preference setup
+            const prefBooks = parseField(row.preferred_books);
+            if (prefBooks.length > 0) userData.books = prefBooks;
         }
 
-        // ดึงหนังสือจาก Journal ของ user (title-based lookup ใน Python)
+        // merge journal titles (title-based lookup ใน Python)
         const [journalRows] = await db.query(
             `SELECT title FROM Journal WHERE user_id = ? AND title IS NOT NULL LIMIT 50`,
             [user_id]
         );
         if (journalRows.length > 0) {
-            userData.books = journalRows.map(r => r.title);
+            const journalTitles = journalRows.map(r => r.title);
+            const merged = [...new Set([...userData.books, ...journalTitles])];
+            userData.books = merged;
         }
         console.log(`[Recommend] books from journal: ${userData.books.length}, genres: ${userData.genres.length}, authors: ${userData.authors.length}`);
         console.log(`[Recommend] userData sent to Python:`, JSON.stringify(userData));
