@@ -1,7 +1,18 @@
-import pickle, json, sys, pandas as pd, os
+import pickle, json, sys, os
 import numpy as np
-import difflib 
+import difflib
 import random
+
+# numpy 2.x removed type aliases that exist in pickles trained on 1.x
+# restore them so pickle.load() can deserialize without TypeError
+for _attr in ('bool', 'int', 'float', 'complex', 'object', 'str', 'long'):
+    if not hasattr(np, _attr):
+        try:
+            setattr(np, _attr, eval(_attr))
+        except Exception:
+            pass
+
+import pandas as pd
 
 # 🔥 บังคับ Output UTF-8 (สำคัญมากสำหรับ Windows/Node.js)
 sys.stdout.reconfigure(encoding='utf-8')
