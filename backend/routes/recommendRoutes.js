@@ -90,9 +90,9 @@ async function handleRecommend(user_id, res) {
             try {
                 const start = output.indexOf('[');
                 const end = output.lastIndexOf(']') + 1;
-                const recommendations = start !== -1
-                    ? JSON.parse(output.substring(start, end))
-                    : JSON.parse(output);
+                const cleaned = (start !== -1 ? output.substring(start, end) : output)
+                    .replace(/\bNaN\b/g, 'null');
+                const recommendations = JSON.parse(cleaned);
                 res.json({ success: true, data: recommendations });
             } catch (parseErr) {
                 console.error(`[Recommend] JSON parse error: ${parseErr.message}, output preview: ${output.slice(0,300)}`);

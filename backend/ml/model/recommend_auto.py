@@ -87,7 +87,7 @@ def get_fallback_books(n=15):
                     "match_percent": "Popular",
                     "tier": "Popular Pick",
                     "reason": "Browse our library",
-                    "rating": round(float(row['rating']), 2) if 'rating' in row and row['rating'] else 3.5
+                    "rating": round(float(row['rating']), 2) if pd.notna(row.get('rating')) and row.get('rating') else 3.5
                 })
             return results
     except: pass
@@ -283,7 +283,7 @@ if __name__ == "__main__":
                 "match_percent": f"{pct}%",
                 "tier": tier,
                 "reason": row['final_reason'],
-                "rating": round(float(row['rating']), 2) if 'rating' in row and row['rating'] else 3.5
+                "rating": round(float(row['rating']), 2) if pd.notna(row.get('rating')) and row.get('rating') else 3.5
             })
 
         # Fill with fallback if needed
