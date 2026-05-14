@@ -76,7 +76,8 @@ async function handleRecommend(user_id, res) {
         py.stderr.on("data", (err) => { errorLog += err.toString(); });
 
         py.on("close", (code) => {
-            console.log(`[Recommend] Python exit code=${code} outputLen=${output.length} stderr=${errorLog.slice(0,200)}`);
+            console.log(`[Recommend] Python exit code=${code} outputLen=${output.length}`);
+            if (errorLog) console.log(`[Recommend] stderr:\n${errorLog}`);
             if (code !== 0) {
                 console.error(`[Recommend] Python failed: ${errorLog}`);
                 return res.json({ success: true, data: [] });
