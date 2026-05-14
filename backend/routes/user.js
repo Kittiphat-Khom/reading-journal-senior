@@ -3,18 +3,11 @@ import db from "../db.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || "your_secret_key";
-
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-    }
-});
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 // ==========================================
 // 🟢 1. สมัครสมาชิก (Register)
@@ -60,8 +53,8 @@ router.post("/register", async (req, res) => {
     // respond immediately — email sends in background
     res.status(201).json({ message: "Registration successful! Please enter the 6-digit code sent to your email." });
 
-    transporter.sendMail({
-      from: `Reading Journal <${process.env.EMAIL_USER}>`,
+    resend.emails.send({
+      from: 'Reading Journal <onboarding@resend.dev>',
       to: email,
       subject: 'Your Reading Journal Verification Code',
       html: `
