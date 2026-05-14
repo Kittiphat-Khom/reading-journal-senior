@@ -103,12 +103,14 @@ router.post("/verify-otp", async (req, res) => {
             return res.status(400).json({ message: "Invalid OTP code. Please try again." });
         }
 
+        const user = users[0];
         await db.query(
             "UPDATE User SET is_verified = 1, verification_token = NULL WHERE user_id = ?",
-            [users[0].user_id]
+            [user.user_id]
         );
 
-        res.json({ message: "ยืนยันตัวตนสำเร็จ! คุณสามารถเข้าสู่ระบบได้แล้ว" });
+        const token = jwt.sign({ id: user.user_id, role: user.role }, JWT_SECRET, { expiresIn: "1h" });
+        res.json({ message: "Email verified!", token, user: { id: user.user_id, username: user.username, role: user.role }, has_preferences: false });
 
     } catch (error) {
         console.error("Verify OTP Error:", error);
