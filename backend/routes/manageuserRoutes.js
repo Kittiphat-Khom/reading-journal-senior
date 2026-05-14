@@ -10,8 +10,8 @@ const router = express.Router();
 router.get('/', async (req, res) => {
     try {
         const sql = `
-            SELECT user_id, username, email, register_date AS created_at 
-            FROM User 
+            SELECT user_id AS id, username, email, role, register_date AS created_at
+            FROM User
             ORDER BY user_id DESC
         `;
         const [rows] = await db.query(sql);
@@ -58,26 +58,45 @@ router.post('/add', async (req, res) => {
 router.put('/update/:id', async (req, res) => {
     const { username, email } = req.body;
     const id = req.params.id;
-
-    if (!username || !email) {
-        return res.status(400).json({ error: 'Please provide username and email' });
-    }
-
+    if (!username || !email) return res.status(400).json({ error: 'Please provide username and email' });
     try {
-        const sql = "UPDATE User SET username = ?, email = ? WHERE user_id = ?";
-        await db.query(sql, [username, email, id]);
-        
-        res.json({ success: true, message: "User updated successfully" });
-
+        await db.query("UPDATE User SET username = ?, email = ? WHERE user_id = ?", [username, email, id]);
+        res.json({ success: true });
     } catch (error) {
-        console.error("Error updating user:", error);
         res.status(500).json({ error: 'Error updating user' });
+    }
+});
+
+// PUT /:id — role update (used by admin ManageUserPage)
+router.put('/:id', async (req, res) => {
+    const { role } = req.body;
+    const id = req.params.id;
+    if (!role) return res.status(400).json({ error: 'role required' });
+    try {
+        await db.query("UPDATE User SET role = ? WHERE user_id = ?", [role, id]);
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: 'Error updating role' });
     }
 });
 
 // ==========================================
 // 4. DELETE: ย้ายไป In_active_user แล้วลบ (Archive & Delete)
 // ==========================================
+// DELETE /:id — used by admin ManageUserPage
+router.delete('/:id', async (req, res) => {
+    const userId = req.params.id;
+    try {
+        await db.query("DELETE FROM MPC WHERE user_id = ?", [userId]);
+        await db.query("DELETE FROM Report WHERE user_id = ?", [userId]);
+        await db.query("DELETE FROM Journal WHERE user_id = ?", [userId]);
+        await db.query("DELETE FROM User WHERE user_id = ?", [userId]);
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: 'Error deleting user' });
+    }
+});
+
 router.delete('/delete/:id', async (req, res) => {
     const userId = req.params.id;
     let connection = null;
