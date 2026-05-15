@@ -111,7 +111,7 @@ export default function ReportBugPage() {
                     >
                       {imagePreviews.length > 0 ? (
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%', padding: '24px 0 12px' }} onClick={e => e.stopPropagation()}>
-                          <div style={{ position: 'relative', height: 130, width: Math.min(imagePreviews.length, 5) * 44 + 80 }}>
+                          <div style={{ position: 'relative', height: 130, width: (Math.min(imagePreviews.length, 5) - 1) * 44 + 80 }}>
                             {imagePreviews.map((src, i) => {
                               const n = imagePreviews.length;
                               const mid = (n - 1) / 2;
