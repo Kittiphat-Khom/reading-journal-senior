@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useToast } from '../../context/ToastContext';
 import client from '../../api/client';
 import '../../styles/manage-pre-book.css';
@@ -12,6 +12,8 @@ const BOOK_QUERY = `query SearchBooks($keyword: String!, $page: Int!) {
 
 export default function BookSelectPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const isEdit = location.state?.isEdit ?? false;
   const { showToast } = useToast();
   const [selected, setSelected] = useState(() => {
     try { return new Set(JSON.parse(localStorage.getItem('pref_books') || '[]')); } catch { return new Set(); }
@@ -236,9 +238,12 @@ export default function BookSelectPage() {
         </div>
 
         <div className="action-footer">
-          <button className="back-footer-btn" onClick={() => navigate('/preferences/authors')}>Back</button>
+          <button className="back-footer-btn" onClick={() => navigate('/preferences/authors', { state: { isEdit } })}>Back</button>
           <div className="footer-right">
             <span className="selection-status">Selected: {selected.size}</span>
+            {isEdit && (
+              <button className="back-footer-btn" onClick={() => navigate('/dashboard')}>Cancel</button>
+            )}
             <button
               className="finish-btn"
               onClick={handleFinish}

@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import client from '../../api/client';
 import '../../styles/manage-pre-genre.css';
 
@@ -28,6 +28,8 @@ const FALLBACK_GENRES = [
 
 export default function GenreSelectPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const isEdit = location.state?.isEdit ?? false;
   const [allGenres, setAllGenres] = useState(FALLBACK_GENRES);
 
   useEffect(() => {
@@ -64,7 +66,7 @@ export default function GenreSelectPage() {
   const handleNext = () => {
     if (selected.size < MIN_SELECT) return alert(`Please select at least ${MIN_SELECT} genres.`);
     localStorage.setItem('pref_genres', JSON.stringify([...selected]));
-    navigate('/preferences/authors');
+    navigate('/preferences/authors', { state: { isEdit } });
   };
 
   const handleSearch = (e) => { setSearch(e.target.value); setPage(0); };
@@ -124,6 +126,11 @@ export default function GenreSelectPage() {
           <button className="unselect-btn" onClick={() => setSelected(new Set())}>Deselect All</button>
           <div className="footer-right">
             <span className="selection-status">Selected: {selected.size}</span>
+            {isEdit ? (
+              <button className="back-footer-btn" onClick={() => navigate('/dashboard')}>Cancel</button>
+            ) : (
+              <button className="skip-btn" onClick={() => navigate('/dashboard')}>Skip All</button>
+            )}
             <button className="next-btn" onClick={handleNext} disabled={selected.size < MIN_SELECT}>
               Next Step <i className="fa-solid fa-arrow-right"></i>
             </button>

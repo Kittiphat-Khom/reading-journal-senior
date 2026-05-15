@@ -52,7 +52,7 @@ export default function Sidebar({ open, onClose }) {
       localStorage.removeItem('pref_books');
     }
     onClose();
-    navigate('/preferences/genres');
+    navigate('/preferences/genres', { state: { isEdit: true } });
   };
   const initial = user?.username ? user.username[0].toUpperCase() : '?';
 

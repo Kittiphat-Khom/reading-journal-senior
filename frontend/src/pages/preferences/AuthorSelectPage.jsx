@@ -1,5 +1,5 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useCallback, useRef } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import client from '../../api/client';
 import '../../styles/manage-pre-author.css';
 
@@ -35,6 +35,8 @@ const STATIC_AUTHORS = [
 
 export default function AuthorSelectPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const isEdit = location.state?.isEdit ?? false;
   const [selected, setSelected] = useState(() => {
     try { return new Set(JSON.parse(localStorage.getItem('pref_authors') || '[]')); } catch { return new Set(); }
   });
@@ -84,12 +86,12 @@ export default function AuthorSelectPage() {
   const handleNext = () => {
     if (selected.size > 0 && selected.size < MIN_SELECT) return;
     localStorage.setItem('pref_authors', JSON.stringify([...selected]));
-    navigate('/preferences/books');
+    navigate('/preferences/books', { state: { isEdit } });
   };
 
   const handleSkip = () => {
     localStorage.removeItem('pref_authors');
-    navigate('/preferences/books');
+    navigate('/preferences/books', { state: { isEdit } });
   };
 
   const displayItems = search.trim() ? searchResults : pageItems;
@@ -165,8 +167,11 @@ export default function AuthorSelectPage() {
           <button className="unselect-all-btn" onClick={() => setSelected(new Set())}>Deselect All</button>
           <div className="footer-center">
             <span className="selection-status">Selected: {selected.size}</span>
-            <button className="back-footer-btn" onClick={() => navigate('/preferences/genres')}>Back</button>
-            <button className="skip-btn" onClick={handleSkip}>Skip</button>
+            <button className="back-footer-btn" onClick={() => navigate('/preferences/genres', { state: { isEdit } })}>Back</button>
+            {isEdit
+              ? <button className="back-footer-btn" onClick={() => navigate('/dashboard')}>Cancel</button>
+              : <button className="skip-btn" onClick={handleSkip}>Skip</button>
+            }
             <button className="next-btn" onClick={handleNext} disabled={selected.size > 0 && selected.size < MIN_SELECT}>
               Next Step
             </button>
