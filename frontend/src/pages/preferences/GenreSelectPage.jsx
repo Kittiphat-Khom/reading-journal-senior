@@ -41,6 +41,20 @@ export default function GenreSelectPage() {
       .catch(() => {});
   }, []);
 
+  useEffect(() => {
+    if (!isEdit) return;
+    client.get('/api/preferences').then((res) => {
+      const d = res.data;
+      const genres = d.preferred_genres || [];
+      const authors = d.preferred_authors || [];
+      const books = d.preferred_books || [];
+      setSelected(new Set(genres));
+      localStorage.setItem('pref_genres', JSON.stringify(genres));
+      localStorage.setItem('pref_authors', JSON.stringify(authors));
+      localStorage.setItem('pref_books', JSON.stringify(books));
+    }).catch(() => {});
+  }, [isEdit]);
+
   const [selected, setSelected] = useState(() => {
     try { return new Set(JSON.parse(localStorage.getItem('pref_genres') || '[]')); } catch { return new Set(); }
   });
@@ -49,8 +63,9 @@ export default function GenreSelectPage() {
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return q ? allGenres.filter((g) => g.toLowerCase().includes(q)) : allGenres;
-  }, [search]);
+    const list = q ? allGenres.filter((g) => g.toLowerCase().includes(q)) : allGenres;
+    return [...list].sort((a, b) => Number(selected.has(b)) - Number(selected.has(a)));
+  }, [search, allGenres, selected]);
 
   const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
   const pageItems = filtered.slice(page * ITEMS_PER_PAGE, (page + 1) * ITEMS_PER_PAGE);

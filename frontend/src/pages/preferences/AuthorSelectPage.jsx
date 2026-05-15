@@ -46,9 +46,10 @@ export default function AuthorSelectPage() {
   const [page, setPage] = useState(0);
   const debounceRef = useRef(null);
 
-  // Static list pagination (no search)
-  const totalPages = Math.ceil(STATIC_AUTHORS.length / ITEMS_PER_PAGE);
-  const pageItems = STATIC_AUTHORS.slice(page * ITEMS_PER_PAGE, (page + 1) * ITEMS_PER_PAGE);
+  // Static list pagination (no search) — selected authors sorted first
+  const sortedAuthors = [...STATIC_AUTHORS].sort((a, b) => Number(selected.has(b)) - Number(selected.has(a)));
+  const totalPages = Math.ceil(sortedAuthors.length / ITEMS_PER_PAGE);
+  const pageItems = sortedAuthors.slice(page * ITEMS_PER_PAGE, (page + 1) * ITEMS_PER_PAGE);
 
   const searchAPI = useCallback(async (keyword) => {
     if (!keyword.trim()) { setSearchResults([]); return; }

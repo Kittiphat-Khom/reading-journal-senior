@@ -39,16 +39,28 @@ export default function ChapterManager({ open, onClose, journalId }) {
   const [addInput, setAddInput] = useState('');
 
   useEffect(() => {
-    if (!open || !journalId) return;
+    if (!open) return;
+    if (!journalId) {
+      setChapters([]);
+      setAddingCh(true);
+      setAddInput('');
+      return;
+    }
     client.get(`/api/journals/${journalId}/chapters`)
       .then((res) => {
         const data = res.data;
-        const chs = data.length > 0 ? data : [emptyChapter(1)];
-        setChapters(chs);
-        setIdx(0);
-        setChInput(String(chs[0]?.num ?? 1));
+        if (data.length > 0) {
+          setChapters(data);
+          setIdx(0);
+          setChInput(String(data[0].num));
+          setAddingCh(false);
+        } else {
+          setChapters([]);
+          setAddingCh(true);
+          setAddInput('');
+        }
       })
-      .catch(() => { setChapters([emptyChapter(1)]); setChInput('1'); });
+      .catch(() => { setChapters([]); setAddingCh(true); setAddInput(''); });
   }, [open, journalId]);
 
   const goToChapter = (numStr) => {
@@ -59,7 +71,12 @@ export default function ChapterManager({ open, onClose, journalId }) {
       setIdx(found);
       setChInput(String(n));
     } else {
-      setChInput(String(chapters[idx]?.num ?? ''));
+      const newCh = emptyChapter(n);
+      const sorted = [...chapters, newCh].sort((a, b) => a.num - b.num);
+      const newIdx = sorted.findIndex((c) => c.id === newCh.id);
+      setChapters(sorted);
+      setIdx(newIdx);
+      setChInput(String(n));
     }
   };
 
@@ -103,7 +120,7 @@ export default function ChapterManager({ open, onClose, journalId }) {
     setInputModal(null);
   };
 
-  if (!open || !ch) return null;
+  if (!open) return null;
 
   return (
     <>
@@ -162,21 +179,39 @@ export default function ChapterManager({ open, onClose, journalId }) {
                     onChange={e => setAddInput(e.target.value)}
                     onKeyDown={e => {
                       if (e.key === 'Enter') confirmAddChapter(addInput);
-                      if (e.key === 'Escape') { setAddingCh(false); setAddInput(''); }
+                      if (e.key === 'Escape' && chapters.length > 0) { setAddingCh(false); setAddInput(''); }
                     }}
-                    onBlur={() => confirmAddChapter(addInput)}
+                    onBlur={() => { if (addInput.trim()) confirmAddChapter(addInput); else if (chapters.length > 0) { setAddingCh(false); setAddInput(''); } }}
                     placeholder="Ch.?"
                     style={{ width: 56, fontFamily: "'Prompt', sans-serif", fontSize: '0.88rem', fontWeight: 600, border: '1.5px solid #3b82f6', borderRadius: 8, padding: '4px 6px', outline: 'none', textAlign: 'center' }}
                   />
                 </div>
               ) : (
-                <button className="add-mini-btn" onClick={() => { setAddingCh(true); setAddInput(''); }}>+</button>
+                <>
+                  <button className="add-mini-btn" onClick={() => { setAddingCh(true); setAddInput(''); }}>+</button>
+                  {ch && (
+                    <button
+                      onClick={() => {
+                        const next = chapters.filter((_, i) => i !== idx);
+                        if (next.length === 0) { setChapters([]); setAddingCh(true); setAddInput(''); return; }
+                        const newIdx = Math.min(idx, next.length - 1);
+                        setChapters(next);
+                        setIdx(newIdx);
+                        setChInput(String(next[newIdx].num));
+                      }}
+                      style={{ width: 28, height: 28, borderRadius: 8, border: 'none', background: '#fee2e2', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem' }}
+                      title="Delete this chapter"
+                    >
+                      <i className="fa-solid fa-trash"></i>
+                    </button>
+                  )}
+                </>
               )}
             </div>
           </div>
 
           {/* Body: left = review, right = ratings + fav pages */}
-          <div className="chapter-body">
+          {ch && <div className="chapter-body">
             <div className="chapter-left">
               <textarea
                 value={ch.review}
@@ -217,10 +252,10 @@ export default function ChapterManager({ open, onClose, journalId }) {
                 <a href="#see" className="see-all-link" onClick={(e) => { e.preventDefault(); setSeeAll({ title: 'Favourite Pages', key: 'favPages' }); }}>See all &gt;</a>
               </div>
             </div>
-          </div>
+          </div>}
 
           {/* Footer lists: Quotes + Annotations */}
-          <div className="chapter-footer-lists">
+          {ch && <div className="chapter-footer-lists">
             <ChapterListBox
               label="Quotes"
               items={(ch.quotes || []).map((q) => (typeof q === 'object' ? q.quote_text || q.text || '' : q))}
@@ -241,7 +276,7 @@ export default function ChapterManager({ open, onClose, journalId }) {
               onDelete={(i) => { const arr = [...(ch.annotations || [])]; arr.splice(i, 1); updateCh({ annotations: arr }); }}
               onSeeAll={() => setSeeAll({ title: 'Annotations', key: 'annotations' })}
             />
-          </div>
+          </div>}
 
         </div>
       </div>

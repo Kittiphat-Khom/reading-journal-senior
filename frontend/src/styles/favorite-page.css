@@ -69,7 +69,7 @@ body {
    ========================================= */
 .modal-overlay { 
     position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-    background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); 
+    background: rgba(0,0,0,0.6); 
     display: flex; align-items: center; justify-content: center; 
     z-index: 50000 !important; 
     opacity: 0; visibility: hidden; 
@@ -126,10 +126,12 @@ body {
 /* =========================================
    5. BOOK DETAIL MODAL (Specific)
    ========================================= */
-.book-detail-box { max-width: 500px; text-align: left; }
-.close-btn-modal { position: absolute; right: 20px; top: 20px; cursor: pointer; font-size: 24px; color: #666; }
-.modal-img-container { text-align: center; margin-bottom: 20px; }
-#modal-img { width: 140px; height: 210px; object-fit: cover; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+.book-detail-box { max-width: 740px !important; width: 90vw !important; text-align: left; display: flex !important; flex-direction: row; gap: 24px; align-items: center; }
+.close-btn-modal { position: absolute; right: 14px; top: 14px; cursor: pointer; width: 30px; height: 30px; border-radius: 50%; background: #fef2f2; border: none; display: flex; align-items: center; justify-content: center; font-size: 16px; color: #ef4444; transition: background 0.15s; line-height: 1; }
+.close-btn-modal:hover { background: #fee2e2; }
+.modal-img-container { flex-shrink: 0; margin-bottom: 0; display: flex; align-items: center; }
+#modal-img { width: 160px; height: 240px; object-fit: cover; border-radius: 10px; box-shadow: 0 6px 20px rgba(0,0,0,0.2); }
+.modal-detail-content { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
 #modal-title { text-align: center; font-size: 1.4rem; margin-bottom: 5px; color: #222; }
 #modal-author { text-align: center; color: #666; margin-bottom: 20px; }
 .book-detail-box h4 { border-bottom: 1px solid #eee; padding-bottom: 8px; margin-bottom: 10px; color: #333; }

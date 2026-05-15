@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import LogoutModal from '../ui/LogoutModal';
-import client from '../../api/client';
 
 const menuGroups = [
   {
@@ -39,18 +38,7 @@ export default function Sidebar({ open, onClose }) {
   const [logoutOpen, setLogoutOpen] = useState(false);
   const navigate = useNavigate();
 
-  const handleEditPreferences = async () => {
-    try {
-      const res = await client.get('/api/preferences');
-      const data = res.data;
-      localStorage.setItem('pref_genres', JSON.stringify(data.preferred_genres || []));
-      localStorage.setItem('pref_authors', JSON.stringify(data.preferred_authors || []));
-      localStorage.setItem('pref_books', JSON.stringify(data.preferred_books || []));
-    } catch {
-      localStorage.removeItem('pref_genres');
-      localStorage.removeItem('pref_authors');
-      localStorage.removeItem('pref_books');
-    }
+  const handleEditPreferences = () => {
     onClose();
     navigate('/preferences/genres', { state: { isEdit: true } });
   };

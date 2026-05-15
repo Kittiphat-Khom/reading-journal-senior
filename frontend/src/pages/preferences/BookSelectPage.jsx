@@ -198,11 +198,14 @@ export default function BookSelectPage() {
           )}
           {!loading && (() => {
             const LIMIT = 12;
-            if (search) return results.slice(0, LIMIT);
-            // featured books paginate locally by visual page
+            if (search) {
+              const list = results.slice(0, LIMIT);
+              return [...list].sort((a, b) => Number(selected.has(b.title)) - Number(selected.has(a.title)));
+            }
             const featuredSlice = featuredBooks.slice((page - 1) * LIMIT, page * LIMIT);
             const apiFiltered = results.filter((b) => !featuredBooks.some((f) => f.title.toLowerCase() === b.title.toLowerCase()));
-            return [...featuredSlice, ...apiFiltered].slice(0, LIMIT);
+            const combined = [...featuredSlice, ...apiFiltered].slice(0, LIMIT);
+            return [...combined].sort((a, b) => Number(selected.has(b.title)) - Number(selected.has(a.title)));
           })().map((b) => (
             <div
               key={b.id}

@@ -20,6 +20,16 @@ router.post('/', async (req, res) => {
   } catch { res.status(500).json({ error: 'Failed to save' }); }
 });
 
+router.put('/:id', async (req, res) => {
+  const { name } = req.body;
+  if (!name) return res.status(400).json({ error: 'name required' });
+  const author_id = name.toLowerCase().replace(/[^a-z0-9]/g, '-');
+  try {
+    await db.query('UPDATE admin_featured_authors SET name = ?, author_id = ? WHERE id = ?', [name, author_id, req.params.id]);
+    res.json({ success: true });
+  } catch { res.status(500).json({ error: 'Failed to update' }); }
+});
+
 router.delete('/:id', async (req, res) => {
   try {
     await db.query('DELETE FROM admin_featured_authors WHERE id = ?', [req.params.id]);

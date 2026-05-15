@@ -54,20 +54,20 @@
 /* Nav arrows */
 .rc-pagerNav {
   position: absolute;
-  top: 36%;
+  top: 50%;
   transform: translateY(-50%);
   z-index: 20;
-  width: 34px; height: 34px; border-radius: 50%;
-  background: var(--rc-card); border: 1px solid var(--rc-rule);
-  box-shadow: 0 6px 18px -10px rgba(26,58,68,.28);
-  color: var(--rc-ink); cursor: pointer;
+  width: 36px; height: 36px; border-radius: 50%;
+  background: #2563eb; border: none;
+  box-shadow: 0 4px 12px rgba(37,99,235,.35);
+  color: #fff; cursor: pointer;
   display: grid; place-items: center;
   transition: transform .15s, box-shadow .15s, background .15s;
 }
-.rc-pagerNav:hover { background: #fafaf6; transform: translateY(-50%) scale(1.06); }
+.rc-pagerNav:hover { background: #1d4ed8; transform: translateY(-50%) scale(1.08); box-shadow: 0 6px 16px rgba(37,99,235,.45); }
 .rc-pagerNav:disabled { opacity: .35; cursor: not-allowed; transform: translateY(-50%); }
-.rc-pagerNav.left  { left: -16px; }
-.rc-pagerNav.right { right: -16px; }
+.rc-pagerNav.left  { left: -18px; }
+.rc-pagerNav.right { right: -18px; }
 
 /* Pager frame — 2-col grid */
 .rc-pagerframe {

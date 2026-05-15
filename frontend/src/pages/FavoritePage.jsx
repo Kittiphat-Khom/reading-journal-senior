@@ -106,23 +106,32 @@ export default function FavoritePage() {
             <span className="close-btn-modal" onClick={() => setSelectedBook(null)}>&times;</span>
             <div className="modal-img-container">
               <img
+                id="modal-img"
                 src={selectedBook.book_image || selectedBook.image || 'https://placehold.co/140x210?text=No+Image'}
                 alt={selectedBook.title}
                 onError={(e) => { e.target.src = 'https://placehold.co/140x210?text=Error'; }}
               />
             </div>
-            <h2>{selectedBook.title}</h2>
-            <p>{selectedBook.author || 'Unknown Author'}</p>
-            {selectedBook.genre && <p style={{ color: '#64748b', fontSize: '0.9rem' }}>{selectedBook.genre}</p>}
-            <div className="modal-actions-centered">
-              <button
-                className="btn-add-lib"
-                onClick={() => handleAddToLibrary(selectedBook)}
-                disabled={addingId === selectedBook.id}
-              >
-                <i className="fa-solid fa-book-open"></i>
-                {addingId === selectedBook.id ? ' Adding...' : ' Add to Journal'}
-              </button>
+            <div className="modal-detail-content">
+              <h2>{selectedBook.title}</h2>
+              <p>{selectedBook.author || 'Unknown Author'}</p>
+              {selectedBook.genre && <p style={{ color: '#64748b', fontSize: '0.9rem' }}>{selectedBook.genre}</p>}
+              {selectedBook.description && (
+                <>
+                  <h4>Description</h4>
+                  <p style={{ color: '#475569', fontSize: '0.88rem', lineHeight: 1.6 }}>{selectedBook.description}</p>
+                </>
+              )}
+              <div className="modal-actions-centered">
+                <button
+                  className="btn-add-lib"
+                  onClick={() => handleAddToLibrary(selectedBook)}
+                  disabled={addingId === selectedBook.id}
+                >
+                  <i className="fa-solid fa-book-open"></i>
+                  {addingId === selectedBook.id ? ' Adding...' : ' Add to Journal'}
+                </button>
+              </div>
             </div>
           </div>
         </div>

@@ -89,11 +89,18 @@ router.get("/", verifyToken, async (req, res) => {
 
     const data = rows[0];
 
-    // แปลง JSON String จาก Database กลับเป็น Array ส่งให้ Frontend
+    const safeParse = (raw) => {
+      if (!raw) return [];
+      if (Array.isArray(raw)) return raw;
+      if (typeof raw !== 'string') return [];
+      try { return JSON.parse(raw); }
+      catch { return raw.split(',').map((s) => s.trim()).filter(Boolean); }
+    };
+
     res.json({
-      preferred_authors: JSON.parse(data.preferred_authors || "[]"),
-      preferred_genres: JSON.parse(data.preferred_genres || "[]"),
-      preferred_books: JSON.parse(data.preferred_books || "[]")
+      preferred_authors: safeParse(data.preferred_authors),
+      preferred_genres: safeParse(data.preferred_genres),
+      preferred_books: safeParse(data.preferred_books),
     });
 
   } catch (err) {

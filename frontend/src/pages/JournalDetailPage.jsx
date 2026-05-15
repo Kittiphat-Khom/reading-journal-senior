@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useToast } from '../context/ToastContext';
 import { useTimer, formatTime, parseDBTime } from '../hooks/useTimer';
 import RatingBlock from '../components/ui/RatingBlock';
@@ -30,6 +30,43 @@ export default function JournalDetailPage({ journalId, onSaved, onClose }) {
   const [loading, setLoading] = useState(!!journalId);
 
   const fileInputRef = useRef(null);
+  const genreDropRef = useRef(null);
+  const [genreOpen, setGenreOpen] = useState(false);
+  const [customGenre, setCustomGenre] = useState('');
+
+  const PRESET_GENRES = [
+    'Fiction', 'Fantasy', 'Science Fiction', 'Mystery', 'Thriller', 'Horror',
+    'Romance', 'Young Adult', 'Adventure', 'Historical Fiction', 'Classics',
+    'Biography', 'Non-Fiction', 'Self Help', 'Business', 'Comics / Manga',
+    'Poetry', 'Travel', 'Psychology', 'Politics',
+  ];
+
+  const selectedGenres = form.genre ? form.genre.split(/[\/,|]/).map(g => g.trim()).filter(Boolean) : [];
+
+  const toggleGenre = (g) => {
+    setForm((p) => {
+      const cur = p.genre ? p.genre.split(/[\/,|]/).map(s => s.trim()).filter(Boolean) : [];
+      const next = cur.includes(g) ? cur.filter(s => s !== g) : [...cur, g];
+      return { ...p, genre: next.join(' / ') };
+    });
+  };
+
+  const addCustomGenre = () => {
+    const g = customGenre.trim();
+    if (!g) return;
+    setForm((p) => {
+      const cur = p.genre ? p.genre.split(/[\/,|]/).map(s => s.trim()).filter(Boolean) : [];
+      if (cur.includes(g)) return p;
+      return { ...p, genre: [...cur, g].join(' / ') };
+    });
+    setCustomGenre('');
+  };
+
+  useEffect(() => {
+    const handleClick = (e) => { if (genreDropRef.current && !genreDropRef.current.contains(e.target)) setGenreOpen(false); };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
 
   useEffect(() => {
     if (!journalId) return;
@@ -204,43 +241,84 @@ export default function JournalDetailPage({ journalId, onSaved, onClose }) {
             <div className="form-group">
               <input type="text" placeholder="Author" value={form.author} onChange={(e) => setField('author', e.target.value)} />
             </div>
-            <div className={`form-group${form.genre && form.genre.split(/[\/,|]/).filter(Boolean).length > 1 ? ' genre-form-group' : ''}`}>
-              {(() => {
-                const genres = form.genre
-                  ? form.genre.split(/[\/,|]/).map(g => g.trim()).filter(Boolean)
-                  : [];
-                if (genres.length > 1) {
-                  const visible = genres.slice(0, 2);
-                  const extra = genres.length - 2;
-                  return (
-                    <div className="genre-chips-field">
-                      {visible.map((g, i) => <span key={i} className="genre-chip">{g}</span>)}
-                      {extra > 0 && <span className="genre-chip genre-chip-more">+{extra} more</span>}
-                      <button type="button" className="genre-chip-clear" onClick={() => setField('genre', '')}>✕</button>
-                    </div>
-                  );
-                }
-                return <input type="text" placeholder="Genre (e.g. Fantasy / Sci-Fi)" value={form.genre} onChange={(e) => setField('genre', e.target.value)} />;
-              })()}
+            <div className="form-group genre-dropdown-wrap" ref={genreDropRef} style={{ position: 'relative' }}>
+              <div
+                className="genre-chips-field"
+                onClick={() => setGenreOpen(o => !o)}
+                style={{ cursor: 'pointer', minHeight: 42, display: 'flex', flexWrap: 'nowrap', alignItems: 'center', gap: 6, padding: '6px 10px', border: '1px solid #ccc', borderRadius: 8, background: '#fff', userSelect: 'none', overflow: 'hidden' }}
+              >
+                {selectedGenres.length === 0 && <span style={{ color: '#aaa', fontSize: '0.9rem' }}>Genre (e.g. Fantasy / Sci-Fi)</span>}
+                {selectedGenres.slice(0, 2).map((g) => (
+                  <span key={g} className="genre-chip" style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0, maxWidth: 120, minWidth: 0 }}>
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>{g}</span>
+                    <button type="button" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, lineHeight: 1, color: '#888', fontSize: '0.75rem', flexShrink: 0 }}
+                      onClick={(e) => { e.stopPropagation(); toggleGenre(g); }}>✕</button>
+                  </span>
+                ))}
+                {selectedGenres.length > 2 && (
+                  <span style={{ flexShrink: 0, background: '#e0e7ff', color: '#4338ca', borderRadius: 20, padding: '2px 8px', fontSize: '0.78rem', fontWeight: 600 }}>
+                    +{selectedGenres.length - 2} more
+                  </span>
+                )}
+                <span style={{ marginLeft: 'auto', color: '#94a3b8', fontSize: '0.8rem', flexShrink: 0 }}>▾</span>
+              </div>
+
+              {genreOpen && (
+                <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#fff', border: '1px solid #e2e8f0', borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.12)', zIndex: 9999, maxHeight: 260, overflowY: 'auto', padding: '8px 0' }}>
+                  {PRESET_GENRES.map((g) => {
+                    const active = selectedGenres.includes(g);
+                    return (
+                      <div key={g} onClick={() => toggleGenre(g)}
+                        style={{ padding: '8px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, background: active ? '#eff6ff' : 'transparent', color: active ? '#2563eb' : '#334155', fontSize: '0.88rem', fontWeight: active ? 600 : 400 }}>
+                        <span style={{ width: 16, height: 16, borderRadius: 4, border: `2px solid ${active ? '#2563eb' : '#cbd5e1'}`, background: active ? '#2563eb' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                          {active && <span style={{ color: '#fff', fontSize: '0.65rem', lineHeight: 1 }}>✓</span>}
+                        </span>
+                        {g}
+                      </div>
+                    );
+                  })}
+                  <div style={{ borderTop: '1px solid #f1f5f9', padding: '8px 12px', display: 'flex', gap: 6 }}>
+                    <input
+                      type="text"
+                      placeholder="Add custom genre..."
+                      value={customGenre}
+                      onChange={(e) => setCustomGenre(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addCustomGenre(); } }}
+                      onClick={(e) => e.stopPropagation()}
+                      style={{ flex: 1, padding: '6px 10px', borderRadius: 6, border: '1px solid #e2e8f0', fontSize: '0.83rem', outline: 'none' }}
+                    />
+                    <button type="button" onClick={(e) => { e.stopPropagation(); addCustomGenre(); }}
+                      style={{ padding: '6px 12px', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: '0.83rem', fontWeight: 600 }}>
+                      + Add
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
-            <div className="form-group">
+            <div className="form-group" style={{ position: 'relative' }}>
+              {!form.startdate && (
+                <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#aaa', fontSize: '0.9rem', pointerEvents: 'none', zIndex: 1 }}>
+                  Start date
+                </span>
+              )}
               <input
-                type="text"
-                placeholder="Start date (dd/mm/yyyy)"
+                type="date"
                 value={form.startdate}
-                onFocus={(e) => (e.target.type = 'date')}
-                onBlur={(e) => { if (!e.target.value) e.target.type = 'text'; }}
                 onChange={(e) => setField('startdate', e.target.value)}
+                style={{ colorScheme: 'light' }}
               />
             </div>
-            <div className="form-group">
+            <div className="form-group" style={{ position: 'relative' }}>
+              {!form.enddate && (
+                <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#aaa', fontSize: '0.9rem', pointerEvents: 'none', zIndex: 1 }}>
+                  End date
+                </span>
+              )}
               <input
-                type="text"
-                placeholder="End date (dd/mm/yyyy)"
+                type="date"
                 value={form.enddate}
-                onFocus={(e) => (e.target.type = 'date')}
-                onBlur={(e) => { if (!e.target.value) e.target.type = 'text'; }}
                 onChange={(e) => setField('enddate', e.target.value)}
+                style={{ colorScheme: 'light' }}
               />
             </div>
           </div>
@@ -296,8 +374,8 @@ export default function JournalDetailPage({ journalId, onSaved, onClose }) {
             <div className="tracking-box">
               <div className="live-timer">{formatTime(seconds)}</div>
               <div className="timer-controls">
-                <button className="t-btn start-btn" onClick={start} disabled={running}>Start</button>
-                <button className="t-btn finish-btn" onClick={handleFinish} disabled={!running}>Finish</button>
+                <button className="t-btn start-btn" style={{ flex: '0 0 calc(50% - 4px)' }} onClick={start} disabled={running}>Start</button>
+                <button className="t-btn finish-btn" style={{ flex: '0 0 calc(50% - 4px)' }} onClick={handleFinish} disabled={!running}>Finish</button>
               </div>
             </div>
             <div className="total-time-wrapper">

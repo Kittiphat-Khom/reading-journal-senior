@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import SidebarPageLayout from '../components/layout/SidebarPageLayout';
 import BookDetailModal from '../components/ui/BookDetailModal';
 import { useToast } from '../context/ToastContext';
+import { useAuth } from '../context/AuthContext';
 import { addJournalFromSearch, toggleFavorite, getRecommendations } from '../api/search';
 import '../styles/recommend.css';
 
@@ -235,6 +236,7 @@ function Moods({ active, onPick }) {
 /* ── Page ── */
 export default function RecommendPage() {
   const { showToast } = useToast();
+  const { user } = useAuth();
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [pageIdx, setPageIdx] = useState(0);
@@ -369,7 +371,7 @@ export default function RecommendPage() {
 
   const doFav = async (book, key) => {
     try {
-      const res = await toggleFavorite({ title: book.title, author: book.author, book_image: book.image || book.book_image, genre: book.genre });
+      const res = await toggleFavorite({ user_id: user?.user_id, title: book.title, author: book.author, book_image: book.image || book.book_image, genre: book.genre });
       showToast('Done', res.data?.message || 'Toggled', 'success');
       setFavorited((f) => ({ ...f, [key]: !f[key] }));
     } catch {

@@ -213,8 +213,8 @@ body {
 
 .tracking-box { background: #f8fafc; border: 1.5px solid #e2e8f0; padding: 14px; border-radius: 12px; text-align: center; width: 100%; }
 .live-timer { font-size: 1.6rem; font-weight: 700; margin-bottom: 10px; color: #0f172a; font-variant-numeric: tabular-nums; }
-.timer-controls { display: flex; gap: 8px; }
-.t-btn { flex: 1; border: none; padding: 9px; border-radius: 8px; cursor: pointer; font-family: 'Prompt'; font-weight: 600; color: #fff; transition: 0.2s; font-size: 0.85rem; }
+.timer-controls { display: flex; gap: 8px; width: 100%; }
+.t-btn { flex: 1 1 0; min-width: 0; border: none; padding: 9px; border-radius: 8px; cursor: pointer; font-family: 'Prompt'; font-weight: 600; color: #fff; transition: 0.2s; font-size: 0.85rem; text-align: center; justify-content: center; }
 .start-btn { background: #059669; } .start-btn:hover { background: #047857; }
 .finish-btn { background: #64748b; } .finish-btn:hover { background: #475569; }
 .t-btn:disabled { opacity: 0.45; cursor: default; }
@@ -243,7 +243,7 @@ body {
 .loading-overlay { position: fixed; inset: 0; background: rgba(255,255,255,0.9); z-index: 4000; display: none; justify-content: center; align-items: center; }
 .spinner-icon { font-size: 3rem; color: #1f618d; }
 
-.popup { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 3000; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(2px); padding: 20px; }
+.popup { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 3000; display: flex; justify-content: center; align-items: center; padding: 20px; }
 .popup-content { background: #fff; width: 1000px; max-height: 100vh; padding: 30px; border-radius: 20px; display: flex; flex-direction: column; position: relative; }
 .popup-close { position: absolute; top: 20px; right: 20px; border: none; background: #f1f5f9; width: 35px; height: 35px; border-radius: 50%; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 .popup-close:hover { background: #ef4444; color: white; }
@@ -273,7 +273,7 @@ body {
 /* =================================================================
    6. CHAPTER POPUP
    ================================================================= */
-.chapter-popup { position: fixed; inset: 0; background: rgba(15,23,42,0.45); backdrop-filter: blur(4px); z-index: 5000; display: flex; justify-content: center; align-items: center; overflow: hidden; animation: fadeIn 0.2s ease-out; padding: 24px; }
+.chapter-popup { position: fixed; inset: 0; background: rgba(15,23,42,0.45); z-index: 5000; display: flex; justify-content: center; align-items: center; overflow: hidden; animation: fadeIn 0.2s ease-out; padding: 24px; }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
 .chapter-content { background: #fff; width: 100%; max-width: 860px; max-height: 88vh; padding: 24px 28px; border-radius: 20px; box-shadow: 0 24px 64px rgba(0,0,0,0.22); border: 1px solid #f1f5f9; display: flex; flex-direction: column; overflow-y: auto; gap: 0; }

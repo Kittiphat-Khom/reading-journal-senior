@@ -4,7 +4,12 @@ export default function BookDetailModal({ book, onClose, onAddJournal, onFavorit
   return (
     <div id="bookModal" className="modal" style={{ display: 'flex' }} onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <span className="close-btn" onClick={onClose}>&times;</span>
+        <button
+          onClick={onClose}
+          style={{ position: 'absolute', top: 12, right: 14, width: 32, height: 32, borderRadius: '50%', background: '#f1f5f9', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', color: '#475569', zIndex: 10 }}
+        >
+          <i className="fa-solid fa-xmark"></i>
+        </button>
         <div className="modal-image-box">
           <img
             src={cover}
