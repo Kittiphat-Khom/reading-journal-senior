@@ -111,18 +111,18 @@ export default function ReportBugPage() {
                     >
                       {imagePreviews.length > 0 ? (
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%', padding: '24px 0 12px' }} onClick={e => e.stopPropagation()}>
-                          <div style={{ position: 'relative', height: 130, width: (Math.min(imagePreviews.length, 5) - 1) * 44 + 80 }}>
+                          <div style={{ position: 'relative', height: 170, width: (Math.min(imagePreviews.length, 5) - 1) * 58 + 110 }}>
                             {imagePreviews.map((src, i) => {
                               const n = imagePreviews.length;
                               const mid = (n - 1) / 2;
                               const rot = (i - mid) * (n === 1 ? 0 : 7);
                               const ty = Math.abs(i - mid) * 4;
                               return (
-                                <div key={i} style={{ position: 'absolute', left: i * 44, bottom: 0, zIndex: i, transform: `rotate(${rot}deg) translateY(${ty}px)`, transformOrigin: 'bottom center', transition: 'transform 0.2s' }}
-                                  onMouseEnter={e => e.currentTarget.style.transform = `rotate(${rot}deg) translateY(${ty - 10}px)`}
+                                <div key={i} style={{ position: 'absolute', left: i * 58, bottom: 0, zIndex: i, transform: `rotate(${rot}deg) translateY(${ty}px)`, transformOrigin: 'bottom center', transition: 'transform 0.2s' }}
+                                  onMouseEnter={e => e.currentTarget.style.transform = `rotate(${rot}deg) translateY(${ty - 12}px)`}
                                   onMouseLeave={e => e.currentTarget.style.transform = `rotate(${rot}deg) translateY(${ty}px)`}
                                 >
-                                  <img src={src} alt={`Preview ${i + 1}`} style={{ width: 80, height: 100, objectFit: 'cover', borderRadius: 10, border: '2.5px solid #fff', boxShadow: '0 6px 18px rgba(0,0,0,0.18)', display: 'block' }} />
+                                  <img src={src} alt={`Preview ${i + 1}`} style={{ width: 110, height: 138, objectFit: 'cover', borderRadius: 12, border: '2.5px solid #fff', boxShadow: '0 8px 22px rgba(0,0,0,0.18)', display: 'block' }} />
                                   <button
                                     type="button"
                                     onClick={(e) => { e.stopPropagation(); removeImage(i); }}
