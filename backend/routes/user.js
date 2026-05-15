@@ -3,11 +3,26 @@ import db from "../db.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
-import { Resend } from "resend";
-
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || "your_secret_key";
-const resend = new Resend(process.env.RESEND_API_KEY);
+
+async function sendEmail(to, subject, html) {
+    const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: {
+            'accept': 'application/json',
+            'api-key': process.env.BREVO_API_KEY,
+            'content-type': 'application/json'
+        },
+        body: JSON.stringify({
+            sender: { name: 'Reading Journal', email: process.env.BREVO_SENDER_EMAIL },
+            to: [{ email: to }],
+            subject,
+            htmlContent: html
+        })
+    });
+    if (!res.ok) throw new Error(`Brevo error: ${await res.text()}`);
+}
 
 // ==========================================
 // 🟢 1. สมัครสมาชิก (Register)
@@ -53,11 +68,7 @@ router.post("/register", async (req, res) => {
     // respond immediately — email sends in background
     res.status(201).json({ message: "Registration successful! Please enter the 6-digit code sent to your email." });
 
-    resend.emails.send({
-      from: 'Reading Journal <onboarding@resend.dev>',
-      to: email,
-      subject: 'Your Reading Journal Verification Code',
-      html: `
+    sendEmail(email, 'Your Reading Journal Verification Code', `
         <div style="font-family: sans-serif; max-width: 420px; margin: auto; padding: 32px; background: #f9fafb; border-radius: 12px;">
           <h2 style="color: #1e293b; margin-bottom: 8px;">Welcome to Reading Journal!</h2>
           <p style="color: #475569;">Use the code below to verify your email address.</p>
@@ -66,11 +77,8 @@ router.post("/register", async (req, res) => {
           </div>
           <p style="color: #94a3b8; font-size: 13px;">If you didn't create an account, you can ignore this email.</p>
         </div>
-      `
-    }).then(({ data, error }) => {
-      if (error) console.error("Resend error:", JSON.stringify(error));
-      else console.log("[Email] sent id:", data?.id);
-    }).catch(err => console.error("Email send failed:", err.message));
+    `).then(() => console.log("[Email] OTP sent to", email))
+      .catch(err => console.error("Email send failed:", err.message));
 
   } catch (error) {
     console.error("Register Error:", error);

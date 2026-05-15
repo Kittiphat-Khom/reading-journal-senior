@@ -2,11 +2,26 @@ import express from "express";
 import db from "../db.js";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
-import { Resend } from "resend";
-
 const router = express.Router();
 const BASE_URL = process.env.BASE_URL || "http://localhost:5000";
-const resend = new Resend(process.env.RESEND_API_KEY);
+
+async function sendEmail(to, subject, html) {
+    const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: {
+            'accept': 'application/json',
+            'api-key': process.env.BREVO_API_KEY,
+            'content-type': 'application/json'
+        },
+        body: JSON.stringify({
+            sender: { name: 'Reading Journal', email: process.env.BREVO_SENDER_EMAIL },
+            to: [{ email: to }],
+            subject,
+            htmlContent: html
+        })
+    });
+    if (!res.ok) throw new Error(`Brevo error: ${await res.text()}`);
+}
 
 // 🟢 1. ลืมรหัสผ่าน (Forgot Password)
 router.post("/forgot-password", async (req, res) => {
@@ -42,19 +57,14 @@ router.post("/forgot-password", async (req, res) => {
 
     res.json({ message: "If the email is registered, you will receive a reset link." });
 
-    resend.emails.send({
-      from: 'Reading Journal <onboarding@resend.dev>',
-      to: email,
-      subject: "Reset Your Password",
-      html: `
+    sendEmail(email, "Reset Your Password", `
         <h3>Password Reset Request</h3>
         <p>Click the link below to reset your password:</p>
         <a href="${resetLink}">Reset Password</a>
         <p>This link expires in 1 hour.</p>
         <br>
         <p><small>If you didn't request this, please ignore this email.</small></p>
-      `
-    }).catch(err => console.error("Email send failed (non-fatal):", err.message));
+    `).catch(err => console.error("Email send failed:", err.message));
 
   } catch (error) {
     console.error("FORGOT-PASSWORD ERROR:", error); 
