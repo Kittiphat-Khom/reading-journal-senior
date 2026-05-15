@@ -102,9 +102,14 @@ export default function ReportBugPage() {
                       style={{ cursor: 'pointer', flexDirection: imagePreviews.length ? 'row' : 'column', flexWrap: 'wrap', alignItems: imagePreviews.length ? 'flex-start' : 'center', gap: 8, padding: imagePreviews.length ? 12 : undefined }}
                     >
                       {imagePreviews.length > 0 ? (
-                        imagePreviews.map((src, i) => (
-                          <img key={i} src={src} alt={`Preview ${i + 1}`} style={{ height: 80, width: 80, objectFit: 'cover', borderRadius: 8, border: '1.5px solid #e2e8f0', flexShrink: 0 }} />
-                        ))
+                        <>
+                          {imagePreviews.map((src, i) => (
+                            <img key={i} src={src} alt={`Preview ${i + 1}`} style={{ height: 80, width: 80, objectFit: 'cover', borderRadius: 8, border: '1.5px solid #e2e8f0', flexShrink: 0 }} />
+                          ))}
+                          <div style={{ width: '100%', fontSize: '0.75rem', color: '#64748b', marginTop: 4 }}>
+                            {imagePreviews.length} / 5 images · click to change
+                          </div>
+                        </>
                       ) : (
                         <div className="upload-placeholder">
                           <div className="icon-circle">
