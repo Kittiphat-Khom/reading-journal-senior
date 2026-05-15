@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import LogoutModal from '../ui/LogoutModal';
+import client from '../../api/client';
 
 const menuGroups = [
   {
@@ -32,9 +33,27 @@ const menuGroups = [
   },
 ];
 
+
 export default function Sidebar({ open, onClose }) {
   const { user } = useAuth();
   const [logoutOpen, setLogoutOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const handleEditPreferences = async () => {
+    try {
+      const res = await client.get('/api/preferences');
+      const data = res.data;
+      localStorage.setItem('pref_genres', JSON.stringify(data.preferred_genres || []));
+      localStorage.setItem('pref_authors', JSON.stringify(data.preferred_authors || []));
+      localStorage.setItem('pref_books', JSON.stringify(data.preferred_books || []));
+    } catch {
+      localStorage.removeItem('pref_genres');
+      localStorage.removeItem('pref_authors');
+      localStorage.removeItem('pref_books');
+    }
+    onClose();
+    navigate('/preferences/genres');
+  };
   const initial = user?.username ? user.username[0].toUpperCase() : '?';
 
   return (
@@ -77,6 +96,9 @@ export default function Sidebar({ open, onClose }) {
         </div>
 
         <div className="sidebar-bottom">
+          <button className="logout-btn" style={{ marginBottom: '8px', background: '#f1f5f9', color: '#475569' }} onClick={handleEditPreferences}>
+            <i className="fa-solid fa-sliders"></i> Edit Preferences
+          </button>
           <button className="logout-btn" onClick={() => setLogoutOpen(true)}>
             <i className="fa-solid fa-right-from-bracket"></i> Log out
           </button>
