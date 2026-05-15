@@ -119,17 +119,21 @@ export default function ManageReportPage() {
                       {r.description && (
                         <p style={{ margin: '8px 0 0', color: '#475569', fontSize: '0.875rem', lineHeight: 1.55 }}>{r.description}</p>
                       )}
-                      {r.image && (
-                        <div style={{ marginTop: 10 }}>
-                          <img
-                            src={r.image}
-                            alt="report screenshot"
-                            onClick={() => setViewImage(r.image)}
-                            style={{ height: 72, borderRadius: 8, border: '1.5px solid #e2e8f0', objectFit: 'cover', cursor: 'pointer', transition: 'opacity 0.15s' }}
-                            onMouseEnter={(e) => e.target.style.opacity = 0.8}
-                            onMouseLeave={(e) => e.target.style.opacity = 1}
-                          />
-                          <div style={{ fontSize: '0.7rem', color: '#94a3b8', marginTop: 3 }}>คลิกเพื่อดูรูปเต็ม</div>
+                      {r.images && r.images.length > 0 && (
+                        <div style={{ marginTop: 10, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                          {r.images.map((src, i) => (
+                            <div key={i}>
+                              <img
+                                src={src}
+                                alt={`screenshot ${i + 1}`}
+                                onClick={() => setViewImage(src)}
+                                style={{ height: 72, width: 72, borderRadius: 8, border: '1.5px solid #e2e8f0', objectFit: 'cover', cursor: 'pointer', transition: 'opacity 0.15s' }}
+                                onMouseEnter={(e) => e.target.style.opacity = 0.8}
+                                onMouseLeave={(e) => e.target.style.opacity = 1}
+                              />
+                            </div>
+                          ))}
+                          <div style={{ fontSize: '0.7rem', color: '#94a3b8', marginTop: 3, width: '100%' }}>Click to view full size</div>
                         </div>
                       )}
                     </div>

@@ -33,19 +33,28 @@ router.get('/', async (req, res) => {
         const [rows] = await db.query(sql);
         
         const reports = rows.map(report => {
-            let imageBase64 = null;
+            let images = [];
             if (report.report_image) {
                 const raw = typeof report.report_image === 'string'
                     ? report.report_image
-                    : report.report_image.toString('base64');
-                imageBase64 = raw.startsWith('data:') ? raw : `data:image/png;base64,${raw}`;
+                    : report.report_image.toString('utf8');
+                try {
+                    const parsed = JSON.parse(raw);
+                    if (Array.isArray(parsed)) {
+                        images = parsed.map(b => b.startsWith('data:') ? b : `data:image/png;base64,${b}`);
+                    } else {
+                        images = [raw.startsWith('data:') ? raw : `data:image/png;base64,${raw}`];
+                    }
+                } catch {
+                    images = [raw.startsWith('data:') ? raw : `data:image/png;base64,${raw}`];
+                }
             }
             return {
                 id: report.report_id,
                 title: report.title,
                 description: report.description,
                 is_done: (report.is_done === 1),
-                image: imageBase64,
+                images,
                 created_at: report.created_at,
                 username: report.username,
                 managed_by: report.managed_by,

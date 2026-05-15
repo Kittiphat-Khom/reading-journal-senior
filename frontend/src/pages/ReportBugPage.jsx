@@ -9,11 +9,10 @@ export default function ReportBugPage() {
   const { showToast } = useToast();
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
-  const fileRef = useRef(null);
+  const filesRef = useRef([]);
 
   const [form, setForm] = useState({ title: '', description: '' });
-  const [imagePreview, setImagePreview] = useState('');
-  const [fileName, setFileName] = useState('');
+  const [imagePreviews, setImagePreviews] = useState([]);
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
@@ -33,13 +32,20 @@ export default function ReportBugPage() {
   };
 
   const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    fileRef.current = file;
-    setFileName(file.name);
-    const reader = new FileReader();
-    reader.onload = (ev) => setImagePreview(ev.target.result);
-    reader.readAsDataURL(file);
+    const files = Array.from(e.target.files).slice(0, 5);
+    if (!files.length) return;
+    filesRef.current = files;
+    const previews = [];
+    let loaded = 0;
+    files.forEach((file, i) => {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        previews[i] = ev.target.result;
+        loaded++;
+        if (loaded === files.length) setImagePreviews([...previews]);
+      };
+      reader.readAsDataURL(file);
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -50,7 +56,7 @@ export default function ReportBugPage() {
       const formData = new FormData();
       formData.append('title', form.title);
       formData.append('description', form.description);
-      if (fileRef.current) formData.append('reportImage', fileRef.current);
+      filesRef.current.forEach(f => formData.append('reportImages', f));
       await client.post('/api/reports/add', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
       setSubmitted(true);
     } catch {
@@ -89,29 +95,27 @@ export default function ReportBugPage() {
               <form onSubmit={handleSubmit}>
                 <div className="form-content">
                   <div className="upload-section">
-                    <label className="section-label">Attachment</label>
+                    <label className="section-label">Attachments (up to 5)</label>
                     <label
                       className="upload-box"
                       onClick={() => fileInputRef.current?.click()}
-                      style={{ cursor: 'pointer' }}
+                      style={{ cursor: 'pointer', flexDirection: imagePreviews.length ? 'row' : 'column', flexWrap: 'wrap', alignItems: imagePreviews.length ? 'flex-start' : 'center', gap: 8, padding: imagePreviews.length ? 12 : undefined }}
                     >
-                      {imagePreview && (
-                        <img src={imagePreview} alt="Preview" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', position: 'absolute', borderRadius: 14 }} />
-                      )}
-                      {!imagePreview && (
+                      {imagePreviews.length > 0 ? (
+                        imagePreviews.map((src, i) => (
+                          <img key={i} src={src} alt={`Preview ${i + 1}`} style={{ height: 80, width: 80, objectFit: 'cover', borderRadius: 8, border: '1.5px solid #e2e8f0', flexShrink: 0 }} />
+                        ))
+                      ) : (
                         <div className="upload-placeholder">
                           <div className="icon-circle">
                             <i className="fa-solid fa-cloud-arrow-up"></i>
                           </div>
-                          <span className="main-text">Click to upload image</span>
-                          <span className="sub-text">SVG, PNG, JPG or GIF (max. 15MB)</span>
+                          <span className="main-text">Click to upload images</span>
+                          <span className="sub-text">PNG, JPG or GIF · up to 5 files · max 15MB each</span>
                         </div>
                       )}
-                      {fileName && (
-                        <div className="file-name-display" style={{ display: 'block' }}>{fileName}</div>
-                      )}
                     </label>
-                    <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/jpg,image/gif" hidden onChange={handleImageChange} />
+                    <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/jpg,image/gif" multiple hidden onChange={handleImageChange} />
                   </div>
 
                   <div className="input-section">
@@ -156,7 +160,7 @@ export default function ReportBugPage() {
               </div>
               <h2>Thank You!</h2>
               <p>Your report has been submitted successfully.<br />We will look into it shortly.</p>
-              <button className="btn-primary btn-ok" onClick={() => { setSubmitted(false); setForm({ title: '', description: '' }); setImagePreview(''); setFileName(''); }}>
+              <button className="btn-primary btn-ok" onClick={() => { setSubmitted(false); setForm({ title: '', description: '' }); setImagePreviews([]); filesRef.current = []; }}>
                 Submit Another Report
               </button>
             </div>
