@@ -35,6 +35,10 @@ router.post("/register", async (req, res) => {
       return res.status(400).json({ message: "กรุณากรอกข้อมูลให้ครบถ้วน" });
     }
 
+    if (/\s/.test(username)) {
+      return res.status(400).json({ message: "Username must not contain spaces." });
+    }
+
     const [existingUser] = await db.query(
       "SELECT * FROM User WHERE username = ? OR email = ?",
       [username, email]
@@ -150,7 +154,7 @@ router.post("/login", async (req, res) => {
     const { username, password } = req.body;
     
     // 1. หา User
-    const [users] = await db.query("SELECT * FROM User WHERE username = ?", [username]);
+    const [users] = await db.query("SELECT * FROM User WHERE username = ? OR email = ?", [username, username]);
     if (users.length === 0) return res.status(401).json({ message: "User not found." });
 
     const user = users[0];
