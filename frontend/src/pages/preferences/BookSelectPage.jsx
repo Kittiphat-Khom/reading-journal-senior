@@ -97,7 +97,7 @@ export default function BookSelectPage() {
   const toggle = (book) => {
     setSelected((prev) => {
       const next = new Set(prev);
-      next.has(book.id) ? next.delete(book.id) : next.add(book.id);
+      next.has(book.title) ? next.delete(book.title) : next.add(book.title);
       return next;
     });
   };
@@ -205,7 +205,7 @@ export default function BookSelectPage() {
           })().map((b) => (
             <div
               key={b.id}
-              className={`book-card${selected.has(b.id) ? ' selected' : ''}`}
+              className={`book-card${selected.has(b.title) ? ' selected' : ''}`}
               onClick={() => toggle(b)}
               style={{ position: 'relative' }}
             >
@@ -219,7 +219,7 @@ export default function BookSelectPage() {
                 <div className="book-title">{b.title}</div>
                 <div className="book-author">{b.author}</div>
               </div>
-              {selected.has(b.id) && (
+              {selected.has(b.title) && (
                 <div className="selected-check"><i className="fa-solid fa-check"></i></div>
               )}
             </div>
