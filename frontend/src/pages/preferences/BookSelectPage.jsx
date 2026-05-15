@@ -107,8 +107,7 @@ export default function BookSelectPage() {
     setSaving(true);
     try {
       const genres = JSON.parse(localStorage.getItem('pref_genres') || '[]');
-      const authorsRaw = JSON.parse(localStorage.getItem('pref_authors') || '[]');
-      const authors = authorsRaw.map(([, name]) => name);
+      const authors = JSON.parse(localStorage.getItem('pref_authors') || '[]');
 
       await client.post('/api/preferences/save', {
         preferred_genres: genres,

@@ -1,81 +1,77 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import client from '../../api/client';
 import '../../styles/manage-pre-author.css';
 
 const MIN_SELECT = 3;
+const ITEMS_PER_PAGE = 20;
 
-const AUTHOR_QUERY = `query SearchAuthors($keyword: String!, $page: Int!) {
-  search(query: $keyword, query_type: Author, page: $page) { results }
-}`;
+const FALLBACK_AUTHORS = [
+  // Trending 2024-2025
+  "Han Kang", "Jon Fosse", "Samantha Harvey", "Percival Everett", "Sally Rooney",
+  "Haruki Murakami", "Rebecca Yarros", "Sarah J. Maas", "Brandon Sanderson", "Emily Henry",
+  "Colleen Hoover", "Freida McFadden", "R.F. Kuang", "Kristin Hannah", "James Clear",
+  "Morgan Housel", "Toshikazu Kawaguchi", "Matt Haig", "Walter Isaacson", "Salman Rushdie",
+  "David Nicholls", "Leigh Bardugo", "Holly Jackson", "Taylor Jenkins Reid", "Bonnie Garmus",
+  "Gabrielle Zevin", "V.E. Schwab", "Olivie Blake", "Hernan Diaz", "Abraham Verghese",
+  // Modern Legends
+  "J.K. Rowling", "Stephen King", "George R.R. Martin", "Neil Gaiman", "Margaret Atwood",
+  "Kazuo Ishiguro", "Paulo Coelho", "Dan Brown", "John Grisham", "James Patterson",
+  "Danielle Steel", "Nora Roberts", "Ken Follett", "Cormac McCarthy", "Toni Morrison",
+  "Gabriel García Márquez", "Milan Kundera", "Orhan Pamuk", "Yuval Noah Harari", "Khaled Hosseini",
+  "Alice Walker", "Donna Tartt", "Hanya Yanagihara", "Malcolm Gladwell", "Rick Riordan",
+  "Michael Connelly", "David Baldacci", "Nicholas Sparks", "Gillian Flynn", "Elena Ferrante",
+  // All-Time Classics
+  "William Shakespeare", "Jane Austen", "Charles Dickens", "Leo Tolstoy", "Fyodor Dostoevsky",
+  "George Orwell", "Mark Twain", "Ernest Hemingway", "F. Scott Fitzgerald", "Virginia Woolf",
+  "Franz Kafka", "Victor Hugo", "Alexandre Dumas", "Charlotte Brontë", "Emily Brontë",
+  "Oscar Wilde", "James Joyce", "Homer", "Dante Alighieri", "Miguel de Cervantes",
+  "Albert Camus", "Vladimir Nabokov", "John Steinbeck", "J.D. Salinger", "Marcel Proust",
+  // Genre Legends
+  "J.R.R. Tolkien", "Agatha Christie", "Arthur Conan Doyle", "C.S. Lewis", "Frank Herbert",
+  "Isaac Asimov", "Arthur C. Clarke", "H.P. Lovecraft", "Edgar Allan Poe", "Roald Dahl",
+  "Dr. Seuss", "Ursula K. Le Guin", "Terry Pratchett", "H.G. Wells", "Jules Verne",
+];
 
 export default function AuthorSelectPage() {
   const navigate = useNavigate();
+  const [allAuthors, setAllAuthors] = useState(FALLBACK_AUTHORS);
   const [selected, setSelected] = useState(() => {
-    try { return new Map(JSON.parse(localStorage.getItem('pref_authors') || '[]')); } catch { return new Map(); }
+    try { return new Set(JSON.parse(localStorage.getItem('pref_authors') || '[]')); } catch { return new Set(); }
   });
-  const [featuredAuthors, setFeaturedAuthors] = useState([]);
   const [search, setSearch] = useState('');
-  const [results, setResults] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const currentKeyword = search.trim() || 'stephen';
+  const [page, setPage] = useState(0);
 
   useEffect(() => {
     client.get('/api/admin/featured-authors')
       .then((res) => {
-        const authors = (Array.isArray(res.data) ? res.data : [])
-          .map((f) => ({ id: f.author_id, name: f.name, featured: true }))
-          .sort((a, b) => a.name.localeCompare(b.name));
-        setFeaturedAuthors(authors);
+        const names = (Array.isArray(res.data) ? res.data : []).map((f) => f.name).filter(Boolean);
+        if (names.length > 0) {
+          const merged = [...new Set([...names, ...FALLBACK_AUTHORS])];
+          setAllAuthors(merged);
+        }
       })
       .catch(() => {});
   }, []);
 
-  const searchAuthors = useCallback(async (keyword, p = 1) => {
-    if (!keyword.trim()) return;
-    setLoading(true);
-    try {
-      const res = await client.post('/api/search', { query: AUTHOR_QUERY, variables: { keyword, page: p } });
-      const raw = res.data?.data?.search?.results;
-      const hits = raw?.hits ?? [];
-      const found = raw?.found ?? 0;
-      const filtered = hits
-        .map((h) => ({ id: h.document.id, name: h.document.name }))
-        .filter((a) => {
-          if (!a.name) return false;
-          const n = a.name.trim();
-          if (n.length < 3 || n.length > 50) return false;
-          if (/\b(Congress|Senate|Committee|Assembly|Legislature|University|Institute)\b/i.test(n)) return false;
-          return true;
-        });
-      setResults(filtered);
-      setTotalPages(Math.max(1, Math.ceil(found / 25)));
-    } catch {
-      setResults([]);
-      setTotalPages(1);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return q ? allAuthors.filter((a) => a.toLowerCase().includes(q)) : allAuthors;
+  }, [search, allAuthors]);
 
-  useEffect(() => { searchAuthors('stephen', 1); }, [searchAuthors]);
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+  const pageItems = filtered.slice(page * ITEMS_PER_PAGE, (page + 1) * ITEMS_PER_PAGE);
 
-  const goToPage = (p) => {
-    setPage(p);
-    searchAuthors(currentKeyword, p);
-  };
-
-  const toggle = (author) => {
+  const toggle = (name) => {
     setSelected((prev) => {
-      const next = new Map(prev);
-      next.has(author.id) ? next.delete(author.id) : next.set(author.id, author.name);
+      const next = new Set(prev);
+      next.has(name) ? next.delete(name) : next.add(name);
       return next;
     });
   };
 
   const handleNext = () => {
+    if (selected.size > 0 && selected.size < MIN_SELECT) return;
     localStorage.setItem('pref_authors', JSON.stringify([...selected]));
     navigate('/preferences/books');
   };
@@ -85,7 +81,7 @@ export default function AuthorSelectPage() {
     navigate('/preferences/books');
   };
 
-  const handleBack = () => navigate('/preferences/genres');
+  const handleSearch = (e) => { setSearch(e.target.value); setPage(0); };
 
   return (
     <div className="main-wrapper">
@@ -99,7 +95,7 @@ export default function AuthorSelectPage() {
             <div className="author-subtitle-wrap">
               <h2 className="author-subtitle">
                 Authors Collection
-                <span className="total-count-badge">({selected.size} selected)</span>
+                <span className="total-count-badge">({allAuthors.length} authors)</span>
               </h2>
               <p className="author-desc">Please select at least {MIN_SELECT} authors or skip this step.</p>
             </div>
@@ -107,72 +103,42 @@ export default function AuthorSelectPage() {
               <label className="search-label-text">Search Author:</label>
               <div className="search-box">
                 <i className="fa-solid fa-magnifying-glass"></i>
-                <input
-                  type="text"
-                  placeholder="e.g. J.K. Rowling"
-                  value={search}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    setSearch(val);
-                    setPage(1);
-                    searchAuthors(val.trim() || 'stephen', 1);
-                  }}
-                />
+                <input type="text" placeholder="e.g. J.K. Rowling" value={search} onChange={handleSearch} />
               </div>
             </div>
           </div>
         </div>
 
-        <div className="author-grid" id="authorGrid">
-          {loading && (
-            <div className="author-empty-state" style={{ gridColumn: '1 / -1' }}>
-              <i className="fa-solid fa-spinner fa-spin" style={{ fontSize: '1.8rem', color: '#94a3b8' }}></i>
-              <p>Searching…</p>
-            </div>
-          )}
-          {!loading && search && results.length === 0 && (
-            <div className="author-empty-state">
-              <i className="fa-solid fa-user-slash" style={{ fontSize: '2rem', color: '#cbd5e1' }}></i>
-              <p>No authors found for "<strong>{search}</strong>"</p>
-            </div>
-          )}
-          {!loading && (() => {
-            const LIMIT = 20;
-            const featured = !search ? featuredAuthors.slice((page - 1) * LIMIT, page * LIMIT) : [];
-            const apiFiltered = results.filter((a) => !featuredAuthors.some((f) => f.name.toLowerCase() === a.name.toLowerCase()));
-            return [...featured, ...apiFiltered].slice(0, LIMIT);
-          })().map((a) => (
+        <div className="author-grid">
+          {pageItems.map((name) => (
             <button
-              key={a.id}
-              className={`author-button${selected.has(a.id) ? ' selected' : ''}`}
-              onClick={() => toggle(a)}
-              style={{ position: 'relative' }}
+              key={name}
+              className={`author-button${selected.has(name) ? ' selected' : ''}`}
+              onClick={() => toggle(name)}
             >
-              {a.featured && (
-                <span style={{ position: 'absolute', top: 4, right: 4, background: '#f59e0b', color: '#fff', borderRadius: 20, padding: '1px 6px', fontSize: '0.6rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <i className="fa-solid fa-star" style={{ fontSize: '0.5rem' }}></i> Recommend
-                </span>
-              )}
-              <span>{a.name}</span>
+              <span>{name}</span>
             </button>
           ))}
+          {pageItems.length === 0 && (
+            <div style={{ gridColumn: '1/-1', textAlign: 'center', color: '#888' }}>No authors found.</div>
+          )}
         </div>
 
         <div className="pagination-bar">
-          <button className="nav-arrow" onClick={() => goToPage(page - 1)} disabled={page <= 1}>
+          <button className="nav-arrow" onClick={() => setPage((p) => p - 1)} disabled={page === 0}>
             <i className="fa-solid fa-chevron-left"></i>
           </button>
-          <span className="page-indicator">Page {page} of {totalPages}</span>
-          <button className="nav-arrow" onClick={() => goToPage(page + 1)} disabled={page >= totalPages}>
+          <span className="page-indicator">Page {page + 1} of {totalPages || 1}</span>
+          <button className="nav-arrow" onClick={() => setPage((p) => p + 1)} disabled={page >= totalPages - 1}>
             <i className="fa-solid fa-chevron-right"></i>
           </button>
         </div>
 
         <div className="action-footer">
-          <button className="unselect-all-btn" onClick={() => setSelected(new Map())}>Deselect All</button>
+          <button className="unselect-all-btn" onClick={() => setSelected(new Set())}>Deselect All</button>
           <div className="footer-center">
             <span className="selection-status">Selected: {selected.size}</span>
-            <button className="back-footer-btn" onClick={handleBack}>Back</button>
+            <button className="back-footer-btn" onClick={() => navigate('/preferences/genres')}>Back</button>
             <button className="skip-btn" onClick={handleSkip}>Skip</button>
             <button className="next-btn" onClick={handleNext} disabled={selected.size > 0 && selected.size < MIN_SELECT}>
               Next Step
