@@ -67,7 +67,10 @@ router.post("/register", async (req, res) => {
           <p style="color: #94a3b8; font-size: 13px;">If you didn't create an account, you can ignore this email.</p>
         </div>
       `
-    }).catch(err => console.error("Email send failed (non-fatal):", err.message));
+    }).then(({ data, error }) => {
+      if (error) console.error("Resend error:", JSON.stringify(error));
+      else console.log("[Email] sent id:", data?.id);
+    }).catch(err => console.error("Email send failed:", err.message));
 
   } catch (error) {
     console.error("Register Error:", error);
