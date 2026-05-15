@@ -102,14 +102,27 @@ export default function ReportBugPage() {
                       style={{ cursor: 'pointer', flexDirection: imagePreviews.length ? 'row' : 'column', flexWrap: 'wrap', alignItems: imagePreviews.length ? 'flex-start' : 'center', gap: 8, padding: imagePreviews.length ? 12 : undefined }}
                     >
                       {imagePreviews.length > 0 ? (
-                        <>
-                          {imagePreviews.map((src, i) => (
-                            <img key={i} src={src} alt={`Preview ${i + 1}`} style={{ height: 80, width: 80, objectFit: 'cover', borderRadius: 8, border: '1.5px solid #e2e8f0', flexShrink: 0 }} />
-                          ))}
-                          <div style={{ width: '100%', fontSize: '0.75rem', color: '#64748b', marginTop: 4 }}>
-                            {imagePreviews.length} / 5 images · click to change
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%', padding: '16px 0 8px' }}>
+                          <div style={{ position: 'relative', height: 120, width: Math.min(imagePreviews.length, 5) * 44 + 80, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+                            {imagePreviews.map((src, i) => {
+                              const n = imagePreviews.length;
+                              const mid = (n - 1) / 2;
+                              const rot = (i - mid) * (n === 1 ? 0 : 7);
+                              const ty = Math.abs(i - mid) * 4;
+                              return (
+                                <div key={i} style={{ position: 'absolute', left: i * 44, bottom: 0, zIndex: i, transform: `rotate(${rot}deg) translateY(${ty}px)`, transformOrigin: 'bottom center', transition: 'transform 0.2s' }}
+                                  onMouseEnter={e => e.currentTarget.style.transform = `rotate(${rot}deg) translateY(${ty - 10}px)`}
+                                  onMouseLeave={e => e.currentTarget.style.transform = `rotate(${rot}deg) translateY(${ty}px)`}
+                                >
+                                  <img src={src} alt={`Preview ${i + 1}`} style={{ width: 80, height: 100, objectFit: 'cover', borderRadius: 10, border: '2.5px solid #fff', boxShadow: '0 6px 18px rgba(0,0,0,0.18)', display: 'block' }} />
+                                </div>
+                              );
+                            })}
                           </div>
-                        </>
+                          <div style={{ fontSize: '0.72rem', color: '#94a3b8', marginTop: 12 }}>
+                            {imagePreviews.length} / 5 · click to change
+                          </div>
+                        </div>
                       ) : (
                         <div className="upload-placeholder">
                           <div className="icon-circle">
