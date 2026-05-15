@@ -35,7 +35,10 @@ router.get('/', async (req, res) => {
         const reports = rows.map(report => {
             let imageBase64 = null;
             if (report.report_image) {
-                imageBase64 = `data:image/jpeg;base64,${report.report_image.toString('base64')}`;
+                const raw = typeof report.report_image === 'string'
+                    ? report.report_image
+                    : report.report_image.toString('base64');
+                imageBase64 = raw.startsWith('data:') ? raw : `data:image/png;base64,${raw}`;
             }
             return {
                 id: report.report_id,

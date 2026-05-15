@@ -52,17 +52,17 @@ router.post("/add", verifyToken, upload.single('reportImage'), async (req, res) 
             return res.status(400).json({ message: "Title and description are required." });
         }
 
-        let imageBuffer = null;
+        let imageBase64 = null;
         if (req.file) {
-            imageBuffer = req.file.buffer;
+            imageBase64 = req.file.buffer.toString('base64');
         }
 
         const sql = `
-            INSERT INTO Report (report_image, title, description, user_id, is_done, created_at) 
+            INSERT INTO Report (report_image, title, description, user_id, is_done, created_at)
             VALUES (?, ?, ?, ?, 0, NOW())
         `;
 
-        await db.query(sql, [imageBuffer, title, description, userId]);
+        await db.query(sql, [imageBase64, title, description, userId]);
 
         res.status(201).json({ message: "Report submitted successfully" });
 
