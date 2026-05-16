@@ -125,7 +125,7 @@ function AlsoPanel({ books, poolBooks, addedMap, onAdd, favMap, onFav, onOpen })
   return (
     <section className="rc-alsopanel">
       <div className="rc-alsohead">
-        <h3>More picks <em>for you</em></h3>
+        <h3>Popular <em>picks</em></h3>
       </div>
       <div className="rc-alsolist">
         {displayBooks.map((book, i) => {
@@ -262,40 +262,32 @@ export default function RecommendPage() {
     if (books.length === 0) return [];
 
     const sorted = [...books].sort((a, b) => getScore(b) - getScore(a));
+    const byRating = [...books].sort((a, b) => (b.rating || 0) - (a.rating || 0));
+
+    const getPopularList = (heroKeys) =>
+      byRating.filter(b => !heroKeys.has(b.book_id || b.title)).slice(0, 5);
 
     if (!hasPreference) {
-      // No preference → sort by real rating desc
-      const byRating = [...books].sort((a, b) => (b.rating || 0) - (a.rating || 0));
       const pages = [];
-      const pageSize = 15; // 2 hero + 5 list + 8 extra
+      const pageSize = 15;
       const totalPages = Math.min(6, Math.ceil(byRating.length / pageSize));
-      const allUsed = new Set();
-      // Pass 1: pick pages
       for (let p = 0; p < totalPages; p++) {
         const offset = p * pageSize;
         const pick = (i) => byRating[(offset + i) % byRating.length];
-        for (let i = 0; i < pageSize; i++) {
-          const b = byRating[(offset + i) % byRating.length];
-          if (b) allUsed.add(b.book_id || b.title);
-        }
+        const hero  = pick(0);
+        const hero2 = pick(1);
+        const heroKeys = new Set([hero.book_id || hero.title, hero2.book_id || hero2.title]);
         pages.push({
-          hero:  pick(0),
-          hero2: pick(1),
-          list:  Array.from({ length: 5 }, (_, i) => pick(i + 2)),
+          hero, hero2,
+          popularList: getPopularList(heroKeys),
           extra: Array.from({ length: 8 }, (_, i) => pick(i + 7)),
         });
       }
-      // Pass 2: each page gets fullMore rotated by (i * 5) so Refresh shows different books per page
-      const fullMore = byRating.filter(b => !allUsed.has(b.book_id || b.title));
-      return pages.map((p, i) => {
-        const offset = (i * 5) % Math.max(fullMore.length, 1);
-        return { ...p, morePool: [...fullMore.slice(offset), ...fullMore.slice(0, offset)] };
-      });
+      return pages;
     }
 
     // Has preference → split by score threshold
     const highBooks = sorted.filter(b => getScore(b) >= 0.80);
-    const midBooks  = sorted.filter(b => getScore(b) >= 0.60);
     const heroPool  = sorted.slice(0, Math.max(6, sorted.length));
     const heroStep  = Math.ceil(heroPool.length / 6);
 
@@ -319,26 +311,19 @@ export default function RecommendPage() {
       return result;
     };
 
-    const panelPool = midBooks.length >= 5 ? midBooks : sorted;
     const extraPool = highBooks.length >= 4 ? highBooks : sorted;
 
-    // Pass 1: pick all pages (globalUsed fills up)
     for (let p = 0; p < Math.min(6, heroPool.length); p++) {
       const hero  = heroPool[p * heroStep] || heroPool[p] || sorted[0];
       const hero2 = heroPool[p * heroStep + 1] || heroPool[p + 1] || sorted[1] || hero;
       globalUsed.add(hero.book_id  || hero.title);
       globalUsed.add(hero2.book_id || hero2.title);
-      const list  = pickFrom(panelPool, 5);
+      const heroKeys = new Set([hero.book_id || hero.title, hero2.book_id || hero2.title]);
       const extra = pickFrom(extraPool, 8);
-      pages.push({ hero, hero2, list, extra });
+      pages.push({ hero, hero2, popularList: getPopularList(heroKeys), extra });
     }
 
-    // Pass 2: each page gets fullMore rotated by (i * 5) so Refresh shows different books per page
-    const fullMore = sorted.filter(b => !globalUsed.has(b.book_id || b.title));
-    return pages.map((p, i) => {
-      const offset = (i * 5) % Math.max(fullMore.length, 1);
-      return { ...p, morePool: [...fullMore.slice(offset), ...fullMore.slice(0, offset)] };
-    });
+    return pages;
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [books]);
   const totalPages = filteredPages.length;
@@ -426,11 +411,11 @@ export default function RecommendPage() {
                   {/* col-right rows-1+2: AlsoPanel (full height) */}
                   <AlsoPanel
                     key={pi}
-                    books={pg.list}
-                    poolBooks={pg.morePool || []}
-                    addedMap={pg.list.reduce((a, b, i2) => { a[i2] = !!added[`title-${b.title}`]; return a; }, {})}
+                    books={pg.popularList || []}
+                    poolBooks={[]}
+                    addedMap={(pg.popularList || []).reduce((a, b, i2) => { a[i2] = !!added[`title-${b.title}`]; return a; }, {})}
                     onAdd={(b) => doAdd(b)}
-                    favMap={pg.list.reduce((a, _, i2) => { a[i2] = !!favorited[`${pi}-l${i2}`]; return a; }, {})}
+                    favMap={(pg.popularList || []).reduce((a, _, i2) => { a[i2] = !!favorited[`${pi}-l${i2}`]; return a; }, {})}
                     onFav={(b) => doFav(b)}
                     onOpen={setSelectedBook}
                   />
