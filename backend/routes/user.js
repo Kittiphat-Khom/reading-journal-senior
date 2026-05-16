@@ -36,7 +36,7 @@ router.post("/register", async (req, res) => {
     const { username, email, password } = req.body;
 
     if (!username || !email || !password) {
-      return res.status(400).json({ message: "กรุณากรอกข้อมูลให้ครบถ้วน" });
+      return res.status(400).json({ message: "All fields are required." });
     }
 
     const [existingUser] = await db.query(
@@ -45,7 +45,7 @@ router.post("/register", async (req, res) => {
     );
 
     if (existingUser.length > 0) {
-      return res.status(409).json({ message: "Username หรือ Email นี้ถูกใช้งานแล้ว" });
+      return res.status(409).json({ message: "Username or Email is already taken." });
     }
 
     // Hash Password
@@ -64,7 +64,7 @@ router.post("/register", async (req, res) => {
     // ✅ แก้ไขตรงนี้: ใช้ BASE_URL แทน localhost
     const verifyUrl = `${BASE_URL}/verify-email.html?token=${verificationToken}`; 
 
-    res.status(201).json({ message: "สมัครสมาชิกสำเร็จ! กรุณาตรวจสอบอีเมลเพื่อยืนยันตัวตนก่อนเข้าสู่ระบบ" });
+    res.status(201).json({ message: "Registered successfully! Please check your email to verify your account before logging in." });
 
     sendEmail({
       to: email,
@@ -99,7 +99,7 @@ router.post("/verify-email", async (req, res) => {
         // อัปเดตสถานะเป็นยืนยันแล้ว และลบ Token ออก
         await db.query("UPDATE User SET is_verified = 1, verification_token = NULL WHERE user_id = ?", [users[0].user_id]);
 
-        res.json({ message: "ยืนยันตัวตนสำเร็จ! คุณสามารถเข้าสู่ระบบได้แล้ว" });
+        res.json({ message: "Email verified successfully. You can now log in." });
 
     } catch (error) {
         console.error("Verify Error:", error);
@@ -116,18 +116,18 @@ router.post("/login", async (req, res) => {
     
     // 1. หา User
     const [users] = await db.query("SELECT * FROM User WHERE username = ?", [username]);
-    if (users.length === 0) return res.status(401).json({ message: "ไม่พบชื่อผู้ใช้" });
+    if (users.length === 0) return res.status(401).json({ message: "User not found." });
 
     const user = users[0];
 
     // 2. เช็คว่ายืนยันอีเมลหรือยัง
     if (user.is_verified === 0) {
-        return res.status(403).json({ message: "กรุณายืนยันตัวตนผ่านอีเมลก่อนเข้าสู่ระบบ" });
+        return res.status(403).json({ message: "Please verify your email before logging in." });
     }
 
     // 3. เช็ค Password
     const isMatch = await bcrypt.compare(password, user.pwd);
-    if (!isMatch) return res.status(401).json({ message: "รหัสผ่านไม่ถูกต้อง" });
+    if (!isMatch) return res.status(401).json({ message: "Invalid password." });
 
     // -----------------------------------------------------------------------
     // 🔥 CHECK PREFERENCES
