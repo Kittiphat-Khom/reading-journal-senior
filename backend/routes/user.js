@@ -3,12 +3,30 @@ import db from "../db.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
-import { Resend } from "resend";
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || "your_secret_key";
 const BASE_URL = process.env.BASE_URL || "http://localhost:5000";
-const resend = new Resend(process.env.RESEND_API_KEY);
+
+async function sendEmail({ to, subject, html }) {
+  const res = await fetch("https://api.brevo.com/v3/smtp/email", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "api-key": process.env.BREVO_API_KEY,
+    },
+    body: JSON.stringify({
+      sender: { name: "Reading Journal", email: process.env.BREVO_SENDER_EMAIL },
+      to: [{ email: to }],
+      subject,
+      htmlContent: html,
+    }),
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Brevo error ${res.status}: ${text}`);
+  }
+}
 
 // ==========================================
 // 🟢 1. สมัครสมาชิก (Register)
@@ -48,16 +66,15 @@ router.post("/register", async (req, res) => {
 
     res.status(201).json({ message: "สมัครสมาชิกสำเร็จ! กรุณาตรวจสอบอีเมลเพื่อยืนยันตัวตนก่อนเข้าสู่ระบบ" });
 
-    resend.emails.send({
-        from: 'Reading Journal <onboarding@resend.dev>',
-        to: email,
-        subject: 'Confirm your Registration',
-        html: `
-            <h2>Welcome to Reading Journal!</h2>
-            <p>Please click the link below to verify your email address and activate your account:</p>
-            <a href="${verifyUrl}" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Verify Email</a>
-            <p>Or copy this link: ${verifyUrl}</p>
-        `
+    sendEmail({
+      to: email,
+      subject: "Confirm your Registration",
+      html: `
+        <h2>Welcome to Reading Journal!</h2>
+        <p>Please click the link below to verify your email address and activate your account:</p>
+        <a href="${verifyUrl}" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Verify Email</a>
+        <p>Or copy this link: ${verifyUrl}</p>
+      `,
     }).catch(err => console.error("Email send failed:", err.message));
 
   } catch (error) {

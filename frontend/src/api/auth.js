@@ -12,5 +12,5 @@ export const getMe = () =>
 export const forgotPassword = (email) =>
   client.post('/api/users/forgot-password', { email });
 
-export const resetPassword = (token, password) =>
-  client.post('/api/users/reset-password', { token, password });
+export const resetPassword = (email, otp, newPassword) =>
+  client.post('/api/users/reset-password', { email, otp, newPassword });

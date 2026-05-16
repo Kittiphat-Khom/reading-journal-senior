@@ -53,8 +53,6 @@ export default function LandingPage() {
         {/* Visual */}
         <div className="lp-visual" aria-hidden="true">
           <div className="lp-monogram">R</div>
-          <div className="lp-vlabel lp-tl"><span className="lp-ln"></span> A SHELF · NO 04</div>
-          <div className="lp-vlabel lp-br"><span className="lp-ln"></span> CURATED · 2026</div>
 
           {BOOKS.map(({ cls, title, by, no }) => (
             <div key={cls} className={`lp-book ${cls}`}>

@@ -50,7 +50,7 @@ app.use(express.static(reactBuild));
 
 // 1. User & Auth
 app.use("/api/users", userRoutes);
-app.use("/api", passwordRoutes); // Password Reset etc.
+app.use("/api/users", passwordRoutes); // Password Reset etc.
 
 // 2. Journals & Chapters
 // ✅ วาง Chapter ไว้ก่อน Journal เพื่อป้องกัน Path ทับซ้อน

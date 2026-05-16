@@ -42,19 +42,19 @@ const verifyToken = (req, res, next) => {
 };
 
 // Route: /api/reports/add (สร้าง Report)
-router.post("/add", verifyToken, upload.single('reportImage'), async (req, res) => {
+router.post("/add", verifyToken, upload.array('reportImages', 5), async (req, res) => {
     try {
         const { title, description } = req.body;
-        // เช็คทั้ง id และ userId (กันเหนียว)
         const userId = req.user.id || req.user.userId;
 
         if (!title || !description) {
             return res.status(400).json({ message: "Title and description are required." });
         }
 
-        let imageBase64 = null;
-        if (req.file) {
-            imageBase64 = req.file.buffer.toString('base64');
+        let imageJson = null;
+        if (req.files && req.files.length > 0) {
+            const base64arr = req.files.map(f => f.buffer.toString('base64'));
+            imageJson = JSON.stringify(base64arr);
         }
 
         const sql = `
@@ -62,7 +62,7 @@ router.post("/add", verifyToken, upload.single('reportImage'), async (req, res) 
             VALUES (?, ?, ?, ?, 0, NOW())
         `;
 
-        await db.query(sql, [imageBase64, title, description, userId]);
+        await db.query(sql, [imageJson, title, description, userId]);
 
         res.status(201).json({ message: "Report submitted successfully" });
 
