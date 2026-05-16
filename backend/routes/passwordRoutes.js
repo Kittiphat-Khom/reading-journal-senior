@@ -1,30 +1,10 @@
 import express from "express";
 import db from "../db.js";
 import bcrypt from "bcryptjs";
+import { sendEmail, generateOtp } from "../lib/email.js";
 
 const router = express.Router();
 
-async function sendEmail({ to, subject, html }) {
-  const res = await fetch("https://api.brevo.com/v3/smtp/email", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "api-key": process.env.BREVO_API_KEY,
-    },
-    body: JSON.stringify({
-      sender: { name: "Reading Journal", email: process.env.BREVO_SENDER_EMAIL },
-      to: [{ email: to }],
-      subject,
-      htmlContent: html,
-    }),
-  });
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`Brevo error ${res.status}: ${text}`);
-  }
-}
-
-// 1. Forgot Password — generate 6-digit OTP
 router.post("/forgot-password", async (req, res) => {
   try {
     const { email } = req.body;
@@ -33,22 +13,18 @@ router.post("/forgot-password", async (req, res) => {
       return res.status(400).json({ message: "Email is required" });
     }
 
-    const [users] = await db.query("SELECT * FROM User WHERE email = ?", [email]);
+    const [users] = await db.query("SELECT user_id FROM User WHERE email = ?", [email]);
 
-    if (users.length === 0) {
-      return res.json({ message: "If the email is registered, you will receive an OTP." });
-    }
+    // Always respond the same way to prevent email enumeration
+    res.json({ message: "If the email is registered, you will receive an OTP." });
 
-    const user = users[0];
-    const otp = String(Math.floor(100000 + Math.random() * 900000));
-    const expireDate = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+    if (users.length === 0) return;
 
+    const { otp, expire } = generateOtp();
     await db.query(
       "UPDATE User SET reset_token = ?, reset_token_expire = ? WHERE user_id = ?",
-      [otp, expireDate, user.user_id]
+      [otp, expire, users[0].user_id]
     );
-
-    res.json({ message: "If the email is registered, you will receive an OTP." });
 
     sendEmail({
       to: email,
@@ -63,12 +39,11 @@ router.post("/forgot-password", async (req, res) => {
     }).catch(err => console.error("Email send failed:", err.message));
 
   } catch (error) {
-    console.error("FORGOT-PASSWORD ERROR:", error);
+    console.error("Forgot-password error:", error);
     res.status(500).json({ message: "Internal Server Error" });
   }
 });
 
-// 2. Reset Password — verify OTP + email, then set new password
 router.post("/reset-password", async (req, res) => {
   try {
     const { email, otp, newPassword } = req.body;
@@ -82,7 +57,7 @@ router.post("/reset-password", async (req, res) => {
     }
 
     const [users] = await db.query(
-      "SELECT * FROM User WHERE email = ? AND reset_token = ? AND reset_token_expire > NOW()",
+      "SELECT user_id FROM User WHERE email = ? AND reset_token = ? AND reset_token_expire > NOW()",
       [email, otp]
     );
 
@@ -90,19 +65,18 @@ router.post("/reset-password", async (req, res) => {
       return res.status(400).json({ message: "Invalid or expired OTP." });
     }
 
-    const user = users[0];
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(newPassword, salt);
 
     await db.query(
       "UPDATE User SET pwd = ?, reset_token = NULL, reset_token_expire = NULL WHERE user_id = ?",
-      [hashedPassword, user.user_id]
+      [hashedPassword, users[0].user_id]
     );
 
     res.json({ message: "Password has been reset successfully." });
 
   } catch (error) {
-    console.error("RESET-PASSWORD ERROR:", error);
+    console.error("Reset-password error:", error);
     res.status(500).json({ message: "Server error during password reset." });
   }
 });

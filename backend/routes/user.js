@@ -1,36 +1,12 @@
 import express from "express";
-import db from "../db.js"; 
+import db from "../db.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import crypto from "crypto";
+import { sendEmail, generateOtp } from "../lib/email.js";
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || "your_secret_key";
-const BASE_URL = process.env.BASE_URL || "http://localhost:5000";
 
-async function sendEmail({ to, subject, html }) {
-  const res = await fetch("https://api.brevo.com/v3/smtp/email", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "api-key": process.env.BREVO_API_KEY,
-    },
-    body: JSON.stringify({
-      sender: { name: "Reading Journal", email: process.env.BREVO_SENDER_EMAIL },
-      to: [{ email: to }],
-      subject,
-      htmlContent: html,
-    }),
-  });
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`Brevo error ${res.status}: ${text}`);
-  }
-}
-
-// ==========================================
-// 1. Register — send OTP to email
-// ==========================================
 router.post("/register", async (req, res) => {
   try {
     const { username, email, password } = req.body;
@@ -44,45 +20,34 @@ router.post("/register", async (req, res) => {
       [username, email]
     );
 
-    if (existing.length > 0) {
-      const conflict = existing[0];
-      // Username taken by a verified account, or email taken by a different username
+    const conflict = existing[0];
+    if (conflict) {
       if (conflict.is_verified === 1) {
         return res.status(409).json({ message: "Username or Email is already taken." });
       }
-      // Unverified record with same email — only allow resend if username matches too
+      // Unverified with a different email means only the username matched
       if (conflict.email !== email) {
         return res.status(409).json({ message: "Username is already taken." });
       }
-      // Unverified, same email → overwrite and resend OTP
-      const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash(password, salt);
-      const otp = String(Math.floor(100000 + Math.random() * 900000));
-      const expire = new Date(Date.now() + 10 * 60 * 1000);
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+    const { otp, expire } = generateOtp();
+
+    if (conflict) {
       await db.query(
         "UPDATE User SET username = ?, pwd = ?, reset_token = ?, reset_token_expire = ? WHERE email = ?",
         [username, hashedPassword, otp, expire, email]
       );
       res.status(200).json({ message: "OTP resent. Please check your email." });
-      sendEmail({
-        to: email,
-        subject: "Your Email Verification Code",
-        html: `<h3>Email Verification</h3><p>Your verification code is:</p><h1 style="letter-spacing:8px;color:#3b82f6;">${otp}</h1><p>Expires in <strong>10 minutes</strong>.</p>`,
-      }).catch(err => console.error("Email send failed:", err.message));
-      return;
+    } else {
+      await db.query(
+        "INSERT INTO User (username, email, pwd, role, is_verified, reset_token, reset_token_expire) VALUES (?, ?, ?, 'user', 0, ?, ?)",
+        [username, email, hashedPassword, otp, expire]
+      );
+      res.status(201).json({ message: "OTP sent. Please check your email." });
     }
-
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-    const otp = String(Math.floor(100000 + Math.random() * 900000));
-    const expire = new Date(Date.now() + 10 * 60 * 1000);
-
-    await db.query(
-      "INSERT INTO User (username, email, pwd, role, is_verified, reset_token, reset_token_expire) VALUES (?, ?, ?, 'user', 0, ?, ?)",
-      [username, email, hashedPassword, otp, expire]
-    );
-
-    res.status(201).json({ message: "OTP sent. Please check your email." });
 
     sendEmail({
       to: email,
@@ -96,9 +61,6 @@ router.post("/register", async (req, res) => {
   }
 });
 
-// ==========================================
-// 2. Verify registration OTP
-// ==========================================
 router.post("/verify-otp", async (req, res) => {
   try {
     const { email, code } = req.body;
@@ -123,66 +85,37 @@ router.post("/verify-otp", async (req, res) => {
   }
 });
 
-// ==========================================
-// 🟢 3. เข้าสู่ระบบ (Login)
-// ==========================================
 router.post("/login", async (req, res) => {
   try {
     const { username, password } = req.body;
-    
-    // 1. หา User
+
     const [users] = await db.query("SELECT * FROM User WHERE username = ?", [username]);
     if (users.length === 0) return res.status(401).json({ message: "User not found." });
 
     const user = users[0];
 
-    // 2. เช็คว่ายืนยันอีเมลหรือยัง
     if (user.is_verified === 0) {
-        return res.status(403).json({ message: "Please verify your email before logging in." });
+      return res.status(403).json({ message: "Please verify your email before logging in." });
     }
 
-    // 3. เช็ค Password
     const isMatch = await bcrypt.compare(password, user.pwd);
     if (!isMatch) return res.status(401).json({ message: "Invalid password." });
 
-    // -----------------------------------------------------------------------
-    // 🔥 CHECK PREFERENCES
-    // -----------------------------------------------------------------------
     let hasPreferences = false;
-    
-    // ✅ ใช้ชื่อตาราง 'MPC' ตามรูปที่คุณส่งมา
-    const tableName = "MPC"; 
-
     try {
-        console.log(`🔍 Checking preferences for UserID: ${user.user_id} in table: ${tableName}`);
-        
-        const [prefs] = await db.query(
-            `SELECT * FROM ${tableName} WHERE user_id = ?`, 
-            [user.user_id]
-        );
-
-        if (prefs.length > 0) {
-            console.log("✅ Found preferences data.");
-            hasPreferences = true;
-        } else {
-            console.log("❌ No preferences data found.");
-        }
-
-    } catch (err) {
-        console.error("💥 Error checking preferences:", err.message);
-        hasPreferences = false; 
+      const [prefs] = await db.query("SELECT 1 FROM MPC WHERE user_id = ? LIMIT 1", [user.user_id]);
+      hasPreferences = prefs.length > 0;
+    } catch {
+      hasPreferences = false;
     }
-    // -----------------------------------------------------------------------
 
-    // 4. สร้าง Token
     const token = jwt.sign({ id: user.user_id, role: user.role }, JWT_SECRET, { expiresIn: "1h" });
 
-    // 5. ส่ง Response
-    res.json({ 
-        message: "Login successful", 
-        token, 
-        user: { id: user.user_id, username: user.username, role: user.role },
-        has_preferences: hasPreferences // ส่งค่านี้เพื่อให้ Frontend ตัดสินใจเปลี่ยนหน้า
+    res.json({
+      message: "Login successful",
+      token,
+      user: { id: user.user_id, username: user.username, role: user.role },
+      has_preferences: hasPreferences,
     });
 
   } catch (error) {
@@ -191,9 +124,6 @@ router.post("/login", async (req, res) => {
   }
 });
 
-// ==========================================
-// 🟢 4. ดึงข้อมูลส่วนตัว (Me)
-// ==========================================
 router.get("/me", async (req, res) => {
   try {
     const authHeader = req.headers.authorization;
@@ -203,8 +133,8 @@ router.get("/me", async (req, res) => {
     const decoded = jwt.verify(token, JWT_SECRET);
 
     const [users] = await db.query(
-        "SELECT user_id, username, email, role FROM User WHERE user_id = ?", 
-        [decoded.id]
+      "SELECT user_id, username, email, role FROM User WHERE user_id = ?",
+      [decoded.id]
     );
 
     if (users.length === 0) return res.status(404).json({ message: "User not found" });
