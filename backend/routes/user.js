@@ -29,7 +29,7 @@ async function sendEmail({ to, subject, html }) {
 }
 
 // ==========================================
-// 🟢 1. สมัครสมาชิก (Register)
+// 1. Register — send OTP to email
 // ==========================================
 router.post("/register", async (req, res) => {
   try {
@@ -39,42 +39,55 @@ router.post("/register", async (req, res) => {
       return res.status(400).json({ message: "All fields are required." });
     }
 
-    const [existingUser] = await db.query(
-      "SELECT * FROM User WHERE username = ? OR email = ?", 
+    const [existing] = await db.query(
+      "SELECT * FROM User WHERE username = ? OR email = ?",
       [username, email]
     );
 
-    if (existingUser.length > 0) {
-      return res.status(409).json({ message: "Username or Email is already taken." });
+    if (existing.length > 0) {
+      const conflict = existing[0];
+      // Username taken by a verified account, or email taken by a different username
+      if (conflict.is_verified === 1) {
+        return res.status(409).json({ message: "Username or Email is already taken." });
+      }
+      // Unverified record with same email — only allow resend if username matches too
+      if (conflict.email !== email) {
+        return res.status(409).json({ message: "Username is already taken." });
+      }
+      // Unverified, same email → overwrite and resend OTP
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(password, salt);
+      const otp = String(Math.floor(100000 + Math.random() * 900000));
+      const expire = new Date(Date.now() + 10 * 60 * 1000);
+      await db.query(
+        "UPDATE User SET username = ?, pwd = ?, reset_token = ?, reset_token_expire = ? WHERE email = ?",
+        [username, hashedPassword, otp, expire, email]
+      );
+      res.status(200).json({ message: "OTP resent. Please check your email." });
+      sendEmail({
+        to: email,
+        subject: "Your Email Verification Code",
+        html: `<h3>Email Verification</h3><p>Your verification code is:</p><h1 style="letter-spacing:8px;color:#3b82f6;">${otp}</h1><p>Expires in <strong>10 minutes</strong>.</p>`,
+      }).catch(err => console.error("Email send failed:", err.message));
+      return;
     }
 
-    // Hash Password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
+    const otp = String(Math.floor(100000 + Math.random() * 900000));
+    const expire = new Date(Date.now() + 10 * 60 * 1000);
 
-    // สร้าง Verification Token
-    const verificationToken = crypto.randomBytes(32).toString("hex");
-
-    // Insert ลงฐานข้อมูล
     await db.query(
-      "INSERT INTO User (username, email, pwd, role, is_verified, verification_token) VALUES (?, ?, ?, 'user', 0, ?)",
-      [username, email, hashedPassword, verificationToken]
+      "INSERT INTO User (username, email, pwd, role, is_verified, reset_token, reset_token_expire) VALUES (?, ?, ?, 'user', 0, ?, ?)",
+      [username, email, hashedPassword, otp, expire]
     );
 
-    // ✅ แก้ไขตรงนี้: ใช้ BASE_URL แทน localhost
-    const verifyUrl = `${BASE_URL}/verify-email.html?token=${verificationToken}`; 
-
-    res.status(201).json({ message: "Registered successfully! Please check your email to verify your account before logging in." });
+    res.status(201).json({ message: "OTP sent. Please check your email." });
 
     sendEmail({
       to: email,
-      subject: "Confirm your Registration",
-      html: `
-        <h2>Welcome to Reading Journal!</h2>
-        <p>Please click the link below to verify your email address and activate your account:</p>
-        <a href="${verifyUrl}" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Verify Email</a>
-        <p>Or copy this link: ${verifyUrl}</p>
-      `,
+      subject: "Your Email Verification Code",
+      html: `<h3>Email Verification</h3><p>Your verification code is:</p><h1 style="letter-spacing:8px;color:#3b82f6;">${otp}</h1><p>Expires in <strong>10 minutes</strong>.</p>`,
     }).catch(err => console.error("Email send failed:", err.message));
 
   } catch (error) {
@@ -84,27 +97,30 @@ router.post("/register", async (req, res) => {
 });
 
 // ==========================================
-// 🟢 2. ยืนยันอีเมล (Verify Email)
+// 2. Verify registration OTP
 // ==========================================
-router.post("/verify-email", async (req, res) => {
-    try {
-        const { token } = req.body;
-
-        const [users] = await db.query("SELECT * FROM User WHERE verification_token = ?", [token]);
-
-        if (users.length === 0) {
-            return res.status(400).json({ message: "Invalid or expired token" });
-        }
-
-        // อัปเดตสถานะเป็นยืนยันแล้ว และลบ Token ออก
-        await db.query("UPDATE User SET is_verified = 1, verification_token = NULL WHERE user_id = ?", [users[0].user_id]);
-
-        res.json({ message: "Email verified successfully. You can now log in." });
-
-    } catch (error) {
-        console.error("Verify Error:", error);
-        res.status(500).json({ message: "Server error" });
+router.post("/verify-otp", async (req, res) => {
+  try {
+    const { email, code } = req.body;
+    if (!email || !code) {
+      return res.status(400).json({ message: "Email and code are required." });
     }
+    const [users] = await db.query(
+      "SELECT * FROM User WHERE email = ? AND reset_token = ? AND reset_token_expire > NOW() AND is_verified = 0",
+      [email, code]
+    );
+    if (users.length === 0) {
+      return res.status(400).json({ message: "Invalid or expired code." });
+    }
+    await db.query(
+      "UPDATE User SET is_verified = 1, reset_token = NULL, reset_token_expire = NULL WHERE user_id = ?",
+      [users[0].user_id]
+    );
+    res.json({ message: "Email verified successfully. You can now log in." });
+  } catch (error) {
+    console.error("Verify OTP Error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
 });
 
 // ==========================================
