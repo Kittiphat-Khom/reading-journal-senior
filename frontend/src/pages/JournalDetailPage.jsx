@@ -295,12 +295,8 @@ export default function JournalDetailPage({ journalId, onSaved, onClose }) {
                 </div>
               )}
             </div>
-            <div className="form-group" style={{ position: 'relative' }}>
-              {!form.startdate && (
-                <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#aaa', fontSize: '0.9rem', pointerEvents: 'none', zIndex: 1 }}>
-                  Start date
-                </span>
-              )}
+            <div className="form-group">
+              <label style={{ fontSize: '0.75rem', color: '#94a3b8', marginBottom: 2, display: 'block' }}>Start date</label>
               <input
                 type="date"
                 value={form.startdate}
@@ -308,12 +304,8 @@ export default function JournalDetailPage({ journalId, onSaved, onClose }) {
                 style={{ colorScheme: 'light' }}
               />
             </div>
-            <div className="form-group" style={{ position: 'relative' }}>
-              {!form.enddate && (
-                <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#aaa', fontSize: '0.9rem', pointerEvents: 'none', zIndex: 1 }}>
-                  End date
-                </span>
-              )}
+            <div className="form-group">
+              <label style={{ fontSize: '0.75rem', color: '#94a3b8', marginBottom: 2, display: 'block' }}>End date</label>
               <input
                 type="date"
                 value={form.enddate}
