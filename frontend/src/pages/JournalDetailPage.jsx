@@ -251,16 +251,16 @@ export default function JournalDetailPage({ journalId, onSaved, onClose }) {
                 style={{ cursor: 'pointer', minHeight: 42, display: 'flex', flexWrap: 'nowrap', alignItems: 'center', gap: 6, padding: '6px 10px', border: '1px solid #ccc', borderRadius: 8, background: '#fff', userSelect: 'none', overflow: 'hidden' }}
               >
                 {selectedGenres.length === 0 && <span style={{ color: '#aaa', fontSize: '0.9rem' }}>Genre (e.g. Fantasy / Sci-Fi)</span>}
-                {selectedGenres.slice(0, 3).map((g) => (
+                {selectedGenres.slice(0, 2).map((g) => (
                   <span key={g} className="genre-chip" style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0, maxWidth: 120, minWidth: 0 }}>
                     <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>{g}</span>
                     <button type="button" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, lineHeight: 1, color: '#888', fontSize: '0.75rem', flexShrink: 0 }}
                       onClick={(e) => { e.stopPropagation(); toggleGenre(g); }}>✕</button>
                   </span>
                 ))}
-                {selectedGenres.length > 3 && (
+                {selectedGenres.length > 2 && (
                   <span style={{ flexShrink: 0, background: '#e0e7ff', color: '#4338ca', borderRadius: 20, padding: '2px 8px', fontSize: '0.78rem', fontWeight: 600 }}>
-                    +{selectedGenres.length - 3} more
+                    +{selectedGenres.length - 2} more
                   </span>
                 )}
                 <span style={{ marginLeft: 'auto', color: '#94a3b8', fontSize: '0.8rem', flexShrink: 0 }}>▾</span>
