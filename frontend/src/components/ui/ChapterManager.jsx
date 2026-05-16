@@ -151,15 +151,9 @@ export default function ChapterManager({ open, onClose, journalId }) {
               </button>
               <div className="ch-input-wrap">
                 <span className="ch-label">Ch.</span>
-                <input
-                  className="chapter-num-input"
-                  type="number"
-                  min={1}
-                  value={chInput}
-                  onChange={e => setChInput(e.target.value)}
-                  onBlur={e => goToChapter(e.target.value)}
-                  onKeyDown={e => { if (e.key === 'Enter') { e.target.blur(); goToChapter(e.target.value); } }}
-                />
+                <span className="chapter-num-input" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', userSelect: 'none' }}>
+                  {chapters[idx]?.num ?? '—'}
+                </span>
                 <span className="ch-total">/ {chapters.length}</span>
               </div>
               <button
