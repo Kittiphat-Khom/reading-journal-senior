@@ -367,7 +367,7 @@ export default function RecommendPage() {
 
   const doFav = async (book, key) => {
     try {
-      const res = await toggleFavorite({ user_id: user?.user_id, title: book.title, author: book.author, book_image: book.image || book.book_image, genre: book.genre });
+      const res = await toggleFavorite({ user_id: user?.user_id, title: book.title, author: book.author, book_image: book.image || book.book_image, genre: book.genre, description: book.description });
       showToast('Done', res.data?.message || 'Toggled', 'success');
       setFavorited((f) => ({ ...f, [key]: !f[key] }));
     } catch {
