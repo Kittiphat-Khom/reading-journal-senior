@@ -263,15 +263,18 @@ export default function JournalDetailPage({ journalId, onSaved, onClose }) {
                     +{selectedGenres.length - 2} more
                   </span>
                 )}
-                <span style={{ marginLeft: 'auto', color: '#94a3b8', fontSize: '0.8rem', flexShrink: 0 }}>▾</span>
+                <button type="button" onClick={(e) => { e.stopPropagation(); setGenreOpen(o => !o); }}
+                  style={{ marginLeft: 'auto', flexShrink: 0, background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: 6, padding: '3px 8px', cursor: 'pointer', color: '#64748b', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: 4, fontFamily: 'inherit' }}>
+                  <i className="fa-solid fa-chevron-down" style={{ fontSize: '0.65rem', transition: 'transform 0.2s', transform: genreOpen ? 'rotate(180deg)' : 'rotate(0deg)' }} />
+                  Edit
+                </button>
               </div>
 
               {genreOpen && (
                 <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, marginTop: 4, background: '#fff', border: '1px solid #e2e8f0', borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.12)', zIndex: 9999, maxHeight: 260, overflowY: 'auto', padding: '8px 0' }}>
                   {[
-                    ...selectedGenres.slice(2),
+                    ...selectedGenres,
                     ...PRESET_GENRES.filter(g => !selectedGenres.includes(g)),
-                    ...selectedGenres.slice(0, 2),
                   ].map((g) => {
                     const active = selectedGenres.includes(g);
                     return (
