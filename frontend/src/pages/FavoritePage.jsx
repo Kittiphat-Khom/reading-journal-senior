@@ -165,7 +165,7 @@ function FavCard({ book, onClick, onDelete }) {
         {book.genre && (() => {
           const genres = String(book.genre).replace(/[\[\]"]/g, '').split(/[\/,|]/).map(g => g.trim()).filter(Boolean);
           return (
-            <div style={{ display: 'flex', flexWrap: 'nowrap', gap: 4, overflow: 'hidden', marginTop: 6 }}>
+            <div style={{ display: 'flex', flexWrap: 'nowrap', gap: 4, marginTop: 6 }}>
               {genres.slice(0, 2).map((g, i) => (
                 <span key={i} className="fav-genre" style={{ flexShrink: 0, maxWidth: 100, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{g}</span>
               ))}
