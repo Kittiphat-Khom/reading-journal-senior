@@ -267,7 +267,7 @@ export default function JournalDetailPage({ journalId, onSaved, onClose }) {
               </div>
 
               {genreOpen && (
-                <div style={{ position: 'absolute', bottom: '100%', left: 0, right: 0, marginBottom: 4, background: '#fff', border: '1px solid #e2e8f0', borderRadius: 10, boxShadow: '0 -8px 24px rgba(0,0,0,0.12)', zIndex: 9999, maxHeight: 260, overflowY: 'auto', padding: '8px 0' }}>
+                <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, marginTop: 4, background: '#fff', border: '1px solid #e2e8f0', borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.12)', zIndex: 9999, maxHeight: 260, overflowY: 'auto', padding: '8px 0' }}>
                   {[
                     ...selectedGenres.slice(2),
                     ...PRESET_GENRES.filter(g => !selectedGenres.includes(g)),
