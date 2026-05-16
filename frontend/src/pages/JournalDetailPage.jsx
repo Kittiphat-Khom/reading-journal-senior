@@ -75,7 +75,7 @@ export default function JournalDetailPage({ journalId, onSaved, onClose }) {
       .then((res) => {
         const d = res.data;
         const genreStr = Array.isArray(d.genre)
-          ? d.genre.slice(0, 3).join(' / ')
+          ? d.genre.join(' / ')
           : String(d.genre || '').replace(/[\[\]"]/g, '');
 
         setForm({
