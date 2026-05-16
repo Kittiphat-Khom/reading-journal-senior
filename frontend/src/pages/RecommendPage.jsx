@@ -264,8 +264,13 @@ export default function RecommendPage() {
     const sorted = [...books].sort((a, b) => getScore(b) - getScore(a));
     const byRating = [...books].sort((a, b) => (b.rating || 0) - (a.rating || 0));
 
-    const getPopularList = (heroKeys) =>
-      byRating.filter(b => !heroKeys.has(b.book_id || b.title)).slice(0, 5);
+    const popularPool = byRating;
+    const getPopularList = (heroKeys, pageIndex) => {
+      const pool = popularPool.filter(b => !heroKeys.has(b.book_id || b.title));
+      const offset = (pageIndex * 5) % Math.max(pool.length, 1);
+      const rotated = [...pool.slice(offset), ...pool.slice(0, offset)];
+      return rotated.slice(0, 5);
+    };
 
     if (!hasPreference) {
       const pages = [];
@@ -279,7 +284,7 @@ export default function RecommendPage() {
         const heroKeys = new Set([hero.book_id || hero.title, hero2.book_id || hero2.title]);
         pages.push({
           hero, hero2,
-          popularList: getPopularList(heroKeys),
+          popularList: getPopularList(heroKeys, p),
           extra: Array.from({ length: 8 }, (_, i) => pick(i + 7)),
         });
       }
@@ -320,7 +325,7 @@ export default function RecommendPage() {
       globalUsed.add(hero2.book_id || hero2.title);
       const heroKeys = new Set([hero.book_id || hero.title, hero2.book_id || hero2.title]);
       const extra = pickFrom(extraPool, 8);
-      pages.push({ hero, hero2, popularList: getPopularList(heroKeys), extra });
+      pages.push({ hero, hero2, popularList: getPopularList(heroKeys, p), extra });
     }
 
     return pages;
