@@ -170,8 +170,8 @@ export default function ChapterManager({ open, onClose, journalId }) {
                 <i className="fa-solid fa-chevron-right"></i>
               </button>
               {addingCh ? (
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-                  <span style={{ fontSize: '0.65rem', color: '#94a3b8', fontWeight: 500, letterSpacing: '0.04em' }}>CHAPTER NO.</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#f0f7ff', border: '2px solid #3b82f6', borderRadius: 10, padding: '4px 10px', boxShadow: '0 0 0 3px rgba(59,130,246,0.12)' }}>
+                  <span style={{ fontSize: '0.8rem', color: '#3b82f6', fontWeight: 700, whiteSpace: 'nowrap' }}>Ch.</span>
                   <input
                     autoFocus
                     type="number"
@@ -183,8 +183,8 @@ export default function ChapterManager({ open, onClose, journalId }) {
                       if (e.key === 'Escape' && chapters.length > 0) { setAddingCh(false); setAddInput(''); }
                     }}
                     onBlur={() => { if (addInput.trim()) confirmAddChapter(addInput); else if (chapters.length > 0) { setAddingCh(false); setAddInput(''); } }}
-                    placeholder="e.g. 1"
-                    style={{ width: 72, fontFamily: "'Prompt', sans-serif", fontSize: '1rem', fontWeight: 700, border: '2px solid #3b82f6', borderRadius: 10, padding: '6px 8px', outline: 'none', textAlign: 'center', boxShadow: '0 0 0 3px rgba(59,130,246,0.12)', background: '#f0f7ff', color: '#1e3a5f' }}
+                    placeholder="?"
+                    style={{ width: 48, fontFamily: "'Prompt', sans-serif", fontSize: '0.9rem', fontWeight: 700, border: 'none', outline: 'none', textAlign: 'center', background: 'transparent', color: '#1e3a5f' }}
                   />
                 </div>
               ) : (
