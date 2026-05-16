@@ -162,7 +162,19 @@ function FavCard({ book, onClick, onDelete }) {
       <div className="fav-info">
         <div className="fav-title">{book.title}</div>
         <div className="fav-author">{book.author || 'Unknown Author'}</div>
-        {book.genre && <span className="fav-genre">{book.genre}</span>}
+        {book.genre && (() => {
+          const genres = String(book.genre).replace(/[\[\]"]/g, '').split(/[\/,|]/).map(g => g.trim()).filter(Boolean);
+          return (
+            <div style={{ display: 'flex', flexWrap: 'nowrap', gap: 4, overflow: 'hidden', marginTop: 6 }}>
+              {genres.slice(0, 2).map((g, i) => (
+                <span key={i} className="fav-genre" style={{ flexShrink: 0, maxWidth: 100, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{g}</span>
+              ))}
+              {genres.length > 2 && (
+                <span style={{ flexShrink: 0, background: '#e0e7ff', color: '#4338ca', borderRadius: 20, padding: '2px 8px', fontSize: '0.72rem', fontWeight: 600, whiteSpace: 'nowrap' }}>+{genres.length - 2} more</span>
+              )}
+            </div>
+          );
+        })()}
       </div>
     </div>
   );
