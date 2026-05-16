@@ -263,11 +263,7 @@ export default function JournalDetailPage({ journalId, onSaved, onClose }) {
                     +{selectedGenres.length - 2} more
                   </span>
                 )}
-                <button type="button" onClick={(e) => { e.stopPropagation(); setGenreOpen(o => !o); }}
-                  style={{ marginLeft: 'auto', flexShrink: 0, background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: 6, padding: '3px 8px', cursor: 'pointer', color: '#64748b', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: 4, fontFamily: 'inherit' }}>
-                  <i className="fa-solid fa-chevron-down" style={{ fontSize: '0.65rem', transition: 'transform 0.2s', transform: genreOpen ? 'rotate(180deg)' : 'rotate(0deg)' }} />
-                  Edit
-                </button>
+                <span style={{ marginLeft: 'auto', color: '#94a3b8', fontSize: '0.8rem', flexShrink: 0 }}>▾</span>
               </div>
 
               {genreOpen && (
