@@ -1,28 +1,14 @@
 import express from "express";
-import db from "../db.js";
+import db from "../db.js"; 
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
+import { Resend } from "resend";
+
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || "your_secret_key";
-
-async function sendEmail(to, subject, html) {
-    const res = await fetch('https://api.brevo.com/v3/smtp/email', {
-        method: 'POST',
-        headers: {
-            'accept': 'application/json',
-            'api-key': process.env.BREVO_API_KEY,
-            'content-type': 'application/json'
-        },
-        body: JSON.stringify({
-            sender: { name: 'Reading Journal', email: process.env.BREVO_SENDER_EMAIL },
-            to: [{ email: to }],
-            subject,
-            htmlContent: html
-        })
-    });
-    if (!res.ok) throw new Error(`Brevo error: ${await res.text()}`);
-}
+const BASE_URL = process.env.BASE_URL || "http://localhost:5000";
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 // ==========================================
 // 🟢 1. สมัครสมาชิก (Register)
@@ -35,54 +21,44 @@ router.post("/register", async (req, res) => {
       return res.status(400).json({ message: "กรุณากรอกข้อมูลให้ครบถ้วน" });
     }
 
-    if (/\s/.test(username)) {
-      return res.status(400).json({ message: "Username must not contain spaces." });
-    }
-
     const [existingUser] = await db.query(
-      "SELECT * FROM User WHERE username = ? OR email = ?",
+      "SELECT * FROM User WHERE username = ? OR email = ?", 
       [username, email]
     );
 
     if (existingUser.length > 0) {
-      const found = existingUser[0];
-      // Already verified → reject
-      if (found.is_verified === 1) {
-        return res.status(409).json({ message: "Username or Email is already in use." });
-      }
-      // Unverified → allow re-register: delete old record so they can start fresh
-      await db.query("DELETE FROM User WHERE user_id = ?", [found.user_id]);
+      return res.status(409).json({ message: "Username หรือ Email นี้ถูกใช้งานแล้ว" });
     }
 
     // Hash Password
-    const hashedPassword = await bcrypt.hash(password, 8);
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
 
-    // สร้าง OTP 6 หลัก
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    // สร้าง Verification Token
+    const verificationToken = crypto.randomBytes(32).toString("hex");
 
     // Insert ลงฐานข้อมูล
     await db.query(
       "INSERT INTO User (username, email, pwd, role, is_verified, verification_token) VALUES (?, ?, ?, 'user', 0, ?)",
-      [username, email, hashedPassword, otp]
+      [username, email, hashedPassword, verificationToken]
     );
 
-    // DEV: log OTP to console
-    console.log(`[OTP] ${email} → ${otp}`);
+    // ✅ แก้ไขตรงนี้: ใช้ BASE_URL แทน localhost
+    const verifyUrl = `${BASE_URL}/verify-email.html?token=${verificationToken}`; 
 
-    // respond immediately — email sends in background
-    res.status(201).json({ message: "Registration successful! Please enter the 6-digit code sent to your email." });
+    res.status(201).json({ message: "สมัครสมาชิกสำเร็จ! กรุณาตรวจสอบอีเมลเพื่อยืนยันตัวตนก่อนเข้าสู่ระบบ" });
 
-    sendEmail(email, 'Your Reading Journal Verification Code', `
-        <div style="font-family: sans-serif; max-width: 420px; margin: auto; padding: 32px; background: #f9fafb; border-radius: 12px;">
-          <h2 style="color: #1e293b; margin-bottom: 8px;">Welcome to Reading Journal!</h2>
-          <p style="color: #475569;">Use the code below to verify your email address.</p>
-          <div style="font-size: 36px; font-weight: 700; letter-spacing: 10px; color: #2563eb; text-align: center; padding: 24px; background: #eff6ff; border-radius: 10px; margin: 24px 0;">
-            ${otp}
-          </div>
-          <p style="color: #94a3b8; font-size: 13px;">If you didn't create an account, you can ignore this email.</p>
-        </div>
-    `).then(() => console.log("[Email] OTP sent to", email))
-      .catch(err => console.error("Email send failed:", err.message));
+    resend.emails.send({
+        from: 'Reading Journal <onboarding@resend.dev>',
+        to: email,
+        subject: 'Confirm your Registration',
+        html: `
+            <h2>Welcome to Reading Journal!</h2>
+            <p>Please click the link below to verify your email address and activate your account:</p>
+            <a href="${verifyUrl}" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Verify Email</a>
+            <p>Or copy this link: ${verifyUrl}</p>
+        `
+    }).catch(err => console.error("Email send failed:", err.message));
 
   } catch (error) {
     console.error("Register Error:", error);
@@ -91,40 +67,7 @@ router.post("/register", async (req, res) => {
 });
 
 // ==========================================
-// 🟢 2. ยืนยันด้วย OTP 6 หลัก
-// ==========================================
-router.post("/verify-otp", async (req, res) => {
-    try {
-        const { email, code } = req.body;
-
-        if (!email || !code) {
-            return res.status(400).json({ message: "Please enter your email and OTP code." });
-        }
-
-        const [users] = await db.query(
-            "SELECT * FROM User WHERE email = ? AND verification_token = ?",
-            [email, code]
-        );
-
-        if (users.length === 0) {
-            return res.status(400).json({ message: "Invalid OTP code. Please try again." });
-        }
-
-        await db.query(
-            "UPDATE User SET is_verified = 1, verification_token = NULL WHERE user_id = ?",
-            [users[0].user_id]
-        );
-
-        res.json({ message: "Email verified! You can now log in." });
-
-    } catch (error) {
-        console.error("Verify OTP Error:", error);
-        res.status(500).json({ message: "Server error" });
-    }
-});
-
-// ==========================================
-// 🟢 2b. ยืนยันอีเมล (Link-based — legacy)
+// 🟢 2. ยืนยันอีเมล (Verify Email)
 // ==========================================
 router.post("/verify-email", async (req, res) => {
     try {
@@ -136,6 +79,7 @@ router.post("/verify-email", async (req, res) => {
             return res.status(400).json({ message: "Invalid or expired token" });
         }
 
+        // อัปเดตสถานะเป็นยืนยันแล้ว และลบ Token ออก
         await db.query("UPDATE User SET is_verified = 1, verification_token = NULL WHERE user_id = ?", [users[0].user_id]);
 
         res.json({ message: "ยืนยันตัวตนสำเร็จ! คุณสามารถเข้าสู่ระบบได้แล้ว" });
@@ -154,8 +98,8 @@ router.post("/login", async (req, res) => {
     const { username, password } = req.body;
     
     // 1. หา User
-    const [users] = await db.query("SELECT * FROM User WHERE username = ? OR email = ?", [username, username]);
-    if (users.length === 0) return res.status(401).json({ message: "User not found." });
+    const [users] = await db.query("SELECT * FROM User WHERE username = ?", [username]);
+    if (users.length === 0) return res.status(401).json({ message: "ไม่พบชื่อผู้ใช้" });
 
     const user = users[0];
 
@@ -166,7 +110,7 @@ router.post("/login", async (req, res) => {
 
     // 3. เช็ค Password
     const isMatch = await bcrypt.compare(password, user.pwd);
-    if (!isMatch) return res.status(401).json({ message: "Incorrect password." });
+    if (!isMatch) return res.status(401).json({ message: "รหัสผ่านไม่ถูกต้อง" });
 
     // -----------------------------------------------------------------------
     // 🔥 CHECK PREFERENCES
@@ -198,7 +142,7 @@ router.post("/login", async (req, res) => {
     // -----------------------------------------------------------------------
 
     // 4. สร้าง Token
-    const token = jwt.sign({ id: user.user_id, role: user.role, username: user.username }, JWT_SECRET, { expiresIn: "1h" });
+    const token = jwt.sign({ id: user.user_id, role: user.role }, JWT_SECRET, { expiresIn: "1h" });
 
     // 5. ส่ง Response
     res.json({ 
