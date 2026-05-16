@@ -165,12 +165,12 @@ function FavCard({ book, onClick, onDelete }) {
         {book.genre && (() => {
           const genres = String(book.genre).replace(/[\[\]"]/g, '').split(/[\/,|]/).map(g => g.trim()).filter(Boolean);
           return (
-            <div style={{ display: 'flex', flexWrap: 'nowrap', gap: 4, marginTop: 6 }}>
+            <div style={{ display: 'flex', flexWrap: 'nowrap', gap: 4, marginTop: 6, width: '100%', overflow: 'hidden' }}>
               {genres.slice(0, 2).map((g, i) => (
-                <span key={i} className="fav-genre" style={{ flexShrink: 0, maxWidth: 100, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{g}</span>
+                <span key={i} className="fav-genre" style={{ flex: '1 1 0', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{g}</span>
               ))}
               {genres.length > 2 && (
-                <span style={{ flexShrink: 0, background: '#e0e7ff', color: '#4338ca', borderRadius: 20, padding: '2px 8px', fontSize: '0.72rem', fontWeight: 600, whiteSpace: 'nowrap' }}>+{genres.length - 2} more</span>
+                <span style={{ flexShrink: 0, background: '#e0e7ff', color: '#4338ca', borderRadius: 20, padding: '2px 8px', fontSize: '0.72rem', fontWeight: 600, whiteSpace: 'nowrap' }}>+{genres.length - 2}</span>
               )}
             </div>
           );
