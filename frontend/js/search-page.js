@@ -42,23 +42,6 @@ async function loadUser() {
 }
 
 // ===================================================
-//  🛠️ HELPER: จัดรูปแบบข้อมูลหนังสือ
-// ===================================================
-function mapBookData(b, defaultGenre = "General") {
-    const rawDesc = b.default_cover_edition?.description || b.description || "";
-    const stripped = rawDesc.replace(/<[^>]*>/g, "").trim();
-    const shortDesc = stripped.length > 300 ? stripped.slice(0, 297) + "..." : (stripped || "No description available.");
-
-    return {
-        title: b.title || "Untitled",
-        cover: b.image?.url || "",
-        author: b.contributions?.[0]?.author?.name || "Unknown Author",
-        description: shortDesc,
-        genre: defaultGenre
-    };
-}
-
-// ===================================================
 //  🔍 SEARCH SYSTEM (GraphQL)
 // ===================================================
 const searchBtn = document.getElementById("search-btn");
@@ -151,52 +134,18 @@ async function searchBooks(searchTerm, page = 1) {
 }
 
 // ===================================================
-//  📚 CATEGORY FETCHING
+//  📚 CATEGORY FETCHING (from local DB)
 // ===================================================
 
-async function fetchTrendingBooks() {
-    const query = `query GetTrendingBooks { books(where: { users_read_count: { _gte: 50 } } order_by: { users_read_count: desc } limit: 150 ) { id title description image { url } contributions { author { name } } } }`;
+async function fetchLocalBooks(params = {}) {
     try {
-        const res = await fetch("/api/search", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ query }) });
+        const query = new URLSearchParams({ limit: 30, ...params }).toString();
+        const res = await fetch(`/api/books?${query}`);
         if (!res.ok) return [];
         const json = await res.json();
-        return (json.data?.books || []).map(b => mapBookData(b, "Trending")).filter(b => b.cover.startsWith("https://assets.hardcover.app/"));
-    } catch (err) { console.error(err); return []; }
-}
-
-async function fetchNewPopularBooks() {
-    const query = `query GetNewAndPopularBooks { books(where: { _and: [ { created_at: { _gte: "2024-01-01" }}, { users_read_count: { _gte: 5 }} ] } order_by: { created_at: desc } limit: 150 ) { id title created_at users_read_count image { url } contributions { author { name } } description } }`;
-    try {
-        const res = await fetch("/api/search", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ query }) });
-        if (!res.ok) return [];
-        const json = await res.json();
-        return (json.data?.books || []).map(b => mapBookData(b, "New & Popular")).filter(b => b.cover.startsWith("https://assets.hardcover.app/"));
-    } catch (err) { console.error(err); return []; }
-}
-
-async function fetchTopRatedBooks() {
-    const query = `query GetTopRatedBooks { books(where: { rating: { _gte: 4.5 }, description: { _is_null: false, _neq: "" } } order_by: { rating: desc } limit: 150 ) { id title rating image { url } contributions { author { name } } description } }`;
-    try {
-        const res = await fetch("/api/search", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ query }) });
-        if (!res.ok) return [];
-        const json = await res.json();
-        return (json.data?.books || []).map(b => mapBookData(b, "Top Rated")).filter(b => b.cover.startsWith("https://assets.hardcover.app/"));
-    } catch (err) { console.error(err); return []; }
-}
-
-async function fetchBooksByGenre(genreName) {
-    const query = `query GetTopRatedBooksByGenre($genre: String!) { books(where: { _and: [ { rating: { _gte: 3.8 }}, { list_books: { list: { name: { _eq: $genre }}}} ] } order_by: { description: asc } limit: 150 ) { id title rating description image { url } contributions { author { name } } } }`;
-    try {
-        const res = await fetch("/api/search", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ query, variables: { genre: genreName } })
-        });
-        if (!res.ok) return [];
-        const json = await res.json();
-        return (json.data?.books || []).map(b => mapBookData(b, genreName)).filter(b => b.cover.startsWith("https://assets.hardcover.app/"));
+        return json.data || [];
     } catch (err) {
-        console.error("Genre fetch error for", genreName, err);
+        console.error("Local books fetch error:", err);
         return [];
     }
 }
@@ -204,9 +153,9 @@ async function fetchBooksByGenre(genreName) {
 // ===================================================
 //  📁 CATEGORY MANAGEMENT
 // ===================================================
-const genreMap = {
+const categoryGenreMap = {
     "Fantasy": "Fantasy",
-    "Mystery & Thriller": "Mystery & Thriller",
+    "Mystery & Thriller": "Mystery",
     "Romance": "Romance",
     "Sci-Fi Spotlight": "Science Fiction",
     "Young Adult": "Young Adult",
@@ -232,18 +181,20 @@ async function loadCategoryBooks(categoryName, containerId) {
     const container = document.getElementById(containerId);
     if (!container) return;
 
-    let books = [];
-    if (categoryName === "Trending Now") books = await fetchTrendingBooks();
-    else if (categoryName === "New & Popular") books = await fetchNewPopularBooks();
-    else if (categoryName === "Top Rated") books = await fetchTopRatedBooks();
-    else if (genreMap[categoryName]) books = await fetchBooksByGenre(genreMap[categoryName]);
+    let params = { sort: "rating", limit: 30 };
+    if (categoryName === "Trending Now") {
+        params = { sort: "random", limit: 30 };
+    } else if (categoryName === "New & Popular") {
+        params = { sort: "rating", offset: 30, limit: 30 };
+    } else if (categoryGenreMap[categoryName]) {
+        params = { genre: categoryGenreMap[categoryName], sort: "rating", limit: 30 };
+    }
 
+    const books = await fetchLocalBooks(params);
     if (!books || books.length === 0) return;
 
-    const displayBooks = books.slice(0, 30);
     container.innerHTML = "";
-
-    displayBooks.forEach(book => container.appendChild(createBookCard(book)));
+    books.forEach(book => container.appendChild(createBookCard(book)));
 }
 
 // ===================================================

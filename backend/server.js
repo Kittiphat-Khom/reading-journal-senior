@@ -27,6 +27,7 @@ import adminGenresRoutes from "./routes/adminGenresRoutes.js";
 import adminFeaturedBooksRoutes from "./routes/adminFeaturedBooksRoutes.js";
 import adminFeaturedAuthorsRoutes from "./routes/adminFeaturedAuthorsRoutes.js";
 import reviewRoutes from "./routes/reviewRoutes.js";
+import booksRoutes from "./routes/booksRoutes.js";
 
 // ==========================================
 // ⚙️ CONFIG & MIDDLEWARE
@@ -122,6 +123,7 @@ app.use("/api/admin/genres", adminGenresRoutes);
 app.use("/api/admin/featured-books", adminFeaturedBooksRoutes);
 app.use("/api/admin/featured-authors", adminFeaturedAuthorsRoutes);
 app.use("/api/reviews", reviewRoutes);
+app.use("/api/books", booksRoutes);
 
 // ==========================================
 // 🛠️ TEST & START
