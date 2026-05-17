@@ -228,3 +228,17 @@ frontend/src/
 - ตรวจ admin pages ทุก page
 
 ---
+
+## Session 2026-05-17 — Security Hardening (Production-Grade)
+
+### TODO
+- [x] **1. JWT secret — ไม่มี fallback** — ถ้าไม่มี env var ให้ crash ทันที
+- [x] **2. Email format validation** — validate รูปแบบ email ก่อน query DB (register, forgot-password)
+- [x] **3. Helmet.js** — set security HTTP headers อัตโนมัติ ใน `server.js`
+- [x] **4. Rate limiting** — จำกัด request ต่อ IP สำหรับ login, register, forgot-password, verify-otp
+- [x] **5. ลบ `SELECT *` ที่เหลือ** — ระบุ column ที่ต้องการใน DB queries
+
+### NEXT
+- ทดสอบ rate limit ว่า block หลัง N requests จริง
+- ทดสอบ email validation ว่า reject format ผิดได้
+- Deploy ขึ้น Railway แล้วตรวจ headers ผ่าน browser devtools
