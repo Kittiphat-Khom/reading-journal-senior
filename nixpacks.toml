@@ -1,10 +1,8 @@
 [phases.setup]
-nixPkgs = ["nodejs_20", "python312", "python312Packages.numpy", "python312Packages.pandas", "curl"]
+nixPkgs = ["nodejs_20", "python312", "python312Packages.numpy", "python312Packages.pandas", "python312Packages.scikit-learn"]
 
 [phases.install]
 cmds = [
-  "curl -sS https://bootstrap.pypa.io/get-pip.py | python3",
-  "python3 -m pip install --no-cache-dir sentence-transformers scikit-learn",
   "npm install",
   "npm --prefix backend install",
   "npm --prefix frontend install"
@@ -12,8 +10,7 @@ cmds = [
 
 [phases.build]
 cmds = [
-  "CI=false npm run build",
-  "python3 backend/ml/model/train_model.py"
+  "CI=false npm run build"
 ]
 
 [start]

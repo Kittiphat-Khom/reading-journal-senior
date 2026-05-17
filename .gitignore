@@ -17,8 +17,8 @@ __pycache__/
 # 4. ไฟล์ Log
 *.log
 
-# ML model artifacts — regenerated on Railway build
-backend/ml/model/models/
+# ML model artifacts — large file excluded (embeddings.npy + book_index.pkl are committed)
+backend/ml/model/models/cosine_sim.pkl
 
 # 5. Claude Code local config
 .claude/
