@@ -242,3 +242,70 @@ frontend/src/
 - ทดสอบ rate limit ว่า block หลัง N requests จริง
 - ทดสอบ email validation ว่า reject format ผิดได้
 - Deploy ขึ้น Railway แล้วตรวจ headers ผ่าน browser devtools
+
+---
+
+## Session 2026-05-17 — Railway Deploy Fix + ML Refactor
+
+### Problem
+Railway + nixpacks ใช้ nix Python ซึ่ง store เป็น read-only — `pip` ติดตั้งไม่ได้เลย (แม้ bootstrap get-pip.py ก็ fail)
+
+### Solution: Pre-train Locally, Commit Artifacts
+
+**เดิม (broken):**
+- Train บน Railway → ต้องการ `sentence-transformers` (pip) → fail
+- Artifact: `cosine_sim.pkl` (379MB N×N matrix) — ใหญ่เกิน commit
+
+**ใหม่ (ใช้งานได้):**
+- Train บนเครื่อง local → commit artifacts ขึ้น git → Railway โหลดตรงจาก repo
+- Artifact: `embeddings.npy` (~15MB, N×384) + `book_index.pkl` (~10MB)
+- Runtime คำนวณ `cosine_similarity` on-the-fly ด้วย `sklearn` (nix package — ไม่ต้อง pip)
+
+### ML Flow
+
+```
+[Local only — เมื่อ books.csv เปลี่ยน]
+python3 backend/ml/model/train_model.py
+  → ใช้ sentence-transformers (all-MiniLM-L6-v2)
+  → encode 9966 books → shape (9966, 384)
+  → save: models/embeddings.npy + models/book_index.pkl
+  → commit + push
+
+[Railway runtime — ทุก request]
+recommend_auto.py
+  → load embeddings.npy + book_index.pkl
+  → avg liked book embeddings → user_profile_vector (384,)
+  → cosine_similarity([user_profile_vector], embeddings)[0] → scores (9966,)
+  → rank + filter + return top 100
+```
+
+### nixpacks.toml (ปัจจุบัน)
+```toml
+[phases.setup]
+nixPkgs = ["nodejs_20", "python312", "python312Packages.numpy",
+           "python312Packages.pandas", "python312Packages.scikit-learn"]
+
+[phases.install]
+cmds = ["npm install", "npm --prefix backend install", "npm --prefix frontend install"]
+
+[phases.build]
+cmds = ["CI=false npm run build"]
+# ไม่มี pip, ไม่มี sentence-transformers, ไม่มี train บน server
+```
+
+### ถ้า books.csv อัปเดต → ต้องทำ
+```bash
+python3 backend/ml/model/train_model.py        # train ใหม่บนเครื่อง
+git add backend/ml/model/models/embeddings.npy backend/ml/model/models/book_index.pkl
+git commit -m "chore: retrain embeddings"
+git push
+```
+
+### SearchPage Categories
+- **เดิม:** fetch จาก Hardcover API (ช้า, quota จำกัด)
+- **ใหม่:** `/api/books` endpoint อ่านจาก `books.csv` ใน memory cache — โหลด instant
+- Route: `backend/routes/booksRoutes.js` — support `?genre=Fantasy&sort=rating&limit=30&offset=0`
+
+### NEXT
+- ทดสอบ Recommend page หลัง ML refactor (ต้อง verify recommend_auto.py ทำงาน)
+- ทดสอบ SearchPage categories โหลดจาก local API ได้ถูกต้อง
