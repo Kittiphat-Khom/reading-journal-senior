@@ -94,25 +94,18 @@ async function fetchAllBooks() {
     console.log(`📂 Loaded ${allBooksMap.size} existing books from CSV`);
   }
   
-  // Genre list — เฉพาะที่มีหนังสือจริงๆ บน Hardcover
   const genres = [
-    // Fiction core
-    "Fiction", "Fantasy", "Science Fiction", "Horror", "Thriller", "Mystery",
-    "Crime", "Romance", "Classics", "Young Adult", "Historical Fiction",
-    "Literary Fiction", "Dystopian", "Paranormal", "Urban Fantasy",
-    // Non-fiction core
-    "Biography", "History", "Self Help", "Psychology", "Philosophy",
-    "Business", "True Crime", "Politics", "Science", "Economics",
-    "Health", "Travel", "Memoir",
-    // Genre fiction
-    "Adventure", "Action", "Comics", "Graphic Novels", "Manga",
-    "LGBTQ", "War", "Spy", "Supernatural", "Magic",
-    // Popular sub-genres
-    "Cozy Mystery", "Dark Fantasy", "Epic Fantasy", "Space Opera",
-    "Cyberpunk", "Steampunk", "Mythology", "Folklore",
-    // Other
-    "Family", "Comedy", "Poetry", "Spirituality", "Religion",
-    "Music", "Art", "Photography", "Nature", "Cooking"
+    "Action", "Adventure", "Art and Design", "Astronomy", "Biography",
+    "Buddhism", "Business", "Children's Books", "Christianity", "Classics",
+    "Comedy", "Comics", "Crafts", "Crime", "Drama",
+    "Economics", "Family", "Fantasy", "Fiction", "Film and TV",
+    "Finance and Investment", "Food and Drink", "Graphic Novels", "Health and Medicine", "History",
+    "Horror", "LGBTQ", "Light Novels", "Literature", "Manga",
+    "Mathematics", "Military and War", "Music", "Mystery", "Paranormal",
+    "Parenting", "Photography", "Poetry", "Political Science", "Programming Languages",
+    "Relationships", "Religion", "Romance", "Science", "Science Fiction",
+    "Self Help", "Self-Enrichment", "Sports", "Thriller", "Travel",
+    "Travel Literature", "True Crime", "War", "World History", "Young Adult",
   ];
 
   for (const genreName of genres) {
