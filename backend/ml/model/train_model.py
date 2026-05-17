@@ -49,10 +49,10 @@ def train():
         # Save embeddings (~15MB for 10K books) — commitable to git
         np.save(os.path.join(MODEL_DIR, "embeddings.npy"), embeddings)
 
-        # Save book metadata
+        # Save book metadata as CSV (portable across pandas versions)
         meta_cols = ["book_id", "title", "image_url", "authors", "genres", "description", "rating"]
         save_cols = [c for c in meta_cols if c in books.columns]
-        books[save_cols].to_pickle(os.path.join(MODEL_DIR, "book_index.pkl"))
+        books[save_cols].to_csv(os.path.join(MODEL_DIR, "book_index.csv"), index=False)
 
         print(f"✅ Training Complete! embeddings={embeddings.shape}, saved at: {MODEL_DIR}")
 

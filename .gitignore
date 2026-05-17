@@ -17,8 +17,9 @@ __pycache__/
 # 4. ไฟล์ Log
 *.log
 
-# ML model artifacts — large file excluded (embeddings.npy + book_index.pkl are committed)
+# ML model artifacts — large files excluded (embeddings.npy + book_index.csv are committed)
 backend/ml/model/models/cosine_sim.pkl
+backend/ml/model/models/book_index.pkl
 
 # 5. Claude Code local config
 .claude/

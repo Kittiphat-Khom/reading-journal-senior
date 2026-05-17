@@ -49,9 +49,9 @@ def score_to_tier(raw_score):
 
 def get_fallback_books(n=15):
     try:
-        idx_path = os.path.join(MODEL_DIR, "book_index.pkl")
+        idx_path = os.path.join(MODEL_DIR, "book_index.csv")
         if os.path.exists(idx_path):
-            df = pd.read_pickle(idx_path)
+            df = pd.read_csv(idx_path)
             df_valid = df[
                 df['authors'].notna() & (df['authors'] != '') & (df['authors'] != 'Unknown') &
                 df['image_url'].notna() & (df['image_url'] != '')
@@ -84,13 +84,13 @@ if __name__ == "__main__":
         # ---------------------------------------------------------
         # 1. Load Data & Models
         # ---------------------------------------------------------
-        idx_path = os.path.join(MODEL_DIR, "book_index.pkl")
+        idx_path = os.path.join(MODEL_DIR, "book_index.csv")
         emb_path = os.path.join(MODEL_DIR, "embeddings.npy")
 
         if not os.path.exists(idx_path) or not os.path.exists(emb_path):
             print(json.dumps(get_fallback_books(), ensure_ascii=False)); sys.exit(0)
 
-        df = pd.read_pickle(idx_path)
+        df = pd.read_csv(idx_path)
         embeddings = np.load(emb_path)
 
         # ---------------------------------------------------------
