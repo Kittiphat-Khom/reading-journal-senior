@@ -38,7 +38,18 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 app.set('trust proxy', 1);
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com"],
+      imgSrc: ["'self'", "data:", "https://assets.hardcover.app", "https://covers.openlibrary.org", "https://*.googleapis.com"],
+      connectSrc: ["'self'"],
+    },
+  },
+}));
 app.use(cors());
 
 const authLimiter = rateLimit({
