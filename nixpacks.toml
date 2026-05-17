@@ -1,9 +1,10 @@
 [phases.setup]
-nixPkgs = ["nodejs_20", "python312", "python312Packages.pip", "python312Packages.numpy", "python312Packages.pandas"]
+nixPkgs = ["nodejs_20", "python312", "python312Packages.numpy", "python312Packages.pandas", "curl"]
 
 [phases.install]
 cmds = [
-  "python3 -m pip install sentence-transformers scikit-learn",
+  "curl -sS https://bootstrap.pypa.io/get-pip.py | python3",
+  "python3 -m pip install --no-cache-dir sentence-transformers scikit-learn",
   "npm install",
   "npm --prefix backend install",
   "npm --prefix frontend install"
