@@ -5,7 +5,7 @@ import { fileURLToPath } from "url";
 
 const router = express.Router();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const CSV_PATH = path.join(__dirname, "../ml/data/books.csv");
+const CSV_PATH = path.join(__dirname, "../ml/model/models/book_index.csv");
 
 let booksCache = null;
 

@@ -139,7 +139,7 @@ async function searchBooks(searchTerm, page = 1) {
 
 async function fetchLocalBooks(params = {}) {
     try {
-        const query = new URLSearchParams({ limit: 30, ...params }).toString();
+        const query = new URLSearchParams({ limit: 25, ...params }).toString();
         const res = await fetch(`/api/books?${query}`);
         if (!res.ok) return [];
         const json = await res.json();
@@ -181,13 +181,13 @@ async function loadCategoryBooks(categoryName, containerId) {
     const container = document.getElementById(containerId);
     if (!container) return;
 
-    let params = { sort: "rating", limit: 30 };
+    let params = { sort: "rating", limit: 25 };
     if (categoryName === "Trending Now") {
-        params = { sort: "random", limit: 30 };
+        params = { sort: "random", limit: 25 };
     } else if (categoryName === "New & Popular") {
-        params = { sort: "rating", offset: 30, limit: 30 };
+        params = { sort: "rating", offset: 25, limit: 25 };
     } else if (categoryGenreMap[categoryName]) {
-        params = { genre: categoryGenreMap[categoryName], sort: "rating", limit: 30 };
+        params = { genre: categoryGenreMap[categoryName], sort: "rating", limit: 25 };
     }
 
     const books = await fetchLocalBooks(params);
@@ -410,11 +410,17 @@ async function openSeeAllModal(categoryName) {
     modal.style.display = "flex";
 
     let books = [];
-
-    if (categoryName === "Trending Now") books = await fetchTrendingBooks();
-    else if (categoryName === "New & Popular") books = await fetchNewPopularBooks();
-    else if (categoryName === "Top Rated") books = await fetchTopRatedBooks();
-    else if (genreMap[categoryName]) books = await fetchBooksByGenre(genreMap[categoryName]);
+    let seeAllParams = { sort: "rating", limit: 25 };
+    if (categoryName === "Trending Now") {
+        seeAllParams = { sort: "random", limit: 25 };
+    } else if (categoryName === "New & Popular") {
+        seeAllParams = { sort: "rating", offset: 25, limit: 25 };
+    } else if (categoryName === "Top Rated") {
+        seeAllParams = { sort: "rating", limit: 25 };
+    } else if (categoryGenreMap[categoryName]) {
+        seeAllParams = { genre: categoryGenreMap[categoryName], sort: "rating", limit: 25 };
+    }
+    books = await fetchLocalBooks(seeAllParams);
 
     gridEl.innerHTML = "";
 
