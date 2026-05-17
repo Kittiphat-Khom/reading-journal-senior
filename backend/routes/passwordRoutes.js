@@ -13,6 +13,10 @@ router.post("/forgot-password", async (req, res) => {
       return res.status(400).json({ message: "Email is required" });
     }
 
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ message: "Invalid email format." });
+    }
+
     const [users] = await db.query("SELECT user_id FROM User WHERE email = ?", [email]);
 
     // Always respond the same way to prevent email enumeration

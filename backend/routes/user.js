@@ -5,7 +5,8 @@ import jwt from "jsonwebtoken";
 import { sendEmail, generateOtp } from "../lib/email.js";
 
 const router = express.Router();
-const JWT_SECRET = process.env.JWT_SECRET || "your_secret_key";
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) throw new Error("JWT_SECRET env var is required");
 
 router.post("/register", async (req, res) => {
   try {
@@ -15,8 +16,12 @@ router.post("/register", async (req, res) => {
       return res.status(400).json({ message: "All fields are required." });
     }
 
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ message: "Invalid email format." });
+    }
+
     const [existing] = await db.query(
-      "SELECT * FROM User WHERE username = ? OR email = ?",
+      "SELECT user_id, username, email, is_verified FROM User WHERE username = ? OR email = ?",
       [username, email]
     );
 
@@ -68,7 +73,7 @@ router.post("/verify-otp", async (req, res) => {
       return res.status(400).json({ message: "Email and code are required." });
     }
     const [users] = await db.query(
-      "SELECT * FROM User WHERE email = ? AND reset_token = ? AND reset_token_expire > NOW() AND is_verified = 0",
+      "SELECT user_id FROM User WHERE email = ? AND reset_token = ? AND reset_token_expire > NOW() AND is_verified = 0",
       [email, code]
     );
     if (users.length === 0) {
@@ -89,7 +94,7 @@ router.post("/login", async (req, res) => {
   try {
     const { username, password } = req.body;
 
-    const [users] = await db.query("SELECT * FROM User WHERE username = ?", [username]);
+    const [users] = await db.query("SELECT user_id, username, pwd, role, is_verified FROM User WHERE username = ?", [username]);
     if (users.length === 0) return res.status(401).json({ message: "User not found." });
 
     const user = users[0];

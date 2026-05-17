@@ -1,9 +1,11 @@
 import express from "express";
 import cors from "cors";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
 import db from "./db.js";
 import path from "path";
 import { fileURLToPath } from "url";
-import fetch from "node-fetch"; // ✅ 1. เพิ่ม import fetch ตรงนี้
+import fetch from "node-fetch";
 
 // ==========================================
 // 📦 ROUTES IMPORTS
@@ -34,7 +36,16 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
+app.use(helmet());
 app.use(cors());
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: "Too many attempts. Please try again later." },
+});
 
 // ✅ เพิ่ม limit เป็น 50mb (จากไฟล์ 1) เพื่อให้รับรูปภาพ Base64 ได้โดยไม่ Error
 app.use(express.json({ limit: '50mb' }));
@@ -49,8 +60,12 @@ app.use(express.static(reactBuild));
 // ==========================================
 
 // 1. User & Auth
+app.use("/api/users/login", authLimiter);
+app.use("/api/users/register", authLimiter);
+app.use("/api/users/verify-otp", authLimiter);
+app.use("/api/users/forgot-password", authLimiter);
 app.use("/api/users", userRoutes);
-app.use("/api/users", passwordRoutes); // Password Reset etc.
+app.use("/api/users", passwordRoutes);
 
 // 2. Journals & Chapters
 // ✅ วาง Chapter ไว้ก่อน Journal เพื่อป้องกัน Path ทับซ้อน
