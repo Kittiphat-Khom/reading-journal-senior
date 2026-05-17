@@ -114,7 +114,7 @@ router.post("/login", async (req, res) => {
       hasPreferences = false;
     }
 
-    const token = jwt.sign({ id: user.user_id, role: user.role }, JWT_SECRET, { expiresIn: "1h" });
+    const token = jwt.sign({ id: user.user_id, role: user.role, username: user.username }, JWT_SECRET, { expiresIn: "1h" });
 
     res.json({
       message: "Login successful",
